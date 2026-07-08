@@ -8,6 +8,7 @@ import pandas as pd
 import reports as REPORTS
 import secure as SECURE
 import wordrep as WORDREP
+import risklist as RLIST
 
 
 def _wrap_summary(title, body, full_id, fname):
@@ -96,7 +97,14 @@ def main():
             wbody, risk_b64 = WORDREP.extract(rp); risk_html = _wrap_summary("Seguimiento de Clientes", wbody, "risk-full", "Seguimiento_Clientes_IP.docx")
     except Exception:
         pass
-    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64}, ensure_ascii=False, separators=(",", ":"))
+    # Lista de clientes en riesgo (Excel de Drive, opcional)
+    rlp = os.environ.get("RISK_LIST_XLSX"); risk_list = None
+    try:
+        if rlp and os.path.exists(rlp):
+            risk_list = RLIST.load(rlp)
+    except Exception:
+        risk_list = None
+    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list}, ensure_ascii=False, separators=(",", ":"))
     sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
     enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
     enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
@@ -235,6 +243,11 @@ body.locked{overflow:hidden}
 .rbox-i{background:#eef2fb;border-left:4px solid var(--navy)}
 .rbox-g{background:#eafaf1;border-left:4px solid var(--pos)}
 .rbox-w{background:#fff3ee;border-left:4px solid var(--brand)}
+.rlnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.rlbtn{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;color:var(--navy);cursor:pointer}
+.rlbtn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.rldesc{font-size:12.5px;color:var(--muted)}
+.rtc td,.rtc th{white-space:nowrap;font-size:12px}
 .repbtns{display:flex;gap:8px;flex-wrap:wrap}
 .pdfbtn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
 @media(max-width:640px){
@@ -291,6 +304,7 @@ body.locked{overflow:hidden}
     <button data-tab="prod">Productos / SKU</button>
     <button data-tab="exec">📄 Informe ejecutivo</button>
     <button data-tab="risk">📄 Riesgo y recuperados</button>
+    <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo</button>
     <button data-tab="log" id="tab-log" style="display:none">🔒 Registro</button>
   </div>
 
@@ -356,6 +370,7 @@ body.locked{overflow:hidden}
   <div class="panel" data-panel="risk" id="p-risk"></div>
   <div id="exec-full" style="display:none"></div>
   <div id="risk-full" style="display:none"></div>
+  <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Detalle por cliente (lista cargada en Drive) · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
   <div class="panel" data-panel="log"><div class="card"><h3>Registro de ingresos</h3><div class="hint">Solo visible para el administrador · accesos al sistema (usuario, rol, fecha y hora)</div><div id="logbox"></div></div></div>
 
   <div class="foot" id="foot"></div>
@@ -541,7 +556,7 @@ class App{
     setTimeout(()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()},30)})}
   renderTab(){const t=this.tab,d=this.d,mo=this.mo;
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
-    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='log')renderLog();}
+    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='rlist')renderRList();else if(t==='log')renderLog();}
   projLine(mo){const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);
     mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);const lr=this.linreg(mo.neto);
     const proj=yFull.map((v,m)=>v!=null?v:Math.max(0,lr.slope*m+lr.intercept));
@@ -675,6 +690,8 @@ async function boot(pin){const err=document.getElementById('gerr');
   document.getElementById('exec-full').innerHTML=res.obj.execFull;
   document.getElementById('risk-full').innerHTML=res.obj.riskFull;
   window.__docx={exec:res.obj.execDocx||'',risk:res.obj.riskDocx||''};
+  RL=res.obj.riskList||null;
+  if(RL){var trl=document.getElementById('tab-rlist');if(trl)trl.style.display='';var rse=document.getElementById('rl-search');if(rse)rse.oninput=renderRList;}
   document.getElementById('gate').style.display='none';document.body.classList.remove('locked');
   window.APP=new App();
   const hr=new Date().getHours();const sal=hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches';
@@ -699,6 +716,19 @@ function downloadDoc(id,fname){var el=document.getElementById(id);if(!el||!el.in
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();a.remove();}
 function printFull(id,title){var el=document.getElementById(id);if(!el)return;var w=window.open('','_blank');if(!w){alert('Permite ventanas emergentes para el PDF.');return;}
   w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title><style>'+PRINT_CSS+'</style></head><body>'+el.innerHTML+'</body></html>');w.document.close();w.focus();setTimeout(function(){w.print();},450);}
+let RL=null, RLact=null;
+function renderRList(){
+  if(!RL){return;}
+  var nav=document.getElementById('rl-nav');
+  if(!RLact||!RL.sheets[RLact])RLact=RL.order[0];
+  nav.innerHTML=RL.order.map(function(s){return '<button class="rlbtn'+(s===RLact?' on':'')+'" data-s="'+encodeURIComponent(s)+'">'+s+'</button>';}).join('');
+  nav.querySelectorAll('.rlbtn').forEach(function(b){b.onclick=function(){RLact=decodeURIComponent(b.dataset.s);renderRList();};});
+  var sh=RL.sheets[RLact];var q=(document.getElementById('rl-search').value||'').toLowerCase();
+  var rows=sh.rows;if(q)rows=rows.filter(function(r){return r.join(' ').toLowerCase().indexOf(q)>=0;});
+  var th=sh.headers.map(function(h){return '<th>'+h+'</th>';}).join('');
+  var body=rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';}).join('');
+  document.getElementById('rl-table').innerHTML='<div class="rldesc">'+sh.title+'</div><div class="mini" style="margin:4px 0 8px">'+rows.length+' de '+sh.rows.length+' registros</div><table class="rt rtc"><thead><tr>'+th+'</tr></thead><tbody>'+body+'</tbody></table>';
+}
 function renderLog(){const box=document.getElementById('logbox');if(!box)return;box.innerHTML='<p class=mini>Cargando…</p>';
   fetch('/.netlify/functions/log',{headers:{'x-admin-key':window.__ADMINPIN||''}}).then(r=>r.ok?r.json():Promise.reject()).then(list=>{
     if(!list||!list.length){box.innerHTML='<p class=mini>Sin registros aún.</p>';return;}
