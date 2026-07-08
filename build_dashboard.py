@@ -72,11 +72,10 @@ def main():
     hist_path = os.path.join(os.path.dirname(os.path.abspath(out)) or ".", "history.json")
     try:
         rep = REPORTS.build(df, hist_path, version)
-        exec_html, risk_html = rep["exec"], rep["risk"]
+        exec_html, risk_html, exec_full, risk_full = rep["exec"], rep["risk"], rep["execFull"], rep["riskFull"]
     except Exception as e:
-        exec_html = risk_html = f'<div class="rep"><p>No se pudo generar el informe: {html.escape(str(e))}</p></div>'
-
-    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html}, ensure_ascii=False, separators=(",", ":"))
+        exec_html = risk_html = exec_full = risk_full = f'<div class="rep"><p>No se pudo generar el informe: {html.escape(str(e))}</p></div>'
+    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full}, ensure_ascii=False, separators=(",", ":"))
     sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
     enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
     enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
@@ -204,6 +203,32 @@ table.rt tbody tr:nth-child(even){background:#f8f9fc}
 .gerr{color:var(--neg);font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
 #greet{position:fixed;top:14px;right:14px;z-index:150;background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(36,32,91,.25);transition:opacity .6s}
 body.locked{overflow:hidden}
+.rcover{border:2px solid var(--navy);border-radius:12px;padding:18px 20px;margin-bottom:18px;background:var(--panel2)}
+.rkick{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--brand)}
+.rcover h1,.rep h1{font-size:22px;color:var(--navy);margin:6px 0}
+.rmeta{font-size:12.5px;color:var(--muted);line-height:1.65}
+.conf{color:var(--neg);font-weight:700}
+.rep h2{font-size:18px;color:var(--navy);margin:22px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--brand)}
+.rbox{border-radius:10px;padding:12px 15px;margin:12px 0;font-size:13px;line-height:1.6}
+.rbox b{color:var(--navy)}
+.rbox-i{background:#eef2fb;border-left:4px solid var(--navy)}
+.rbox-g{background:#eafaf1;border-left:4px solid var(--pos)}
+.rbox-w{background:#fff3ee;border-left:4px solid var(--brand)}
+.repbtns{display:flex;gap:8px;flex-wrap:wrap}
+.pdfbtn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+@media(max-width:640px){
+  .top{padding:12px 14px}.top h1{font-size:16px}.top .logo{width:46px;height:46px}.top .logo svg{width:40px;height:40px}
+  .top .status{font-size:11px}.wrap{padding:12px 12px 30px}
+  .bar{padding:10px 12px;gap:8px}.ms>button{padding:7px 10px;font-size:12px}.reset{padding:8px 12px}
+  .kpis{grid-template-columns:1fr 1fr;gap:10px}.kpi .val{font-size:20px}.kpi{padding:12px 14px}
+  .chart{height:300px}.chart.tall{height:360px}.chart.sm{height:250px}
+  .card{padding:12px 14px}.card h3{font-size:14px}
+  .tabs button{padding:9px 11px;font-size:13px}
+  .rep{padding:16px 14px}.rcover h1,.rep h1{font-size:18px}.rep h2{font-size:15px}
+  .repkpis{grid-template-columns:1fr 1fr}.rephead{flex-direction:column}.repbtns{width:100%}
+  .gatecard{padding:26px 20px}.gatelogo{width:92px;height:92px}.gatelogo svg{width:92px;height:92px}
+  #greet{left:10px;right:10px;top:auto;bottom:10px;text-align:center}
+}
 @media print{body{background:#fff}.top,.bar,.chips,.tabs,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0}.rep{border:none;box-shadow:none;max-width:none}}
 @media(max-width:1050px){.g2,.g3{grid-template-columns:1fr}}
 </style>
@@ -304,6 +329,8 @@ body.locked{overflow:hidden}
 
   <div class="panel" data-panel="exec" id="p-exec"></div>
   <div class="panel" data-panel="risk" id="p-risk"></div>
+  <div id="exec-full" style="display:none"></div>
+  <div id="risk-full" style="display:none"></div>
   <div class="panel" data-panel="log"><div class="card"><h3>Registro de ingresos</h3><div class="hint">Solo visible para el administrador · accesos al sistema (usuario, rol, fecha y hora)</div><div id="logbox"></div></div></div>
 
   <div class="foot" id="foot"></div>
@@ -359,6 +386,14 @@ table.rt{width:100%;border-collapse:collapse;font-size:11.5px;margin:5px 0}
 table.rt th{background:#24205b;color:#fff;text-align:left;padding:6px 9px;font-size:10px;text-transform:uppercase}
 table.rt th.num,table.rt td.num{text-align:right}table.rt td{padding:6px 9px;border-bottom:1px solid #eef1f7}
 table.rt tbody tr:nth-child(even){background:#f8f9fc}
+.rcover{border:2px solid #24205b;border-radius:10px;padding:14px 16px;margin-bottom:14px;background:#f5f6fa}
+.rkick{font-size:10px;font-weight:800;letter-spacing:1px;color:#ff4f20}
+.rcover h1,h1{font-size:20px;color:#24205b;margin:5px 0}
+.rmeta{font-size:11px;color:#6b7392;line-height:1.6}.conf{color:#e0472c;font-weight:700}
+h2{font-size:16px;color:#24205b;margin:16px 0 8px;border-bottom:2px solid #ff4f20;padding-bottom:4px}
+.rbox{border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;line-height:1.55}
+.rbox b{color:#24205b}.rbox-i{background:#eef2fb;border-left:4px solid #24205b}
+.rbox-g{background:#eafaf1;border-left:4px solid #16a34a}.rbox-w{background:#fff3ee;border-left:4px solid #ff4f20}
 @page{margin:14mm}`;
 function printReport(sel,title){
   const el=document.querySelector(sel+' .rep');if(!el)return;
@@ -458,16 +493,19 @@ class App{
       series:[{type:'line',data,smooth:true,symbol:'none',lineStyle:{width:2,color:col},areaStyle:{color:area}}]},true)}
   chart(id){if(!this.ch[id]){this.ch[id]=echarts.init(document.getElementById(id))}return this.ch[id]}
   topN(map,names,n){return [...map.entries()].map(([i,o])=>[names[i],o.neto,o]).sort((a,b)=>b[1]-a[1]).slice(0,n)}
-  hbz(id,pairs,opt={}){const c=this.chart(id);const trunc=opt.trunc||28;
+  hbz(id,pairs,opt={}){const c=this.chart(id);const trunc=opt.trunc||22;
     const cats=pairs.map(p=>p[0]);const vals=pairs.map(p=>Math.round(p[1]));
-    const win=opt.window||14;const zoom=opt.zoom&&cats.length>win;const end=zoom?Math.max(6,win/cats.length*100):100;
+    const win=opt.window||14;const zoom=opt.zoom&&cats.length>win;const end=zoom?Math.max(8,win/cats.length*100):100;
     const fmt=opt.units?(v=>intf(v)+' u.'):(v=>moneyFull(v));
-    c.setOption({grid:{top:8,bottom:zoom?26:8,left:opt.left||150,right:zoom?42:24,containLabel:true},
+    const axf=v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?Math.round(v/1e3)+'K':Math.round(v));
+    const tr=s=>s.length>trunc?s.slice(0,trunc-1)+'…':s;
+    c.setOption({grid:{top:8,bottom:32,left:(opt.left||150),right:zoom?46:30,containLabel:false},
       tooltip:{trigger:'axis',axisPointer:{type:'shadow'},valueFormatter:fmt},
-      xAxis:{type:'value',axisLabel:{formatter:money}},
-      yAxis:{type:'category',data:cats,inverse:true,axisLabel:{fontSize:11,formatter:s=>s.length>trunc?s.slice(0,trunc-1)+'…':s}},
-      dataZoom:zoom?[{type:'slider',yAxisIndex:0,right:12,width:14,start:0,end:end,brushSelect:false,handleSize:'80%'},{type:'inside',yAxisIndex:0,start:0,end:end}]:[],
-      series:[{type:'bar',data:vals,itemStyle:{color:opt.color||'#ff4f20',borderRadius:[0,5,5,0]},barMaxWidth:24}]},true);
+      xAxis:{type:'value',splitNumber:4,axisLabel:{formatter:axf,fontSize:10,hideOverlap:true,margin:8},splitLine:{lineStyle:{color:'#f0f2f8'}}},
+      yAxis:{type:'category',data:cats,inverse:true,axisTick:{show:false},axisLine:{lineStyle:{color:'#c9cfe0'}},axisLabel:{fontSize:11,margin:8,formatter:tr}},
+      dataZoom:zoom?[{type:'slider',yAxisIndex:0,right:10,width:13,start:0,end:end,brushSelect:false,handleSize:'80%'},{type:'inside',yAxisIndex:0,start:0,end:end}]:[],
+      series:[{type:'bar',data:vals,itemStyle:{color:opt.color||'#ff4f20',borderRadius:[0,4,4,0]},barMaxWidth:22,
+        label:{show:true,position:'right',formatter:p=>axf(p.value),fontSize:9,color:'#6b7392'}}]},true);
     if(opt.click){c.off('click');c.on('click',p=>{if(p.componentType==='series')opt.click(p.name)})}}
   render(){this.syncFilterUI();const d=this.filtered();this.d=d;this.mo=this.monthly(d);this.renderKPIs(this.mo);this.renderTab();}
   bindTabs(){document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
@@ -609,6 +647,8 @@ async function boot(pin){const err=document.getElementById('gerr');
   P=res.obj.P;initMeta();
   document.getElementById('p-exec').innerHTML=res.obj.exec;
   document.getElementById('p-risk').innerHTML=res.obj.risk;
+  document.getElementById('exec-full').innerHTML=res.obj.execFull;
+  document.getElementById('risk-full').innerHTML=res.obj.riskFull;
   document.getElementById('gate').style.display='none';document.body.classList.remove('locked');
   window.APP=new App();
   const g=document.getElementById('greet');const hr=new Date().getHours();
@@ -618,6 +658,12 @@ async function boot(pin){const err=document.getElementById('gerr');
   try{fetch('/.netlify/functions/log',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({user:res.user.name,role:res.user.role})}).catch(()=>{});}catch(e){}
   if(res.user.role==='admin'){window.__ADMINPIN=pin;const tl=document.getElementById('tab-log');if(tl)tl.style.display='';}
 }
+function downloadDoc(id,fname){var el=document.getElementById(id);if(!el||!el.innerHTML){alert('Abre el informe primero.');return;}
+  var head='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>'+PRINT_CSS+'</style></head><body>';
+  var blob=new Blob(['\ufeff'+head+el.innerHTML+'</body></html>'],{type:'application/msword'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();a.remove();}
+function printFull(id,title){var el=document.getElementById(id);if(!el)return;var w=window.open('','_blank');if(!w){alert('Permite ventanas emergentes para el PDF.');return;}
+  w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title><style>'+PRINT_CSS+'</style></head><body>'+el.innerHTML+'</body></html>');w.document.close();w.focus();setTimeout(function(){w.print();},450);}
 function renderLog(){const box=document.getElementById('logbox');if(!box)return;box.innerHTML='<p class=mini>Cargando…</p>';
   fetch('/.netlify/functions/log',{headers:{'x-admin-key':window.__ADMINPIN||''}}).then(r=>r.ok?r.json():Promise.reject()).then(list=>{
     if(!list||!list.length){box.innerHTML='<p class=mini>Sin registros aún.</p>';return;}
