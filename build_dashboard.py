@@ -125,6 +125,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Distribuidora y Suministros IP · Inteligencia de Ventas</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMDAgMTAwJz48cmVjdCB3aWR0aD0nMTAwJyBoZWlnaHQ9JzEwMCcgcng9JzIwJyBmaWxsPScjZmZmJy8+PGNpcmNsZSBjeD0nNTAnIGN5PSc1MCcgcj0nNDInIGZpbGw9J25vbmUnIHN0cm9rZT0nIzI0MjA1Yicgc3Ryb2tlLXdpZHRoPSc2Jy8+PGNpcmNsZSBjeD0nNTAnIGN5PSc1MCcgcj0nMzQnIGZpbGw9J25vbmUnIHN0cm9rZT0nI2ZmNGYyMCcgc3Ryb2tlLXdpZHRoPSczJy8+PHRleHQgeD0nNTEnIHk9JzY5JyBmb250LWZhbWlseT0nR2VvcmdpYSxzZXJpZicgZm9udC1zaXplPSc1MCcgZm9udC13ZWlnaHQ9JzcwMCcgZmlsbD0nI2ZmNGYyMCcgdGV4dC1hbmNob3I9J21pZGRsZSc+SVA8L3RleHQ+PC9zdmc+">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
