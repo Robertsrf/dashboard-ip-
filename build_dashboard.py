@@ -7,6 +7,14 @@ import sys, json, html, os
 import pandas as pd
 import reports as REPORTS
 import secure as SECURE
+import wordrep as WORDREP
+
+
+def _wrap_summary(title, body, full_id, fname):
+    return ('<div class="rep"><div class="rephead"><div><div class="repkick">RESUMEN · INFORME CARGADO</div>'
+            f'<h2>{title}</h2><div class="repsub">Resumen tomado del Word cargado en Drive · descarga el documento completo</div></div>'
+            f'<div class="repbtns"><button class="pdfbtn" onclick="downloadReport(\'{full_id}\',\'{fname}\')">⬓ Descargar informe (Word)</button></div></div>'
+            f'{body}<div class="repnote">📄 Resumen del informe cargado en Drive. Usa <b>Descargar informe (Word)</b> para el documento completo.</div></div>')
 
 
 def main():
@@ -70,12 +78,25 @@ def main():
 
     # Informes (Ejecutivo + Clientes riesgo/recuperados) con historico de cortes
     hist_path = os.path.join(os.path.dirname(os.path.abspath(out)) or ".", "history.json")
+    # Informes: excluir marca AMERICO y cliente REVIPLAST (solo informes, no dashboard)
+    _mk = df["MARCA"].astype(str).str.upper(); _cl = df["NOMBRECLI"].astype(str).str.upper()
+    df_rep = df[~((_mk == "AMERICO") | (_cl.str.contains("REVIPLAST")))].copy()
     try:
-        rep = REPORTS.build(df, hist_path, version)
+        rep = REPORTS.build(df_rep, hist_path, version)
         exec_html, risk_html, exec_full, risk_full = rep["exec"], rep["risk"], rep["execFull"], rep["riskFull"]
     except Exception as e:
         exec_html = risk_html = exec_full = risk_full = f'<div class="rep"><p>No se pudo generar el informe: {html.escape(str(e))}</p></div>'
-    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full}, ensure_ascii=False, separators=(",", ":"))
+    # Word cargados en Drive (opcional): resumen desde el Word + descarga del archivo real
+    exec_b64 = risk_b64 = ""
+    ep = os.environ.get("EXEC_DOCX"); rp = os.environ.get("RISK_DOCX")
+    try:
+        if ep and os.path.exists(ep):
+            wbody, exec_b64 = WORDREP.extract(ep); exec_html = _wrap_summary("Informe Ejecutivo", wbody, "exec-full", "Informe_Ejecutivo_IP.docx")
+        if rp and os.path.exists(rp):
+            wbody, risk_b64 = WORDREP.extract(rp); risk_html = _wrap_summary("Seguimiento de Clientes", wbody, "risk-full", "Seguimiento_Clientes_IP.docx")
+    except Exception:
+        pass
+    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64}, ensure_ascii=False, separators=(",", ":"))
     sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
     enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
     enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
@@ -229,6 +250,10 @@ body.locked{overflow:hidden}
   .gatecard{padding:26px 20px}.gatelogo{width:92px;height:92px}.gatelogo svg{width:92px;height:92px}
   #greet{left:10px;right:10px;top:auto;bottom:10px;text-align:center}
 }
+#welcome{position:fixed;inset:0;z-index:300;background:rgba(15,20,40,.35);display:flex;align-items:center;justify-content:center;transition:opacity .6s}
+.wcard{background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(36,32,91,.3);padding:28px 40px;text-align:center;border-top:5px solid var(--brand);animation:wpop .35s ease}
+.wemoji{font-size:38px}.wcard h2{color:var(--navy);font-size:23px;margin:6px 0 2px}.wcard p{color:var(--muted);font-size:13px}
+@keyframes wpop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 @media print{body{background:#fff}.top,.bar,.chips,.tabs,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0}.rep{border:none;box-shadow:none;max-width:none}}
 @media(max-width:1050px){.g2,.g3{grid-template-columns:1fr}}
 </style>
@@ -573,7 +598,7 @@ class App{
     d.forEach(r=>{if(map[r[field]])map[r[field]][r[R.MES]]+=r[R.NETO]});
     return top.map((i,k)=>({name:names[i],type:'line',smooth:true,symbol:'circle',data:map[i].map(Math.round),lineStyle:{width:2.5,color:PAL[k%PAL.length]},itemStyle:{color:PAL[k%PAL.length]}}))}
   tVend(d,mo){
-    this.hbz('c-vendrank',this.topN(this.groupBy(d,R.VEND),P.dims.vendedor,25).map(x=>[x[0],x[1]]),{color:'#24205b',left:120,zoom:true,window:12,click:n=>this.toggleFilter('vend',n)});
+    this.hbz('c-vendrank',this.topN(this.groupBy(d,R.VEND),P.dims.vendedor,9999).map(x=>[x[0],x[1]]),{color:'#24205b',left:120,zoom:true,window:12,click:n=>this.toggleFilter('vend',n)});
     const cmp=this.chart('c-vendcmp');cmp.setOption({grid:{top:20,bottom:34,left:55,right:20,containLabel:true},
       legend:{type:'scroll',bottom:0},tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},
       xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
@@ -581,7 +606,7 @@ class App{
     this.entTable('t-vend','s-vend',this.groupBy(d,R.VEND),P.dims.vendedor,'Vendedor',n=>this.toggleFilter('vend',n))}
   tMarca(d,mo){
     const g=this.groupBy(d,R.MARCA);
-    this.hbz('c-marca-bars',this.topN(g,P.dims.marca,40).map(x=>[x[0],x[1]]),{color:'#17a39a',left:130,zoom:true,window:13,click:n=>this.toggleFilter('marca',n)});
+    this.hbz('c-marca-bars',this.topN(g,P.dims.marca,9999).map(x=>[x[0],x[1]]),{color:'#17a39a',left:130,zoom:true,window:13,click:n=>this.toggleFilter('marca',n)});
     const cmp=this.chart('c-marcacmp');cmp.setOption({grid:{top:20,bottom:34,left:55,right:20,containLabel:true},
       legend:{type:'scroll',bottom:0},tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},
       xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
@@ -595,7 +620,7 @@ class App{
     this.entTable('t-marca','s-marca',g,P.dims.marca,'Marca',n=>this.toggleFilter('marca',n))}
   tCli(d,mo){
     const g=this.groupBy(d,R.CLI);
-    this.hbz('c-cli',this.topN(g,P.dims.cliente,30).map(x=>[x[0],x[1]]),{color:'#e0708a',left:190,trunc:30,zoom:true,window:12});
+    this.hbz('c-cli',this.topN(g,P.dims.cliente,999999).map(x=>[x[0],x[1]]),{color:'#e0708a',left:190,trunc:30,zoom:true,window:12});
     const all=[...g.values()].map(o=>o.neto).sort((a,b)=>b-a);const tot=all.reduce((a,b)=>a+b,0);
     let acc=0;const cumpct=all.map(v=>{acc+=v;return +(acc/tot*100).toFixed(1)});
     const step=Math.max(1,Math.ceil(all.length/80));const xs=[],barv=[],linev=[];
@@ -608,8 +633,8 @@ class App{
     this.entTable('t-cli','s-cli',g,P.dims.cliente,'Cliente',null)}
   tProd(d,mo){
     const g=this.groupBy(d,R.PROD);
-    this.hbz('c-prodneto',this.topN(g,P.dims.producto,30).map(x=>[x[0],x[1]]),{color:'#ff4f20',left:230,trunc:36,zoom:true,window:11});
-    const byU=[...g.entries()].map(([i,o])=>[P.dims.producto[i],o.cant]).sort((a,b)=>b[1]-a[1]).slice(0,30);
+    this.hbz('c-prodneto',this.topN(g,P.dims.producto,999999).map(x=>[x[0],x[1]]),{color:'#ff4f20',left:230,trunc:36,zoom:true,window:11});
+    const byU=[...g.entries()].map(([i,o])=>[P.dims.producto[i],o.cant]).sort((a,b)=>b[1]-a[1]).slice(0,999999);
     this.hbz('c-produ',byU,{color:'#17a39a',left:230,trunc:36,zoom:true,window:11,units:true});
     this.entTable('t-prod','s-prod',g,P.dims.producto,'Producto',null)}
   entTable(tid,sid,map,names,label,onclick){
@@ -621,7 +646,7 @@ class App{
     const st=this.tsort[tid]||{k:'neto',dir:-1};this.tsort[tid]=st;
     const tbl=document.getElementById(tid);const search=document.getElementById(sid);
     const draw=()=>{const q=(search&&search.value||'').toLowerCase();
-      let rows=data.filter(r=>r.name.toLowerCase().includes(q)).sort((a,b)=>{const x=a[st.k],y=b[st.k];return(x<y?-1:x>y?1:0)*st.dir}).slice(0,200);
+      let rows=data.filter(r=>r.name.toLowerCase().includes(q)).sort((a,b)=>{const x=a[st.k],y=b[st.k];return(x<y?-1:x>y?1:0)*st.dir}).slice(0,5000);
       tbl.innerHTML=`<thead><tr>${cols.map(c=>`<th class="${c.n?'num':''}" data-k="${c.k}">${c.l}${st.k===c.k?(st.dir<0?' ▼':' ▲'):''}</th>`).join('')}</tr></thead>
         <tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c.n?'num':''}" ${c.k==='name'&&onclick?'style="cursor:pointer;color:#24205b;font-weight:600"':''} data-nm="${c.k==='name'?encodeURIComponent(r.name):''}">${c.f?c.f(r[c.k]):r[c.k]}</td>`).join('')}</tr>`).join('')}</tbody>`;
       tbl.querySelectorAll('th').forEach(th=>th.onclick=()=>{const k=th.dataset.k;st.dir=(st.k===k)?-st.dir:-1;st.k=k;draw()});
@@ -649,15 +674,25 @@ async function boot(pin){const err=document.getElementById('gerr');
   document.getElementById('p-risk').innerHTML=res.obj.risk;
   document.getElementById('exec-full').innerHTML=res.obj.execFull;
   document.getElementById('risk-full').innerHTML=res.obj.riskFull;
+  window.__docx={exec:res.obj.execDocx||'',risk:res.obj.riskDocx||''};
   document.getElementById('gate').style.display='none';document.body.classList.remove('locked');
   window.APP=new App();
-  const g=document.getElementById('greet');const hr=new Date().getHours();
-  const sal=hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches';
-  g.textContent=sal+', '+res.user.greet+' · '+res.user.role;g.style.display='';g.style.opacity='1';
-  setTimeout(()=>{g.style.opacity='0';setTimeout(()=>{g.style.display='none';},700);},5000);
+  const hr=new Date().getHours();const sal=hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches';
+  var rol=res.user.role.charAt(0).toUpperCase()+res.user.role.slice(1);
+  var wv=document.createElement('div');wv.id='welcome';
+  wv.innerHTML='<div class="wcard"><div class="wemoji">👋</div><h2>'+sal+', '+res.user.greet+'</h2><p>'+rol+' · Distribuidora y Suministros IP</p></div>';
+  document.body.appendChild(wv);
+  setTimeout(function(){wv.style.opacity='0';setTimeout(function(){if(wv.parentNode)wv.remove();},600);},2800);
+  var hv=document.getElementById('ver');if(hv)hv.textContent='Hola, '+res.user.greet;
   try{fetch('/.netlify/functions/log',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({user:res.user.name,role:res.user.role})}).catch(()=>{});}catch(e){}
   if(res.user.role==='admin'){window.__ADMINPIN=pin;const tl=document.getElementById('tab-log');if(tl)tl.style.display='';}
 }
+function downloadB64(b64,fname){var bin=atob(b64);var arr=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  var blob=new Blob([arr],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();a.remove();}
+function downloadReport(fullId,fname){var kind=fullId.replace('-full','');
+  if(window.__docx&&window.__docx[kind]){downloadB64(window.__docx[kind],fname.replace(/\.docx?$/,'')+'.docx');}
+  else{downloadDoc(fullId,fname.replace(/\.docx$/,'.doc'));}}
 function downloadDoc(id,fname){var el=document.getElementById(id);if(!el||!el.innerHTML){alert('Abre el informe primero.');return;}
   var head='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>'+PRINT_CSS+'</style></head><body>';
   var blob=new Blob(['\ufeff'+head+el.innerHTML+'</body></html>'],{type:'application/msword'});
