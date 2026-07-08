@@ -106,7 +106,11 @@ def main():
             list_b64 = _b64x.b64encode(open(rlp, "rb").read()).decode()
     except Exception:
         risk_list = None
-    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list, "listDocx": list_b64}, ensure_ascii=False, separators=(",", ":"))
+    def _dl(envk):
+        i = os.environ.get(envk, "")
+        return f"https://drive.google.com/uc?export=download&id={i}" if i else ""
+    drive_links = {"exec": _dl("EXEC_ID"), "risk": _dl("RISK_ID"), "list": _dl("LIST_ID")}
+    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list, "listDocx": list_b64, "driveLinks": drive_links}, ensure_ascii=False, separators=(",", ":"))
     sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
     enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
     enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
@@ -693,6 +697,7 @@ async function boot(pin){const err=document.getElementById('gerr');
   document.getElementById('exec-full').innerHTML=res.obj.execFull;
   document.getElementById('risk-full').innerHTML=res.obj.riskFull;
   window.__docx={exec:res.obj.execDocx||'',risk:res.obj.riskDocx||'',list:res.obj.listDocx||''};
+  window.__dl=res.obj.driveLinks||{};
   RL=res.obj.riskList||null;
   if(RL){var trl=document.getElementById('tab-rlist');if(trl)trl.style.display='';var rse=document.getElementById('rl-search');if(rse)rse.oninput=renderRList;}
   var rdl=document.getElementById('rl-dl');if(rdl&&window.__docx.list)rdl.style.display='';
@@ -713,8 +718,9 @@ function downloadB64(b64,fname){var bin=atob(b64);var arr=new Uint8Array(bin.len
   var blob=new Blob([arr],{type:mime});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();a.remove();}
 function downloadReport(kind,fname){
-  if(window.__docx&&window.__docx[kind]){downloadB64(window.__docx[kind],fname);}
-  else{alert('El archivo aún no está cargado. Súbelo a Drive y ejecuta la actualización (o Run now en la tarea).');}}
+  if(window.__dl&&window.__dl[kind]){window.open(window.__dl[kind],'_blank');return;}
+  if(window.__docx&&window.__docx[kind]){downloadB64(window.__docx[kind],fname);return;}
+  alert('El archivo aún no está enlazado. Ejecuta la actualización de la tarea (Run now).');}
 function downloadDoc(id,fname){var el=document.getElementById(id);if(!el||!el.innerHTML){alert('Abre el informe primero.');return;}
   var head='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>'+PRINT_CSS+'</style></head><body>';
   var blob=new Blob(['\ufeff'+head+el.innerHTML+'</body></html>'],{type:'application/msword'});
