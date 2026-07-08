@@ -3,8 +3,9 @@
 Generador del dashboard IP (v3 - marca, ECharts, analitico).
 Uso: python3 build_dashboard.py <ruta_xlsx> <version_str> <salida_html>
 """
-import sys, json, html
+import sys, json, html, os
 import pandas as pd
+import reports as REPORTS
 
 
 def main():
@@ -65,7 +66,19 @@ def main():
         "rows": rows,
     }
     data_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-    out_html = TEMPLATE.replace("__VERSION__", html.escape(version)).replace("__DATA_JSON__", data_json)
+
+    # Informes (Ejecutivo + Clientes riesgo/recuperados) con historico de cortes
+    hist_path = os.path.join(os.path.dirname(os.path.abspath(out)) or ".", "history.json")
+    try:
+        rep = REPORTS.build(df, hist_path, version)
+        exec_html, risk_html = rep["exec"], rep["risk"]
+    except Exception as e:
+        exec_html = risk_html = f'<div class="rep"><p>No se pudo generar el informe: {html.escape(str(e))}</p></div>'
+
+    out_html = (TEMPLATE.replace("__VERSION__", html.escape(version))
+                        .replace("__DATA_JSON__", data_json)
+                        .replace("__EXEC_REPORT__", exec_html)
+                        .replace("__RISK_REPORT__", risk_html))
     with open(out, "w", encoding="utf-8") as f:
         f.write(out_html)
     print(f"OK -> {out} ({len(out_html)/1e6:.2f} MB, {len(rows)} filas)")
@@ -153,6 +166,27 @@ tbody tr:hover{background:var(--panel2)}
 .badge{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:12px;font-weight:600;color:var(--muted)}
 .foot{text-align:center;color:var(--muted);font-size:12.5px;padding:22px;border-top:1px solid var(--line);margin-top:10px}
 .foot b{color:var(--navy)}
+.rep{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:26px 30px;box-shadow:var(--shadow);max-width:1000px;margin:0 auto}
+.rephead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:3px solid var(--brand);padding-bottom:14px;margin-bottom:18px}
+.repkick{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--brand)}
+.rep h2{font-size:23px;color:var(--navy);margin:4px 0 2px;letter-spacing:-.4px}
+.repsub{font-size:12.5px;color:var(--muted)}
+.pdfbtn{background:var(--brand);color:#fff;border:none;border-radius:9px;padding:9px 15px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.pdfbtn:hover{opacity:.92}
+.repkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.rk{background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--navy);border-radius:10px;padding:12px 14px}
+.rk span{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700}
+.rk b{font-size:19px;color:var(--navy)}
+.rep h3{font-size:15.5px;color:var(--navy);margin:22px 0 10px;padding-left:10px;border-left:4px solid var(--brand)}
+.rep p{font-size:13.5px;line-height:1.6;color:#333c52;margin-bottom:10px}
+.rep ul{margin:6px 0 10px 22px}.rep li{font-size:13.5px;line-height:1.55;color:#333c52;margin-bottom:5px}
+.rep .repnote{background:#fff2ee;border:1px solid #ffd9cd;border-radius:10px;padding:10px 14px;font-size:13px}
+table.rt{width:100%;border-collapse:collapse;font-size:12.5px;margin:6px 0 4px}
+table.rt th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+table.rt th.num,table.rt td.num{text-align:right;font-variant-numeric:tabular-nums}
+table.rt td{padding:7px 10px;border-bottom:1px solid #eef1f7}
+table.rt tbody tr:nth-child(even){background:#f8f9fc}
+@media print{body{background:#fff}.top,.bar,.chips,.tabs,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0}.rep{border:none;box-shadow:none;max-width:none}}
 @media(max-width:1050px){.g2,.g3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -189,6 +223,8 @@ tbody tr:hover{background:var(--panel2)}
     <button data-tab="marca">Marcas y grupos</button>
     <button data-tab="cli">Clientes</button>
     <button data-tab="prod">Productos / SKU</button>
+    <button data-tab="exec">📄 Informe ejecutivo</button>
+    <button data-tab="risk">📄 Riesgo y recuperados</button>
   </div>
 
   <div class="panel active" data-panel="resumen">
@@ -249,6 +285,9 @@ tbody tr:hover{background:var(--panel2)}
     <div class="grid"><div class="card"><h3>Tabla de productos (SKU)</h3><input class="tsearch" id="s-prod" placeholder="Buscar producto..."><div class="tblwrap"><table id="t-prod"></table></div></div></div>
   </div>
 
+  <div class="panel" data-panel="exec">__EXEC_REPORT__</div>
+  <div class="panel" data-panel="risk">__RISK_REPORT__</div>
+
   <div class="foot" id="foot"></div>
 </div>
 
@@ -284,6 +323,29 @@ const TIPS={'c-trend':'Venta neta real por mes (barras) y proyección lineal has
   'c-pareto':'Regla 80/20: qué porcentaje de la venta acumulan los primeros clientes del ranking.',
   'c-prodneto':'Productos (SKU) ordenados por venta neta. Desliza para ver más.',
   'c-produ':'Productos (SKU) ordenados por unidades vendidas. Desliza para ver más.'};
+
+const PRINT_CSS=`*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
+body{padding:28px;color:#24205b}.rephead{display:flex;justify-content:space-between;border-bottom:3px solid #ff4f20;padding-bottom:12px;margin-bottom:16px}
+.pdfbtn{display:none}.repkick{font-size:11px;font-weight:800;letter-spacing:1px;color:#ff4f20}
+h2{font-size:22px;margin:4px 0}.repsub{font-size:12px;color:#6b7392}
+.repkpis{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+.rk{background:#f5f6fa;border-left:4px solid #24205b;border-radius:8px;padding:10px 14px;min-width:150px}
+.rk span{display:block;font-size:10px;text-transform:uppercase;color:#6b7392;font-weight:700}.rk b{font-size:17px}
+h3{font-size:14px;margin:18px 0 8px;padding-left:9px;border-left:4px solid #ff4f20}
+p{font-size:12.5px;line-height:1.55;margin-bottom:8px;color:#333c52}
+ul{margin:6px 0 8px 20px}li{font-size:12.5px;line-height:1.5;margin-bottom:4px;color:#333c52}
+.repnote{background:#fff2ee;border:1px solid #ffd9cd;border-radius:8px;padding:9px 12px}
+table.rt{width:100%;border-collapse:collapse;font-size:11.5px;margin:5px 0}
+table.rt th{background:#24205b;color:#fff;text-align:left;padding:6px 9px;font-size:10px;text-transform:uppercase}
+table.rt th.num,table.rt td.num{text-align:right}table.rt td{padding:6px 9px;border-bottom:1px solid #eef1f7}
+table.rt tbody tr:nth-child(even){background:#f8f9fc}
+@page{margin:14mm}`;
+function printReport(sel,title){
+  const el=document.querySelector(sel+' .rep');if(!el)return;
+  const w=window.open('','_blank');if(!w){alert('Permite las ventanas emergentes para descargar el PDF.');return;}
+  w.document.write('<html><head><meta charset="utf-8"><title>'+title+'</title><style>'+PRINT_CSS+'</style></head><body>'+el.outerHTML+'</body></html>');
+  w.document.close();w.focus();setTimeout(()=>{w.print();},450);
+}
 
 class App{
   constructor(){
