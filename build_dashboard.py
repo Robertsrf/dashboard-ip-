@@ -6,6 +6,7 @@ Uso: python3 build_dashboard.py <ruta_xlsx> <version_str> <salida_html>
 import sys, json, html, os
 import pandas as pd
 import reports as REPORTS
+import secure as SECURE
 
 
 def main():
@@ -75,10 +76,15 @@ def main():
     except Exception as e:
         exec_html = risk_html = f'<div class="rep"><p>No se pudo generar el informe: {html.escape(str(e))}</p></div>'
 
+    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html}, ensure_ascii=False, separators=(",", ":"))
+    sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
+    enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
+    enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
+    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.svg")
+    logo_svg = open(logo_path, encoding="utf-8").read() if os.path.exists(logo_path) else '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#24205b" stroke-width="5"/><text x="50" y="66" font-size="46" font-weight="700" fill="#ff4f20" text-anchor="middle" font-family="Georgia,serif">IP</text></svg>'
     out_html = (TEMPLATE.replace("__VERSION__", html.escape(version))
-                        .replace("__DATA_JSON__", data_json)
-                        .replace("__EXEC_REPORT__", exec_html)
-                        .replace("__RISK_REPORT__", risk_html))
+                        .replace("__ENC_JSON__", enc_json)
+                        .replace("__LOGO_SVG__", logo_svg))
     with open(out, "w", encoding="utf-8") as f:
         f.write(out_html)
     print(f"OK -> {out} ({len(out_html)/1e6:.2f} MB, {len(rows)} filas)")
@@ -186,18 +192,28 @@ table.rt th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;f
 table.rt th.num,table.rt td.num{text-align:right;font-variant-numeric:tabular-nums}
 table.rt td{padding:7px 10px;border-bottom:1px solid #eef1f7}
 table.rt tbody tr:nth-child(even){background:#f8f9fc}
+#gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#f5f6fa,#e9ebf4);display:flex;align-items:center;justify-content:center;padding:20px}
+.gatecard{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 20px 60px rgba(36,32,91,.18);padding:34px 32px 26px;max-width:380px;width:100%;text-align:center}
+.gatelogo{width:112px;height:112px;margin:0 auto 8px}.gatelogo svg{width:112px;height:112px}
+.gatecard h2{color:var(--navy);font-size:19px;margin-bottom:4px}
+.gatecard>p{color:var(--muted);font-size:12.5px;margin-bottom:18px}
+#pin{width:100%;text-align:center;letter-spacing:8px;font-size:22px;font-weight:700;padding:12px;border:2px solid var(--line);border-radius:12px;color:var(--navy)}
+#pin:focus{outline:none;border-color:var(--brand)}
+#enter{width:100%;margin-top:12px;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:13px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+#enter:hover{opacity:.93}
+.gerr{color:var(--neg);font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
+#greet{position:fixed;top:14px;right:14px;z-index:150;background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(36,32,91,.25);transition:opacity .6s}
+body.locked{overflow:hidden}
 @media print{body{background:#fff}.top,.bar,.chips,.tabs,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0}.rep{border:none;box-shadow:none;max-width:none}}
 @media(max-width:1050px){.g2,.g3{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
+<div id="gate"><div class="gatecard"><div class="gatelogo">__LOGO_SVG__</div><h2>Distribuidora y Suministros IP</h2><p>Inteligencia de Ventas · acceso restringido</p><input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off"><button id="enter">Entrar</button><div class="gerr" id="gerr"></div></div></div>
+<div id="greet" style="display:none"></div>
 <div class="top">
   <div class="brand">
-    <div class="logo"><svg viewBox="0 0 120 120" width="52" height="52">
-      <circle cx="60" cy="60" r="54" fill="#fff" stroke="#24205b" stroke-width="5"/>
-      <circle cx="60" cy="60" r="45" fill="none" stroke="#ff4f20" stroke-width="3"/>
-      <text x="61" y="80" font-family="Georgia,'Times New Roman',serif" font-size="56" font-weight="700" fill="#ff4f20" text-anchor="middle">IP</text>
-    </svg></div>
+    <div class="logo">__LOGO_SVG__</div>
     <div><h1>Distribuidora y Suministros IP</h1><div class="meta" id="meta"></div></div>
   </div>
   <div class="status"><div><span class="dot"></span>Datos en vivo · <span id="ver"></span></div><div class="mini">Autor: Ing. Roberts Flores</div></div>
@@ -225,6 +241,7 @@ table.rt tbody tr:nth-child(even){background:#f8f9fc}
     <button data-tab="prod">Productos / SKU</button>
     <button data-tab="exec">📄 Informe ejecutivo</button>
     <button data-tab="risk">📄 Riesgo y recuperados</button>
+    <button data-tab="log" id="tab-log" style="display:none">🔒 Registro</button>
   </div>
 
   <div class="panel active" data-panel="resumen">
@@ -285,22 +302,25 @@ table.rt tbody tr:nth-child(even){background:#f8f9fc}
     <div class="grid"><div class="card"><h3>Tabla de productos (SKU)</h3><input class="tsearch" id="s-prod" placeholder="Buscar producto..."><div class="tblwrap"><table id="t-prod"></table></div></div></div>
   </div>
 
-  <div class="panel" data-panel="exec">__EXEC_REPORT__</div>
-  <div class="panel" data-panel="risk">__RISK_REPORT__</div>
+  <div class="panel" data-panel="exec" id="p-exec"></div>
+  <div class="panel" data-panel="risk" id="p-risk"></div>
+  <div class="panel" data-panel="log"><div class="card"><h3>Registro de ingresos</h3><div class="hint">Solo visible para el administrador · accesos al sistema (usuario, rol, fecha y hora)</div><div id="logbox"></div></div></div>
 
   <div class="foot" id="foot"></div>
 </div>
 
 <script>
-const P = __DATA_JSON__;
+const ENC = __ENC_JSON__;
+let P=null;
 const R={MES:0,GRUPO:1,VEND:2,SECTOR:3,MARCA:4,CLI:5,PROD:6,DOC:7,CANT:8,DEV:9,NETO:10};
 const PAL=['#ff4f20','#24205b','#17a39a','#f4a72c','#5b6aa0','#e0708a','#3aa0d1','#7c9a2b','#b0552c','#9488c9','#e8b64a','#2f8f86'];
-const DIMS={mes:{field:R.MES,names:P.dims.mesLabels,label:'Mes'},
+let DIMS={},nameIdx={};
+function initMeta(){DIMS={mes:{field:R.MES,names:P.dims.mesLabels,label:'Mes'},
   grupo:{field:R.GRUPO,names:P.dims.grupo,label:'Grupo'},
   vend:{field:R.VEND,names:P.dims.vendedor,label:'Vendedor'},
   sector:{field:R.SECTOR,names:P.dims.sector,label:'Sector'},
   marca:{field:R.MARCA,names:P.dims.marca,label:'Marca'}};
-const nameIdx={};for(const k in DIMS){nameIdx[k]=new Map(DIMS[k].names.map((n,i)=>[n,i]))}
+  nameIdx={};for(const k in DIMS){nameIdx[k]=new Map(DIMS[k].names.map((n,i)=>[n,i]))}}
 const money=v=>'$'+(v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v));
 const moneyFull=v=>'$'+Math.round(v).toLocaleString('es');
 const intf=v=>Math.round(v).toLocaleString('es');
@@ -458,7 +478,7 @@ class App{
     setTimeout(()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()},30)})}
   renderTab(){const t=this.tab,d=this.d,mo=this.mo;
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
-    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);}
+    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='log')renderLog();}
   projLine(mo){const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);
     mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);const lr=this.linreg(mo.neto);
     const proj=yFull.map((v,m)=>v!=null?v:Math.max(0,lr.slope*m+lr.intercept));
@@ -571,7 +591,44 @@ class App{
     if(search)search.oninput=draw;draw();
   }
 }
-const APP=new App();
+const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+async function unlock(pin){const te=new TextEncoder();
+  for(const u of ENC.users){try{
+    const base=await crypto.subtle.importKey('raw',te.encode(pin),{name:'PBKDF2'},false,['deriveKey']);
+    const uk=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64d(u.salt),iterations:ENC.iter,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,['decrypt']);
+    const mkBuf=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(u.ivu)},uk,b64d(u.wrapped));
+    const mk=await crypto.subtle.importKey('raw',mkBuf,{name:'AES-GCM'},false,['decrypt']);
+    const dataBuf=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64d(ENC.iv)},mk,b64d(ENC.ct));
+    return {user:u,obj:JSON.parse(new TextDecoder().decode(dataBuf))};
+  }catch(e){}}
+  return null;}
+async function boot(pin){const err=document.getElementById('gerr');
+  if(!/^[0-9]{6}$/.test(pin)){err.textContent='Ingresa tu código de 6 dígitos';return;}
+  err.textContent='Verificando…';let res=null;try{res=await unlock(pin);}catch(e){res=null;}
+  if(!res){err.textContent='Código incorrecto';return;}
+  P=res.obj.P;initMeta();
+  document.getElementById('p-exec').innerHTML=res.obj.exec;
+  document.getElementById('p-risk').innerHTML=res.obj.risk;
+  document.getElementById('gate').style.display='none';document.body.classList.remove('locked');
+  window.APP=new App();
+  const g=document.getElementById('greet');const hr=new Date().getHours();
+  const sal=hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches';
+  g.textContent=sal+', '+res.user.greet+' · '+res.user.role;g.style.display='';g.style.opacity='1';
+  setTimeout(()=>{g.style.opacity='0';setTimeout(()=>{g.style.display='none';},700);},5000);
+  try{fetch('/.netlify/functions/log',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({user:res.user.name,role:res.user.role})}).catch(()=>{});}catch(e){}
+  if(res.user.role==='admin'){window.__ADMINPIN=pin;const tl=document.getElementById('tab-log');if(tl)tl.style.display='';}
+}
+function renderLog(){const box=document.getElementById('logbox');if(!box)return;box.innerHTML='<p class=mini>Cargando…</p>';
+  fetch('/.netlify/functions/log',{headers:{'x-admin-key':window.__ADMINPIN||''}}).then(r=>r.ok?r.json():Promise.reject()).then(list=>{
+    if(!list||!list.length){box.innerHTML='<p class=mini>Sin registros aún.</p>';return;}
+    const rows=list.slice().reverse().map(e=>'<tr><td>'+e.user+'</td><td>'+e.role+'</td><td>'+new Date(e.ts).toLocaleString('es')+'</td></tr>').join('');
+    box.innerHTML='<table class="rt"><thead><tr><th>Usuario</th><th>Rol</th><th>Fecha y hora</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }).catch(()=>{box.innerHTML='<p class=mini>Registro central aún no disponible (se activa al desplegar la función en Netlify). Reintenta en unos minutos.</p>';});
+}
+document.body.classList.add('locked');
+document.getElementById('enter').onclick=()=>boot(document.getElementById('pin').value.trim());
+document.getElementById('pin').addEventListener('keydown',function(e){if(e.key==='Enter')boot(e.target.value.trim());});
+try{document.getElementById('pin').focus();}catch(e){}
 </script>
 </body>
 </html>
