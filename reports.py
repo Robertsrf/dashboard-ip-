@@ -340,11 +340,11 @@ def render_risk_full(m):
 
 
 def _sum(title, kick, kpis, paragraph, full_id, fname, dl_label):
+    kind = full_id.replace("-full","")
     kh="".join(f'<div class="rk"><span>{k}</span><b>{v}</b></div>' for k,v in kpis)
     return f'''<div class="rep"><div class="rephead"><div><div class="repkick">{kick}</div>
       <h2>{title}</h2><div class="repsub">Resumen · el informe completo incluye todas las secciones, tablas, insights y recomendaciones</div></div>
-      <div class="repbtns"><button class="pdfbtn" onclick="downloadReport('{full_id}','{fname}')">⭳ {dl_label} (Word)</button>
-      <button class="pdfbtn ghost" onclick="printFull('{full_id}','{title}')">🖨 PDF / Imprimir</button></div></div>
+      <div class="repbtns"><button class="pdfbtn" onclick="downloadReport('{kind}','{fname}')">⭳ {dl_label}</button></div></div>
       <div class="repkpis">{kh}</div>{paragraph}
       <div class="repnote">📄 Este es un <b>resumen</b>. Para leer el informe completo (largo y detallado), usa <b>Descargar (Word)</b> o <b>PDF / Imprimir</b>.</div></div>'''
 

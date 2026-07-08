@@ -14,7 +14,7 @@ import risklist as RLIST
 def _wrap_summary(title, body, full_id, fname):
     return ('<div class="rep"><div class="rephead"><div><div class="repkick">RESUMEN · INFORME CARGADO</div>'
             f'<h2>{title}</h2><div class="repsub">Resumen tomado del Word cargado en Drive · descarga el documento completo</div></div>'
-            f'<div class="repbtns"><button class="pdfbtn" onclick="downloadReport(\'{full_id}\',\'{fname}\')">⬓ Descargar informe (Word)</button></div></div>'
+            f'<div class="repbtns"><button class="pdfbtn" onclick="downloadReport(\'{full_id.replace("-full","")}\',\'{fname}\')">⬓ Descargar informe (Word)</button></div></div>'
             f'{body}<div class="repnote">📄 Resumen del informe cargado en Drive. Usa <b>Descargar informe (Word)</b> para el documento completo.</div></div>')
 
 
@@ -98,13 +98,15 @@ def main():
     except Exception:
         pass
     # Lista de clientes en riesgo (Excel de Drive, opcional)
-    rlp = os.environ.get("RISK_LIST_XLSX"); risk_list = None
+    rlp = os.environ.get("RISK_LIST_XLSX"); risk_list = None; list_b64 = ""
     try:
         if rlp and os.path.exists(rlp):
             risk_list = RLIST.load(rlp)
+            import base64 as _b64x
+            list_b64 = _b64x.b64encode(open(rlp, "rb").read()).decode()
     except Exception:
         risk_list = None
-    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list}, ensure_ascii=False, separators=(",", ":"))
+    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list, "listDocx": list_b64}, ensure_ascii=False, separators=(",", ":"))
     sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
     enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
     enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
@@ -371,7 +373,7 @@ body.locked{overflow:hidden}
   <div class="panel" data-panel="risk" id="p-risk"></div>
   <div id="exec-full" style="display:none"></div>
   <div id="risk-full" style="display:none"></div>
-  <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Detalle por cliente (lista cargada en Drive) · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
+  <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Detalle por cliente (lista cargada en Drive) · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
   <div class="panel" data-panel="log"><div class="card"><h3>Registro de ingresos</h3><div class="hint">Solo visible para el administrador · accesos al sistema (usuario, rol, fecha y hora)</div><div id="logbox"></div></div></div>
 
   <div class="foot" id="foot"></div>
@@ -690,9 +692,10 @@ async function boot(pin){const err=document.getElementById('gerr');
   document.getElementById('p-risk').innerHTML=res.obj.risk;
   document.getElementById('exec-full').innerHTML=res.obj.execFull;
   document.getElementById('risk-full').innerHTML=res.obj.riskFull;
-  window.__docx={exec:res.obj.execDocx||'',risk:res.obj.riskDocx||''};
+  window.__docx={exec:res.obj.execDocx||'',risk:res.obj.riskDocx||'',list:res.obj.listDocx||''};
   RL=res.obj.riskList||null;
   if(RL){var trl=document.getElementById('tab-rlist');if(trl)trl.style.display='';var rse=document.getElementById('rl-search');if(rse)rse.oninput=renderRList;}
+  var rdl=document.getElementById('rl-dl');if(rdl&&window.__docx.list)rdl.style.display='';
   document.getElementById('gate').style.display='none';document.body.classList.remove('locked');
   window.APP=new App();
   const hr=new Date().getHours();const sal=hr<12?'Buenos días':hr<19?'Buenas tardes':'Buenas noches';
@@ -706,11 +709,12 @@ async function boot(pin){const err=document.getElementById('gerr');
   if(res.user.role==='admin'){window.__ADMINPIN=pin;const tl=document.getElementById('tab-log');if(tl)tl.style.display='';}
 }
 function downloadB64(b64,fname){var bin=atob(b64);var arr=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
-  var blob=new Blob([arr],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  var mime=/\.xlsx$/i.test(fname)?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+  var blob=new Blob([arr],{type:mime});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;document.body.appendChild(a);a.click();a.remove();}
-function downloadReport(fullId,fname){var kind=fullId.replace('-full','');
-  if(window.__docx&&window.__docx[kind]){downloadB64(window.__docx[kind],fname.replace(/\.docx?$/,'')+'.docx');}
-  else{downloadDoc(fullId,fname.replace(/\.docx$/,'.doc'));}}
+function downloadReport(kind,fname){
+  if(window.__docx&&window.__docx[kind]){downloadB64(window.__docx[kind],fname);}
+  else{alert('El archivo aún no está cargado. Súbelo a Drive y ejecuta la actualización (o Run now en la tarea).');}}
 function downloadDoc(id,fname){var el=document.getElementById(id);if(!el||!el.innerHTML){alert('Abre el informe primero.');return;}
   var head='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><style>'+PRINT_CSS+'</style></head><body>';
   var blob=new Blob(['\ufeff'+head+el.innerHTML+'</body></html>'],{type:'application/msword'});
