@@ -195,6 +195,11 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .dpre a:hover{background:#fff2ee}
 .calkey{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:12px;color:var(--muted)}
 .calkey b{color:var(--navy)}
+.dlimg{margin-left:auto;cursor:pointer;font-size:15px;opacity:.45;user-select:none;flex:0 0 auto;transition:opacity .15s}
+.dlimg:hover{opacity:1}
+.cmpbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin:12px 0}
+.cmpg{font-size:12.5px;color:var(--navy);display:inline-flex;align-items:center;gap:6px;font-weight:600}
+.cmpg input[type=date]{font:inherit;font-size:12px;padding:5px 7px;border:1px solid var(--line);border-radius:8px;color:var(--navy);background:#fff}
 @media(max-width:640px){.timebar{padding:8px 12px;gap:10px}.tslider{min-width:150px}}
 .wrap{max-width:1500px;margin:0 auto;padding:18px 26px 40px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:18px}
@@ -339,6 +344,7 @@ body.locked{overflow:hidden}
     <button data-tab="marca">Marcas y grupos</button>
     <button data-tab="cli">Clientes</button>
     <button data-tab="prod">Productos / SKU</button>
+    <button data-tab="comp">⚖️ Comparar</button>
     <button data-tab="exec">📄 Informe ejecutivo</button>
     <button data-tab="risk">📄 Riesgo y recuperados</button>
     <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo</button>
@@ -393,6 +399,7 @@ body.locked{overflow:hidden}
       <div class="card"><h3>Concentración de clientes (Pareto)</h3><div class="hint">% acumulado de venta según ranking de clientes</div><div id="c-pareto" class="chart tall"></div></div>
     </div>
     <div class="grid"><div class="card"><h3>Comparación mensual de clientes (top 6)</h3><div class="hint">Trayectoria de venta neta de los 6 clientes líderes</div><div id="c-clicmp" class="chart tall"></div></div></div>
+    <div class="grid"><div class="card"><h3>🔔 Clientes inactivos (posible fuga)</h3><div class="hint">Clientes sin compras en los últimos 45 días · ordenados por valor histórico · sobre toda la data</div><div id="inact-box"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de clientes</h3><input class="tsearch" id="s-cli" placeholder="Buscar cliente..."><div class="tblwrap"><table id="t-cli"></table></div></div></div>
   </div>
 
@@ -403,6 +410,14 @@ body.locked{overflow:hidden}
     </div>
     <div class="grid"><div class="card"><h3>Comparación mensual de productos (top 6)</h3><div class="hint">Trayectoria de venta neta de los 6 productos líderes</div><div id="c-prodcmp" class="chart tall"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de productos (SKU)</h3><input class="tsearch" id="s-prod" placeholder="Buscar producto..."><div class="tblwrap"><table id="t-prod"></table></div></div></div>
+  </div>
+
+  <div class="panel" data-panel="comp">
+    <div class="card"><h3>Comparar dos períodos</h3><div class="hint">Elige dos rangos de fechas y compara los indicadores clave (sobre toda la data)</div>
+    <div class="cmpbar"><span class="cmpg"><b>Período A</b> <input type="date" id="cA0"> a <input type="date" id="cA1"></span>
+      <span class="cmpg"><b>Período B</b> <input type="date" id="cB0"> a <input type="date" id="cB1"></span>
+      <button class="pdfbtn" id="cmpGo">Comparar</button></div>
+    <div id="cmp-res"></div><div id="c-cmp" class="chart" style="height:300px;margin-top:12px"></div></div>
   </div>
 
   <div class="panel" data-panel="exec" id="p-exec"></div>
@@ -490,7 +505,7 @@ class App{
     document.getElementById('meta').textContent=`Período ${fmtDate(P.dateMin)}–${fmtDate(P.dateMax)} · ${P.rows.length.toLocaleString('es')} líneas de factura`;
     document.getElementById('ver').textContent='Corte al '+fmtDate(P.dateMax);
     document.getElementById('foot').innerHTML=`<b>Distribuidora y Suministros IP</b> &nbsp;·&nbsp; Información actualizada del ${fmtDate(P.dateMin)} al ${fmtDate(P.dateMax)} &nbsp;·&nbsp; Autor: Ing. Roberts Flores`;
-    this.buildFilters();this.buildKPIs();this.injectInfo();this.bindTabs();this.buildDayBar();
+    this.buildFilters();this.buildKPIs();this.injectInfo();this.injectDownloads();this.bindTabs();this.buildDayBar();
     this._wasMob=this.isMob();
     window.addEventListener('resize',()=>{const m=this.isMob();if(m!==this._wasMob){this._wasMob=m;if(this.d)this.renderTab();}for(const k in this.ch)this.ch[k]&&this.ch[k].resize()});
     this.render();
@@ -498,6 +513,14 @@ class App{
   injectInfo(){for(const id in TIPS){const el=document.getElementById(id);if(!el)continue;
     const card=el.closest('.card');if(!card)continue;const h=card.querySelector('h3');
     if(h&&!h.querySelector('.info')){const s=document.createElement('span');s.className='info';s.textContent='i';s.setAttribute('data-tip',TIPS[id]);h.appendChild(s)}}}
+  injectDownloads(){document.querySelectorAll('.card').forEach(card=>{
+    const cv=card.querySelector('.chart');if(!cv||!cv.id)return;
+    const h=card.querySelector('h3');if(!h||h.querySelector('.dlimg'))return;
+    const b=document.createElement('span');b.className='dlimg';b.textContent='⬇';b.title='Descargar imagen';
+    b.onclick=()=>{const c=this.ch[cv.id];if(!c){alert('Abre la pestaña del gráfico primero.');return;}
+      const url=c.getDataURL({type:'png',pixelRatio:2,backgroundColor:'#fff'});
+      const a=document.createElement('a');a.href=url;a.download=(h.textContent||'grafico').trim().replace(/[^\w]+/g,'_').slice(0,40)+'.png';document.body.appendChild(a);a.click();a.remove();};
+    h.appendChild(b);});}
   buildFilters(){
     for(const key in DIMS){
       const host=document.querySelector(`.ms[data-dim="${key}"]`);const d=DIMS[key];
@@ -626,7 +649,7 @@ class App{
     const trunc=opt.trunc||(mob?13:22);
     const cats=pairs.map(p=>p[0]);const vals=pairs.map(p=>Math.round(p[1]));
     const win=opt.window||(mob?8:(opt.zoom?12:14));const zoom=cats.length>win;
-    const end=zoom?Math.max(5,win/cats.length*100):100;
+    const end=zoom?Math.min(100,win/cats.length*100):100;
     const fmt=opt.units?(v=>intf(v)+' u.'):(v=>moneyFull(v));
     const axf=v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?Math.round(v/1e3)+'K':Math.round(v));
     const trf=s=>s.length>trunc?s.slice(0,trunc-1)+'…':s;
@@ -667,7 +690,7 @@ class App{
     setTimeout(()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()},30)})}
   renderTab(){const t=this.tab,d=this.d,mo=this.mo;
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
-    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='rlist')renderRList();}
+    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='comp')this.tComp();else if(t==='rlist')renderRList();}
   projLine(mo){const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);
     mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);
     const eo=this.effNeto(mo),pi=eo.pi;const xs=idxData,ys=eo.eff,nn=xs.length;
@@ -754,7 +777,7 @@ class App{
     this.entTable('t-marca','s-marca',g,P.dims.marca,'Marca',n=>this.toggleFilter('marca',n))}
   tCli(d,mo){
     const g=this.groupBy(d,R.CLI);
-    this.hbz('c-cli',this.topN(g,P.dims.cliente,999999).map(x=>[x[0],x[1]]),{color:'#e0708a',left:190,trunc:30,zoom:true,window:12});
+    this.hbz('c-cli',this.topN(g,P.dims.cliente,999999).map(x=>[x[0],x[1]]),{color:'#e0708a',left:190,trunc:30,zoom:true,window:10});
     const all=[...g.values()].map(o=>o.neto).sort((a,b)=>b-a);const tot=all.reduce((a,b)=>a+b,0);
     let acc=0;const cumpct=all.map(v=>{acc+=v;return +(acc/tot*100).toFixed(1)});
     const step=Math.max(1,Math.ceil(all.length/80));const xs=[],barv=[],linev=[];
@@ -768,12 +791,12 @@ class App{
       legend:{type:'scroll',bottom:0},tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},
       xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
       series:this.monthlyByDim(d,R.CLI,P.dims.cliente,6),color:PAL},true);
-    this.entTable('t-cli','s-cli',g,P.dims.cliente,'Cliente',null)}
+    this.entTable('t-cli','s-cli',g,P.dims.cliente,'Cliente',null);this.renderInactive()}
   tProd(d,mo){
     const g=this.groupBy(d,R.PROD);
-    this.hbz('c-prodneto',this.topN(g,P.dims.producto,999999).map(x=>[x[0],x[1]]),{color:'#ff4f20',left:230,trunc:36,zoom:true,window:11});
+    this.hbz('c-prodneto',this.topN(g,P.dims.producto,999999).map(x=>[x[0],x[1]]),{color:'#ff4f20',left:230,trunc:36,zoom:true,window:10});
     const byU=[...g.entries()].map(([i,o])=>[P.dims.producto[i],o.cant]).sort((a,b)=>b[1]-a[1]).slice(0,999999);
-    this.hbz('c-produ',byU,{color:'#17a39a',left:230,trunc:36,zoom:true,window:11,units:true});
+    this.hbz('c-produ',byU,{color:'#17a39a',left:230,trunc:36,zoom:true,window:10,units:true});
     const prodcmp=this.chart('c-prodcmp');prodcmp.setOption({grid:{top:20,bottom:34,left:55,right:20,containLabel:true},
       legend:{type:'scroll',bottom:0},tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},
       xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
@@ -795,6 +818,35 @@ class App{
       if(onclick)tbl.querySelectorAll('td[data-nm]:not([data-nm=""])').forEach(td=>td.onclick=()=>onclick(decodeURIComponent(td.dataset.nm)))};
     if(search)search.oninput=draw;draw();
   }
+  renderInactive(){const box=document.getElementById('inact-box');if(!box)return;
+    const n=P.dayCount||0;if(!n){box.innerHTML='<p class=mini>Sin datos de fecha (regenera para activarlo).</p>';return;}
+    const thr=(n-1)-45;const last={},tot={};
+    P.rows.forEach(r=>{const c=r[R.CLI],dd=r[R.DAY];if(last[c]==null||dd>last[c])last[c]=dd;tot[c]=(tot[c]||0)+r[R.NETO];});
+    const items=[];for(const c in last){if(last[c]<=thr)items.push({c:+c,last:last[c],tot:tot[c]});}
+    items.sort((a,b)=>b.tot-a.tot);
+    if(!items.length){box.innerHTML='<p class=mini>✅ Ningún cliente inactivo: todos compraron en los últimos 45 días.</p>';return;}
+    const rows=items.slice(0,60).map((it,i)=>'<tr><td>'+(i+1)+'</td><td>'+P.dims.cliente[it.c]+'</td><td class=num>'+moneyFull(it.tot)+'</td><td class=num>'+fmtDate(this.offToDate(it.last))+'</td><td class=num>'+((n-1)-it.last)+' días</td></tr>').join('');
+    box.innerHTML='<div class="mini" style="margin-bottom:8px">'+items.length+' clientes sin comprar hace más de 45 días</div><div class="tblwrap" style="max-height:420px"><table><thead><tr><th>#</th><th>Cliente</th><th class=num>Valor histórico</th><th class=num>Última compra</th><th class=num>Inactivo</th></tr></thead><tbody>'+rows+'</tbody></table></div>';}
+  tComp(){const n=P.dayCount||0;if(!n)return;
+    const A0=document.getElementById('cA0'),A1=document.getElementById('cA1'),B0=document.getElementById('cB0'),B1=document.getElementById('cB1');
+    if(!A0.value){const last=this.offToDate(n-1);const curFirst=last.slice(0,7)+'-01';const bStart=Math.max(0,this.dateToOff(curFirst));
+      const prevLast=this.offToDate(Math.max(0,bStart-1));const prevFirst=prevLast.slice(0,7)+'-01';
+      const mn=this.offToDate(0),mx=last;[A0,A1,B0,B1].forEach(el=>{el.min=mn;el.max=mx;});
+      A0.value=prevFirst;A1.value=prevLast;B0.value=curFirst;B1.value=last;
+      document.getElementById('cmpGo').onclick=()=>this.runComp();}
+    this.runComp();}
+  runComp(){const gv=id=>this.dateToOff(document.getElementById(id).value);
+    const agg=(d0,d1)=>{const lo=Math.min(d0,d1),hi=Math.max(d0,d1);let neto=0,cant=0;const docs=new Set(),clis=new Set(),prods=new Set();
+      P.rows.forEach(r=>{const dd=r[R.DAY];if(dd>=lo&&dd<=hi){neto+=r[R.NETO];cant+=r[R.CANT];docs.add(r[R.DOC]);clis.add(r[R.CLI]);prods.add(r[R.PROD]);}});
+      return {neto,fac:docs.size,cli:clis.size,sku:prods.size,uni:cant,tk:docs.size?neto/docs.size:0};};
+    const A=agg(gv('cA0'),gv('cA1')),B=agg(gv('cB0'),gv('cB1'));
+    const mt=[['Venta neta','neto',moneyFull],['Facturas','fac',intf],['Clientes','cli',intf],['Ticket prom.','tk',moneyFull],['Unidades','uni',intf],['SKU','sku',intf]];
+    const rows=mt.map(m=>{const va=A[m[1]],vb=B[m[1]];const dp=va?(vb-va)/Math.abs(va)*100:0;const col=dp>=0?'#16a34a':'#e0472c';
+      return '<tr><td>'+m[0]+'</td><td class=num>'+m[2](va)+'</td><td class=num>'+m[2](vb)+'</td><td class=num style="font-weight:700;color:'+col+'">'+(dp>=0?'▲ ':'▼ ')+pct(dp)+'</td></tr>';}).join('');
+    document.getElementById('cmp-res').innerHTML='<div class="tblwrap"><table><thead><tr><th>Indicador</th><th class=num>Período A</th><th class=num>Período B</th><th class=num>Δ B vs A</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    const cc=this.chart('c-cmp');cc.setOption({tooltip:{valueFormatter:v=>moneyFull(v)},grid:{top:16,bottom:24,left:60,right:20,containLabel:true},
+      xAxis:{type:'category',data:['Período A','Período B']},yAxis:{type:'value',axisLabel:{formatter:money}},
+      series:[{type:'bar',barMaxWidth:90,data:[{value:Math.round(A.neto),itemStyle:{color:'#5b6aa0'}},{value:Math.round(B.neto),itemStyle:{color:'#ff4f20'}}],label:{show:true,position:'top',formatter:p=>moneyFull(p.value)}}]},true);}
 }
 const b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 async function unlock(pin){const te=new TextEncoder();
