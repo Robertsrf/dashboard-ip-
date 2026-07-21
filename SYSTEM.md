@@ -81,6 +81,16 @@ Rango de tiempo: `this.timeRange = [a, b]` (índices de mes).
 ### Segmentadores actuales
 `Mes` · `Grupo` · `Vendedor` · `Sector` · `Marca` · `Cliente` · **Slider de rango de tiempo**.
 
+## 5b. Proyección / tendencia con MES PARCIAL (importante)
+
+El usuario sube **cortes quincenales**, así que el último mes suele estar incompleto (p.ej. 15 días).
+Para que las tendencias no lo traten como mes cerrado:
+
+- `partialInfo(mo)`: detecta mes parcial **en el navegador** usando `P.dateMax` (día del corte vs. días del mes). `frac = díasTranscurridos / díasDelMes`. El mes parcial es el último índice de `P.dims.mes`. (No se puede añadir campos al payload porque va encriptado.)
+- `effNeto(mo)`: serie mensual "efectiva" donde el mes parcial se **escala a cierre** (`neto / frac`).
+- `projLine(mo)`: la **regresión lineal se ajusta en espacio de mes-calendario** (`idxData`, no `0..n`) sobre la serie efectiva → la recta pasa por los datos reales y proyecta el cierre del mes parcial + los meses siguientes de forma continua. El mes parcial muestra barra clara + punto de proyección (cierre estimado).
+- Afecta: `c-trend`, `c-proj`, tabla `t-proj` (marca `parcial`), KPI *Proyección año*, `c-mom` (usa serie efectiva), y el delta "(proy.)" de los KPIs de volumen.
+
 ## 6. Pestañas (tabs)
 
 `resumen` (KPIs + tendencia/proyección + top vend/marca), `tend` (proyección lineal), `vend`, `marca`,
@@ -108,8 +118,16 @@ C:\Users\RJ\Desktop\Sitios web  pruebas\dashboard-ip-_backups\prod_<FECHA-HORA>\
 ```
 (fuera del repo para no inflar git). Si algo se rompe, restaurar desde el backup más reciente.
 
+## Gráficos de barras (hbz) — responsive + eje que se reescala
+
+`hbz()` dibuja las barras horizontales (top vendedores/marcas/clientes/productos). Reglas:
+- Muestra una **ventana fija** de barras (desktop ~10-14, **móvil 8**) con un **slider vertical** a la derecha para recorrer el resto (`zoomLock:true` = tamaño fijo, solo se desplaza).
+- `filterMode:'filter'` → al desplazarte, el **eje X se reescala a las barras visibles** (soluciona el problema de que un valor enorme aplaste a los pequeños).
+- `isMob()` (ancho ≤640) ajusta ventana, márgenes, truncado de etiquetas y tamaños de fuente. Al cruzar el breakpoint se re-renderiza la pestaña.
+
 ## 10. Registro de cambios
 
-- **2026-07-21** — (1) Chips de filtro colapsados a un solo chip con conteo. (2) Nuevo segmentador **Cliente**.
+- **2026-07-21 (a)** — (1) Chips de filtro colapsados a un solo chip con conteo. (2) Nuevo segmentador **Cliente**.
   (3) Nuevo **slider deslizable de rango de tiempo** (`#timebar`, se combina con el filtro Mes). (4) Casillas
-  de los menús se sincronizan solo al abrir (rendimiento). Cambios aplicados en `index.html` y `build_dashboard.py`.
+  de los menús se sincronizan solo al abrir (rendimiento).
+- **2026-07-21 (b)** — (1) **Tendencia/proyección con mes parcial** (ver §5b): escala el mes incompleto a cierre y corrige el desfase de la regresión. (2) **Gráficos de barras responsive** con ventana fija + slider vertical y eje X que se reescala a lo visible (móvil y escritorio). (3) Nuevos **gráficos de comparación mensual** en Clientes (`c-clicmp`) y Productos (`c-prodcmp`) — top 6 (Vendedores y Marcas ya los tenían).

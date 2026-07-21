@@ -379,6 +379,7 @@ body.locked{overflow:hidden}
       <div class="card"><h3>Top clientes por venta neta</h3><div class="hint">Desliza para ver más</div><div id="c-cli" class="chart tall"></div></div>
       <div class="card"><h3>Concentración de clientes (Pareto)</h3><div class="hint">% acumulado de venta según ranking de clientes</div><div id="c-pareto" class="chart tall"></div></div>
     </div>
+    <div class="grid"><div class="card"><h3>Comparación mensual de clientes (top 6)</h3><div class="hint">Trayectoria de venta neta de los 6 clientes líderes</div><div id="c-clicmp" class="chart tall"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de clientes</h3><input class="tsearch" id="s-cli" placeholder="Buscar cliente..."><div class="tblwrap"><table id="t-cli"></table></div></div></div>
   </div>
 
@@ -387,6 +388,7 @@ body.locked{overflow:hidden}
       <div class="card"><h3>Top productos por venta neta</h3><div class="hint">Desliza para ver más</div><div id="c-prodneto" class="chart tall"></div></div>
       <div class="card"><h3>Top productos por unidades</h3><div class="hint">Desliza para ver más</div><div id="c-produ" class="chart tall"></div></div>
     </div>
+    <div class="grid"><div class="card"><h3>Comparación mensual de productos (top 6)</h3><div class="hint">Trayectoria de venta neta de los 6 productos líderes</div><div id="c-prodcmp" class="chart tall"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de productos (SKU)</h3><input class="tsearch" id="s-prod" placeholder="Buscar producto..."><div class="tblwrap"><table id="t-prod"></table></div></div></div>
   </div>
 
@@ -434,7 +436,9 @@ const TIPS={'c-trend':'Venta neta real por mes (barras) y proyección lineal has
   'c-cli':'Clientes ordenados por venta neta. Desliza el control lateral para ver más.',
   'c-pareto':'Regla 80/20: qué porcentaje de la venta acumulan los primeros clientes del ranking.',
   'c-prodneto':'Productos (SKU) ordenados por venta neta. Desliza para ver más.',
-  'c-produ':'Productos (SKU) ordenados por unidades vendidas. Desliza para ver más.'};
+  'c-produ':'Productos (SKU) ordenados por unidades vendidas. Desliza para ver más.',
+  'c-clicmp':'Trayectoria mensual de venta neta de los 6 clientes líderes.',
+  'c-prodcmp':'Trayectoria mensual de venta neta de los 6 productos líderes.'};
 
 const PRINT_CSS=`*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 body{padding:28px;color:#24205b}.rephead{display:flex;justify-content:space-between;border-bottom:3px solid #ff4f20;padding-bottom:12px;margin-bottom:16px}
@@ -475,7 +479,8 @@ class App{
     document.getElementById('ver').textContent='Corte al '+fmtDate(P.dateMax);
     document.getElementById('foot').innerHTML=`<b>Distribuidora y Suministros IP</b> &nbsp;·&nbsp; Información actualizada del ${fmtDate(P.dateMin)} al ${fmtDate(P.dateMax)} &nbsp;·&nbsp; Autor: Ing. Roberts Flores`;
     this.buildFilters();this.buildKPIs();this.injectInfo();this.bindTabs();this.buildTimeSlider();
-    window.addEventListener('resize',()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()});
+    this._wasMob=this.isMob();
+    window.addEventListener('resize',()=>{const m=this.isMob();if(m!==this._wasMob){this._wasMob=m;if(this.d)this.renderTab();}for(const k in this.ch)this.ch[k]&&this.ch[k].resize()});
     this.render();
   }
   injectInfo(){for(const id in TIPS){const el=document.getElementById(id);if(!el)continue;
@@ -559,6 +564,11 @@ class App{
   linreg(ys){const xs=ys.map((_,i)=>i);const n=xs.length;if(n<2)return{slope:0,intercept:ys[0]||0};
     const sx=xs.reduce((a,b)=>a+b,0),sy=ys.reduce((a,b)=>a+b,0),sxx=xs.reduce((a,b)=>a+b*b,0),sxy=xs.reduce((a,b,i)=>a+b*ys[i],0);
     const d=n*sxx-sx*sx;const slope=d?(n*sxy-sx*sy)/d:0;return{slope,intercept:(sy-slope*sx)/n}}
+  isMob(){return window.innerWidth<=640}
+  partialInfo(mo){const dm=(P.dateMax||'').split('-');if(dm.length<3)return{partial:false,frac:1,idx:P.dims.mes.length-1};
+    const y=+dm[0],mm=+dm[1],day=+dm[2];const dim=new Date(y,mm,0).getDate();const idx=P.dims.mes.length-1;
+    const partial=day<dim&&!!mo&&mo.neto[idx]>0;return{partial,frac:day/dim,idx,day,dim};}
+  effNeto(mo){const pi=this.partialInfo(mo);const eff=mo.neto.slice();if(pi.partial&&pi.frac>0)eff[pi.idx]=mo.neto[pi.idx]/pi.frac;return{eff,pi};}
   buildKPIs(){
     this.kpiDefs=[{id:'neto',lab:'Venta neta',hero:true,fmt:moneyFull},{id:'fac',lab:'Facturas',fmt:intf},
       {id:'tk',lab:'Ticket promedio',fmt:moneyFull},{id:'cli',lab:'Clientes únicos',fmt:intf},
@@ -572,15 +582,17 @@ class App{
     const sum=a=>a.reduce((x,y)=>x+y,0);const uniq=arr=>{const s=new Set();arr.forEach(x=>x.forEach(v=>s.add(v)));return s.size};
     const neto=sum(mo.neto),cant=sum(mo.cant),dev=sum(mo.dev);
     const fac=uniq(mo.docs),cli=uniq(mo.clis),sku=uniq(mo.prods);
-    const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);mo.neto.forEach((v,i)=>{yFull[idxData[i]]=v});
-    const lr=this.linreg(mo.neto);let proyYear=0;for(let m=0;m<12;m++){const real=yFull[m];proyYear+=(real!=null?real:Math.max(0,lr.slope*m+lr.intercept))}
+    const pj=this.projLine(mo);let proyYear=pj.proj.reduce((a,b)=>a+b,0);
     const vals={neto,fac,tk:fac?neto/fac:0,cli,sku,uni:cant,dev:cant?dev/cant*100:0,proy:proyYear};
     const series={neto:mo.neto,fac:mo.docs.map(s=>s.size),tk:mo.neto.map((v,i)=>mo.docs[i].size?v/mo.docs[i].size:0),
       cli:mo.clis.map(s=>s.size),sku:mo.prods.map(s=>s.size),uni:mo.cant,dev:mo.cant.map((c,i)=>c?mo.dev[i]/c*100:0),proy:mo.neto};
+    const pi=this.partialInfo(mo);const volIds={neto:1,fac:1,uni:1,cli:1,sku:1};
     this.kpiDefs.forEach(k=>{document.getElementById('k-'+k.id).textContent=k.fmt(vals[k.id]||0);
-      const s=series[k.id];const last=s.length-1;let d=null;if(last>=1&&s[last-1])d=(s[last]-s[last-1])/Math.abs(s[last-1])*100;
+      const s=series[k.id];const last=s.length-1;let d=null,proyd=false;
+      if(last>=1&&s[last-1]){let cur=s[last];if(pi.partial&&last===pi.idx&&volIds[k.id]){cur=s[last]/pi.frac;proyd=true;}
+        d=(cur-s[last-1])/Math.abs(s[last-1])*100;}
       const de=document.getElementById('kd-'+k.id);
-      if(d!=null&&k.id!=='proy'){de.className='delta '+(d>=0?'pos':'neg');de.textContent=(d>=0?'▲ ':'▼ ')+pct(d)+' últ. mes'}else de.textContent='';
+      if(d!=null&&k.id!=='proy'){de.className='delta '+(d>=0?'pos':'neg');de.textContent=(d>=0?'▲ ':'▼ ')+pct(d)+(proyd?' (proy.)':' últ. mes')}else de.textContent='';
       this.spark('kp-'+k.id,s,k.hero);});
   }
   spark(id,data,hero){const el=document.getElementById(id);let c=this.ch[id];if(!c){c=this.ch[id]=echarts.init(el)}
@@ -589,19 +601,22 @@ class App{
       series:[{type:'line',data,smooth:true,symbol:'none',lineStyle:{width:2,color:col},areaStyle:{color:area}}]},true)}
   chart(id){if(!this.ch[id]){this.ch[id]=echarts.init(document.getElementById(id))}return this.ch[id]}
   topN(map,names,n){return [...map.entries()].map(([i,o])=>[names[i],o.neto,o]).sort((a,b)=>b[1]-a[1]).slice(0,n)}
-  hbz(id,pairs,opt={}){const c=this.chart(id);const trunc=opt.trunc||22;
+  hbz(id,pairs,opt={}){const c=this.chart(id);const mob=this.isMob();
+    const trunc=opt.trunc||(mob?13:22);
     const cats=pairs.map(p=>p[0]);const vals=pairs.map(p=>Math.round(p[1]));
-    const win=opt.window||14;const zoom=opt.zoom&&cats.length>win;const end=zoom?Math.max(8,win/cats.length*100):100;
+    const win=opt.window||(mob?8:(opt.zoom?12:14));const zoom=cats.length>win;
+    const end=zoom?Math.max(5,win/cats.length*100):100;
     const fmt=opt.units?(v=>intf(v)+' u.'):(v=>moneyFull(v));
     const axf=v=>'$'+(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?Math.round(v/1e3)+'K':Math.round(v));
-    const tr=s=>s.length>trunc?s.slice(0,trunc-1)+'…':s;
-    c.setOption({grid:{top:8,bottom:32,left:(opt.left||150),right:zoom?46:30,containLabel:false},
-      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},valueFormatter:fmt},
-      xAxis:{type:'value',splitNumber:4,axisLabel:{formatter:axf,fontSize:10,hideOverlap:true,margin:8},splitLine:{lineStyle:{color:'#f0f2f8'}}},
-      yAxis:{type:'category',data:cats,inverse:true,axisTick:{show:false},axisLine:{lineStyle:{color:'#c9cfe0'}},axisLabel:{fontSize:11,margin:8,formatter:tr}},
-      dataZoom:zoom?[{type:'slider',yAxisIndex:0,right:10,width:13,start:0,end:end,brushSelect:false,handleSize:'80%'},{type:'inside',yAxisIndex:0,start:0,end:end}]:[],
-      series:[{type:'bar',data:vals,itemStyle:{color:opt.color||'#ff4f20',borderRadius:[0,4,4,0]},barMaxWidth:22,
-        label:{show:true,position:'right',formatter:p=>axf(p.value),fontSize:9,color:'#6b7392'}}]},true);
+    const trf=s=>s.length>trunc?s.slice(0,trunc-1)+'…':s;
+    const left=mob?(opt.leftMob||94):(opt.left||150);
+    c.setOption({grid:{top:8,bottom:mob?24:32,left:left,right:zoom?44:(mob?38:30),containLabel:false},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},valueFormatter:fmt,confine:true},
+      xAxis:{type:'value',splitNumber:mob?3:4,axisLabel:{formatter:axf,fontSize:mob?9:10,hideOverlap:true,margin:8},splitLine:{lineStyle:{color:'#f0f2f8'}}},
+      yAxis:{type:'category',data:cats,inverse:true,axisTick:{show:false},axisLine:{lineStyle:{color:'#c9cfe0'}},axisLabel:{fontSize:mob?10:11,margin:8,formatter:trf}},
+      dataZoom:zoom?[{type:'slider',yAxisIndex:0,right:5,width:mob?18:13,start:0,end:end,brushSelect:false,handleSize:'80%',filterMode:'filter',zoomLock:true,showDetail:false}]:[],
+      series:[{type:'bar',data:vals,itemStyle:{color:opt.color||'#ff4f20',borderRadius:[0,4,4,0]},barMaxWidth:mob?18:22,
+        label:{show:true,position:'right',formatter:p=>axf(p.value),fontSize:mob?8:9,color:'#6b7392'}}]},true);
     if(opt.click){c.off('click');c.on('click',p=>{if(p.componentType==='series')opt.click(p.name)})}}
   render(){this.syncFilterUI();const d=this.filtered();this.d=d;this.mo=this.monthly(d);this.renderKPIs(this.mo);this.renderTab();}
   bindTabs(){document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
@@ -614,17 +629,23 @@ class App{
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
     else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='rlist')renderRList();else if(t==='log')renderLog();}
   projLine(mo){const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);
-    mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);const lr=this.linreg(mo.neto);
+    mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);
+    const eo=this.effNeto(mo),pi=eo.pi;const xs=idxData,ys=eo.eff,nn=xs.length;
+    let lr={slope:0,intercept:ys[nn-1]||0};
+    if(nn>=2){const sx=xs.reduce((a,b)=>a+b,0),sy=ys.reduce((a,b)=>a+b,0),sxx=xs.reduce((a,b)=>a+b*b,0),sxy=xs.reduce((a,b,i)=>a+b*ys[i],0);
+      const dd=nn*sxx-sx*sx;const sl=dd?(nn*sxy-sx*sy)/dd:0;lr={slope:sl,intercept:(sy-sl*sx)/nn};}
+    const partialCal=pi.partial?idxData[pi.idx]:-1;const lastFullEst=pi.partial?eo.eff[pi.idx]:null;
     const proj=yFull.map((v,m)=>v!=null?v:Math.max(0,lr.slope*m+lr.intercept));
+    if(partialCal>=0)proj[partialCal]=Math.max(lastFullEst,yFull[partialCal]||0);
     const realOnly=yFull.map(v=>v);const projOnly=yFull.map((v,m)=>v!=null?null:proj[m]);
-    const lastReal=idxData[idxData.length-1];if(lastReal>=0)projOnly[lastReal]=yFull[lastReal];
-    return {yFull,proj,realOnly,projOnly,lr,idxData};}
+    const lastReal=idxData[idxData.length-1];if(lastReal>=0)projOnly[lastReal]=proj[lastReal];
+    return {yFull,proj,realOnly,projOnly,lr,idxData,partial:pi.partial,partialCal,lastFullEst,pi};}
   tResumen(d,mo){
     const pj=this.projLine(mo);const c=this.chart('c-trend');
     c.setOption({grid:{top:20,bottom:30,left:55,right:20,containLabel:true},legend:{data:['Real','Proyección'],bottom:0},
       tooltip:{trigger:'axis',valueFormatter:v=>v==null?'–':moneyFull(v)},
       xAxis:{type:'category',data:P.dims.fullLabels,axisLabel:{fontSize:11}},yAxis:{type:'value',axisLabel:{formatter:money}},
-      series:[{name:'Real',type:'bar',data:pj.realOnly,itemStyle:{color:'#ff4f20',borderRadius:[5,5,0,0]},barMaxWidth:30},
+      series:[{name:'Real',type:'bar',data:pj.realOnly,itemStyle:{color:p=>pj.partial&&p.dataIndex===pj.partialCal?'#ffb59e':'#ff4f20',borderRadius:[5,5,0,0]},barMaxWidth:30},
         {name:'Proyección',type:'line',data:pj.projOnly,smooth:true,symbol:'circle',lineStyle:{type:'dashed',color:'#24205b',width:2},itemStyle:{color:'#24205b'}}]},true);
     const g=this.groupBy(d,R.GRUPO);const ge=[...g.entries()].map(([i,o])=>({name:P.dims.grupo[i],value:Math.round(o.neto)})).sort((a,b)=>b.value-a.value);
     const gc=this.chart('c-grupo');gc.setOption({tooltip:{trigger:'item',valueFormatter:v=>moneyFull(v)},legend:{type:'scroll',bottom:0},
@@ -633,7 +654,7 @@ class App{
     gc.off('click');gc.on('click',p=>this.toggleFilter('grupo',p.name));
     this.hbz('c-vend10',this.topN(this.groupBy(d,R.VEND),P.dims.vendedor,10).map(x=>[x[0],x[1]]),{color:'#24205b',left:110,click:n=>this.toggleFilter('vend',n)});
     this.hbz('c-marca10',this.topN(this.groupBy(d,R.MARCA),P.dims.marca,10).map(x=>[x[0],x[1]]),{color:'#17a39a',left:120,click:n=>this.toggleFilter('marca',n)});
-    const mom=mo.neto.map((v,i)=>i===0||!mo.neto[i-1]?0:(v-mo.neto[i-1])/mo.neto[i-1]*100);
+    const {eff:effM}=this.effNeto(mo);const mom=effM.map((v,i)=>i===0||!effM[i-1]?0:(v-effM[i-1])/effM[i-1]*100);
     const mc=this.chart('c-mom');mc.setOption({grid:{top:14,bottom:24,left:45,right:14,containLabel:true},
       tooltip:{trigger:'axis',valueFormatter:v=>v.toFixed(1)+'%'},xAxis:{type:'category',data:P.dims.mesLabels},
       yAxis:{type:'value',axisLabel:{formatter:'{value}%'}},series:[{type:'bar',data:mom.map(v=>+v.toFixed(1)),
@@ -652,9 +673,10 @@ class App{
         {name:'Proyección',type:'line',data:pj.projOnly,smooth:true,symbol:'emptyCircle',lineStyle:{type:'dashed',color:'#24205b',width:2.5},itemStyle:{color:'#24205b'},
          markArea:{itemStyle:{color:'rgba(36,32,91,.06)'},data:[[{xAxis:P.dims.fullLabels[markStart]},{xAxis:P.dims.fullLabels[11]}]]}}]},true);
     const realYear=pj.yFull.reduce((a,b)=>a+(b||0),0);const projYear=pj.proj.reduce((a,b)=>a+b,0);
-    let rows=P.dims.fullLabels.map((lb,m)=>{const real=pj.yFull[m];const pr=pj.proj[m];
-      return `<tr><td>${lb}</td><td class="num">${real!=null?moneyFull(real):'<span class=mini>—</span>'}</td>
-      <td class="num">${real!=null?'<span class=badge>real</span>':moneyFull(pr)}</td></tr>`}).join('');
+    let rows=P.dims.fullLabels.map((lb,m)=>{const real=pj.yFull[m];const pr=pj.proj[m];const isP=pj.partial&&m===pj.partialCal;
+      const realCell=real!=null?(moneyFull(real)+(isP?' <span class=badge>parcial</span>':'')):'<span class=mini>—</span>';
+      const projCell=isP?moneyFull(pr):(real!=null?'<span class=badge>real</span>':moneyFull(pr));
+      return `<tr><td>${lb}</td><td class="num">${realCell}</td><td class="num">${projCell}</td></tr>`}).join('');
     document.getElementById('t-proj').innerHTML=`<thead><tr><th>Mes</th><th class=num>Real</th><th class=num>Proyectado</th></tr></thead><tbody>${rows}
       <tr style="font-weight:800"><td>Cierre estimado ${P.year}</td><td class="num">${moneyFull(realYear)}</td><td class="num">${moneyFull(projYear)}</td></tr></tbody>`;
     const uc=this.chart('c-units');const tk=mo.neto.map((v,i)=>mo.docs[i].size?v/mo.docs[i].size:0);
@@ -701,12 +723,20 @@ class App{
       yAxis:[{type:'value',axisLabel:{formatter:money}},{type:'value',max:100,position:'right',axisLabel:{formatter:'{value}%'}}],
       dataZoom:xs.length>25?[{type:'slider',xAxisIndex:0,height:12,bottom:20,start:0,end:Math.max(20,25/xs.length*100)}]:[],
       series:[{type:'bar',data:barv,itemStyle:{color:'#c9cfe6'}},{type:'line',yAxisIndex:1,data:linev,smooth:true,symbol:'none',lineStyle:{color:'#ff4f20',width:3}}]},true);
+    const clicmp=this.chart('c-clicmp');clicmp.setOption({grid:{top:20,bottom:34,left:55,right:20,containLabel:true},
+      legend:{type:'scroll',bottom:0},tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},
+      xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
+      series:this.monthlyByDim(d,R.CLI,P.dims.cliente,6),color:PAL},true);
     this.entTable('t-cli','s-cli',g,P.dims.cliente,'Cliente',null)}
   tProd(d,mo){
     const g=this.groupBy(d,R.PROD);
     this.hbz('c-prodneto',this.topN(g,P.dims.producto,999999).map(x=>[x[0],x[1]]),{color:'#ff4f20',left:230,trunc:36,zoom:true,window:11});
     const byU=[...g.entries()].map(([i,o])=>[P.dims.producto[i],o.cant]).sort((a,b)=>b[1]-a[1]).slice(0,999999);
     this.hbz('c-produ',byU,{color:'#17a39a',left:230,trunc:36,zoom:true,window:11,units:true});
+    const prodcmp=this.chart('c-prodcmp');prodcmp.setOption({grid:{top:20,bottom:34,left:55,right:20,containLabel:true},
+      legend:{type:'scroll',bottom:0},tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},
+      xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
+      series:this.monthlyByDim(d,R.PROD,P.dims.producto,6),color:PAL},true);
     this.entTable('t-prod','s-prod',g,P.dims.producto,'Producto',null)}
   entTable(tid,sid,map,names,label,onclick){
     const totN=[...map.values()].reduce((a,o)=>a+o.neto,0);
