@@ -11,7 +11,8 @@ Dashboard de **Inteligencia de Ventas** para *Distribuidora y Suministros IP*. E
 (`index.html`) autocontenida, protegida por PIN, con gráficos ECharts, KPIs, tablas e informes.
 Se genera con Python a partir de un Excel de ventas y se despliega en **Netlify**.
 
-- **En producción:** GitHub (`Robertsrf/dashboard-ip-`, rama `main`) → Netlify redespliega solo con cada push.
+- **En producción:** GitHub (`Robertsrf/dashboard-ip-`, rama `main`) → **GitHub Pages** despliega solo con cada push. URL: https://robertsrf.github.io/dashboard-ip-/
+- **Netlify quedó fuera** (créditos agotados, deploys pausados). Se conserva `netlify.toml` por si se retoma, pero el sitio vive en GitHub Pages.
 - **Autor:** Ing. Roberts Flores.
 
 ## 2. Arquitectura / stack
@@ -94,21 +95,22 @@ Para que las tendencias no lo traten como mes cerrado:
 ## 6. Pestañas (tabs)
 
 `resumen` (KPIs + tendencia/proyección + top vend/marca), `tend` (proyección lineal), `vend`, `marca`,
-`cli`, `prod`, `exec` (informe ejecutivo), `risk` (riesgo/recuperados), `rlist` (lista Drive, oculta si no hay),
-`log` (registro de ingresos, solo admin).
+`cli`, `prod`, `exec` (informe ejecutivo), `risk` (riesgo/recuperados), `rlist` (lista Drive, oculta si no hay).
+La pestaña `log` (registro de ingresos) se **eliminó** al pasar a GitHub Pages (era una función serverless de Netlify).
 
 ## 7. Seguridad / acceso
 
 - Puerta de PIN de 6 dígitos (`#gate`). El PIN deriva una clave (PBKDF2) que desencripta `ENC` en el navegador (AES-GCM).
-- Usuarios y roles viven en `secrets.json` (fuera del repo). Rol `admin` ve la pestaña de Registro.
-- El registro de ingresos usa la función Netlify `log`.
+- Usuarios y roles viven en `secrets.json` (fuera del repo).
 - Nota: todo el JS ya es público en `index.html`; la seguridad depende del PIN/cifrado, no de ocultar el código.
 
-## 8. Despliegue
+## 8. Despliegue (GitHub Pages)
 
-1. `git add` + `commit` + `push` a `main`.
-2. Netlify detecta el push y redespliega (~1 min). `publish = "."`.
-3. Verificar en la URL de producción con el PIN.
+1. `git add` + `commit` + `push` a `main` (o correr `python publish.py`).
+2. **GitHub Pages** detecta el push y publica (~1 min). Config: Settings → Pages → Deploy from a branch → `main` / `/ (root)`. El `.nojekyll` evita el procesado Jekyll.
+3. Verificar en https://robertsrf.github.io/dashboard-ip-/ con el PIN.
+4. **Tarea automática (Cowork, cada 3 días):** genera `index.html` con `build_dashboard.py` y luego llama a **`python publish.py`** (git add/commit/push). Antes desplegaba a Netlify; ahora publica por git. El entorno de la tarea necesita credenciales de push a GitHub (token/PAT o SSH).
+5. **Ya NO hay funciones serverless.** Se quitó la función `log` (registro de ingresos) porque GitHub Pages es solo estático. El login sigue igual; solo no se registra quién entra.
 
 ## 9. Respaldos
 
@@ -131,3 +133,4 @@ C:\Users\RJ\Desktop\Sitios web  pruebas\dashboard-ip-_backups\prod_<FECHA-HORA>\
   (3) Nuevo **slider deslizable de rango de tiempo** (`#timebar`, se combina con el filtro Mes). (4) Casillas
   de los menús se sincronizan solo al abrir (rendimiento).
 - **2026-07-21 (b)** — (1) **Tendencia/proyección con mes parcial** (ver §5b): escala el mes incompleto a cierre y corrige el desfase de la regresión. (2) **Gráficos de barras responsive** con ventana fija + slider vertical y eje X que se reescala a lo visible (móvil y escritorio). (3) Nuevos **gráficos de comparación mensual** en Clientes (`c-clicmp`) y Productos (`c-prodcmp`) — top 6 (Vendedores y Marcas ya los tenían).
+- **2026-07-21 (c)** — Migración a **GitHub Pages**: (1) se eliminó la función serverless `log` y la pestaña 🔒 Registro (login sigue igual, ya no se registran accesos). (2) `package.json` sin dependencias Netlify. (3) Nuevo `publish.py` (git add/commit/push) y `.nojekyll`. (4) La tarea automática ahora publica por git en vez de Netlify.

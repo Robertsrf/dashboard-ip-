@@ -329,7 +329,6 @@ body.locked{overflow:hidden}
     <button data-tab="exec">📄 Informe ejecutivo</button>
     <button data-tab="risk">📄 Riesgo y recuperados</button>
     <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo</button>
-    <button data-tab="log" id="tab-log" style="display:none">🔒 Registro</button>
   </div>
 
   <div class="panel active" data-panel="resumen">
@@ -397,8 +396,6 @@ body.locked{overflow:hidden}
   <div id="exec-full" style="display:none"></div>
   <div id="risk-full" style="display:none"></div>
   <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Detalle por cliente (lista cargada en Drive) · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
-  <div class="panel" data-panel="log"><div class="card"><h3>Registro de ingresos</h3><div class="hint">Solo visible para el administrador · accesos al sistema (usuario, rol, fecha y hora)</div><div id="logbox"></div></div></div>
-
   <div class="foot" id="foot"></div>
 </div>
 
@@ -627,7 +624,7 @@ class App{
     setTimeout(()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()},30)})}
   renderTab(){const t=this.tab,d=this.d,mo=this.mo;
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
-    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='rlist')renderRList();else if(t==='log')renderLog();}
+    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='rlist')renderRList();}
   projLine(mo){const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);
     mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);
     const eo=this.effNeto(mo),pi=eo.pi;const xs=idxData,ys=eo.eff,nn=xs.length;
@@ -789,8 +786,6 @@ async function boot(pin){const err=document.getElementById('gerr');
   document.body.appendChild(wv);
   setTimeout(function(){wv.style.opacity='0';setTimeout(function(){if(wv.parentNode)wv.remove();},600);},2800);
   var hv=document.getElementById('ver');if(hv)hv.textContent='Hola, '+res.user.greet;
-  try{fetch('/.netlify/functions/log',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({user:res.user.name,role:res.user.role})}).catch(()=>{});}catch(e){}
-  if(res.user.role==='admin'){window.__ADMINPIN=pin;const tl=document.getElementById('tab-log');if(tl)tl.style.display='';}
 }
 function downloadB64(b64,fname){var bin=atob(b64);var arr=new Uint8Array(bin.length);for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
   var mime=/\.xlsx$/i.test(fname)?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
@@ -818,13 +813,6 @@ function renderRList(){
   var th=sh.headers.map(function(h){return '<th>'+h+'</th>';}).join('');
   var body=rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';}).join('');
   document.getElementById('rl-table').innerHTML='<div class="rldesc">'+sh.title+'</div><div class="mini" style="margin:4px 0 8px">'+rows.length+' de '+sh.rows.length+' registros</div><table class="rt rtc"><thead><tr>'+th+'</tr></thead><tbody>'+body+'</tbody></table>';
-}
-function renderLog(){const box=document.getElementById('logbox');if(!box)return;box.innerHTML='<p class=mini>Cargando…</p>';
-  fetch('/.netlify/functions/log',{headers:{'x-admin-key':window.__ADMINPIN||''}}).then(r=>r.ok?r.json():Promise.reject()).then(list=>{
-    if(!list||!list.length){box.innerHTML='<p class=mini>Sin registros aún.</p>';return;}
-    const rows=list.slice().reverse().map(e=>'<tr><td>'+e.user+'</td><td>'+e.role+'</td><td>'+new Date(e.ts).toLocaleString('es')+'</td></tr>').join('');
-    box.innerHTML='<table class="rt"><thead><tr><th>Usuario</th><th>Rol</th><th>Fecha y hora</th></tr></thead><tbody>'+rows+'</tbody></table>';
-  }).catch(()=>{box.innerHTML='<p class=mini>Registro central aún no disponible (se activa al desplegar la función en Netlify). Reintenta en unos minutos.</p>';});
 }
 document.body.classList.add('locked');
 document.getElementById('enter').onclick=()=>boot(document.getElementById('pin').value.trim());
