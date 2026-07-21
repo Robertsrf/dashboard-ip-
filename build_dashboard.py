@@ -188,7 +188,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 @media(max-width:640px){.timebar{padding:8px 12px;gap:10px}.tslider{min-width:150px}}
 .wrap{max-width:1500px;margin:0 auto;padding:18px 26px 40px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:18px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden;border-left:4px solid var(--brand)}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:visible;border-left:4px solid var(--brand)}
+.kpi:hover{z-index:5}
+.kpi .lab .info{margin-left:4px;width:15px;height:15px;font-size:10px;vertical-align:middle}
+.kpi.hero .info{background:#fff;color:var(--navy)}
 .kpi .lab{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
 .kpi .val{font-size:27px;font-weight:800;margin-top:5px;letter-spacing:-.5px;color:var(--navy)}
 .kpi .sub{font-size:12px;color:var(--muted);margin-top:2px}
@@ -567,12 +570,12 @@ class App{
     const partial=day<dim&&!!mo&&mo.neto[idx]>0;return{partial,frac:day/dim,idx,day,dim};}
   effNeto(mo){const pi=this.partialInfo(mo);const eff=mo.neto.slice();if(pi.partial&&pi.frac>0)eff[pi.idx]=mo.neto[pi.idx]/pi.frac;return{eff,pi};}
   buildKPIs(){
-    this.kpiDefs=[{id:'neto',lab:'Venta neta',hero:true,fmt:moneyFull},{id:'fac',lab:'Facturas',fmt:intf},
-      {id:'tk',lab:'Ticket promedio',fmt:moneyFull},{id:'cli',lab:'Clientes únicos',fmt:intf},
-      {id:'sku',lab:'SKU únicos',fmt:intf},{id:'uni',lab:'Unidades',fmt:intf},
-      {id:'dev',lab:'% Devolución',fmt:v=>v.toFixed(1)+'%'},{id:'proy',lab:'Proyección año',fmt:moneyFull,sub:'estimado a Dic'}];
+    this.kpiDefs=[{id:'neto',lab:'Venta neta',hero:true,fmt:moneyFull,tip:'Suma de la venta neta (ventas menos devoluciones) de todo lo que está filtrado ahora. El ▲/▼ compara el último mes contra el mes anterior; (proy.) = el último mes es un corte parcial y se estimó a cierre para comparar parejo.'},{id:'fac',lab:'Facturas',fmt:intf,tip:'Número de facturas (documentos) distintas en la selección actual.'},
+      {id:'tk',lab:'Ticket promedio',fmt:moneyFull,tip:'Ticket promedio = Venta neta ÷ Facturas: lo que factura en promedio cada documento.'},{id:'cli',lab:'Clientes únicos',fmt:intf,tip:'Clientes distintos que compraron en la selección actual.'},
+      {id:'sku',lab:'SKU únicos',fmt:intf,tip:'Productos (SKU) distintos vendidos en la selección actual.'},{id:'uni',lab:'Unidades',fmt:intf,tip:'Suma de unidades (cantidad) vendidas en la selección actual.'},
+      {id:'dev',lab:'% Devolución',fmt:v=>v.toFixed(1)+'%',tip:'Unidades devueltas ÷ unidades vendidas × 100. Mientras más bajo, mejor.'},{id:'proy',lab:'Proyección año',fmt:moneyFull,sub:'estimado a Dic',tip:'Estimación de la venta neta de TODO el año: suma los meses ya reales y proyecta los que faltan con una tendencia lineal (regresión). Si el último mes está incompleto, primero lo estima a cierre.'}];
     document.getElementById('kpis').innerHTML=this.kpiDefs.map(k=>`<div class="kpi${k.hero?' hero':''}">
-      <div class="lab">${k.lab}</div><div class="val" id="k-${k.id}">–</div><div class="sub" id="ks-${k.id}">${k.sub||''}</div>
+      <div class="lab">${k.lab} <span class="info" data-tip="${k.tip}">i</span></div><div class="val" id="k-${k.id}">–</div><div class="sub" id="ks-${k.id}">${k.sub||''}</div>
       <div class="delta" id="kd-${k.id}"></div><div class="spark" id="kp-${k.id}"></div></div>`).join('');
   }
   renderKPIs(mo){
