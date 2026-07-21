@@ -171,6 +171,21 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .chips{padding:8px 26px 0;display:flex;gap:8px;flex-wrap:wrap}
 .chip{background:#fff2ee;color:var(--brand);border:1px solid #ffd9cd;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
 .chip b{font-weight:700;color:var(--navy)}.chip span{cursor:pointer;opacity:.7}.chip span:hover{opacity:1}
+.timebar{display:flex;align-items:center;gap:14px;padding:10px 26px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.timebar .tlab{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap}
+.tslider{position:relative;flex:1;min-width:220px;max-width:520px;height:26px}
+.ttrack{position:absolute;top:11px;left:9px;right:9px;height:5px;background:#e7e9f2;border-radius:4px}
+.tfill{position:absolute;top:0;bottom:0;background:var(--brand);border-radius:4px}
+.trange{position:absolute;top:0;left:0;width:100%;height:26px;margin:0;background:none;pointer-events:none;-webkit-appearance:none;appearance:none}
+.trange::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;pointer-events:auto;width:18px;height:18px;margin-top:4px;border-radius:50%;background:#fff;border:3px solid var(--brand);box-shadow:0 1px 4px rgba(36,32,91,.28);cursor:pointer}
+.trange::-moz-range-thumb{pointer-events:auto;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--brand);box-shadow:0 1px 4px rgba(36,32,91,.28);cursor:pointer}
+.trange::-webkit-slider-runnable-track{height:26px;background:none;border:none}
+.trange::-moz-range-track{height:26px;background:none;border:none}
+.trange:focus{outline:none}
+.tval{font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tclear{font-size:12px;color:var(--muted);cursor:pointer;font-weight:600;text-decoration:underline;white-space:nowrap}
+.tclear:hover{color:var(--brand)}
+@media(max-width:640px){.timebar{padding:8px 12px;gap:10px}.tslider{min-width:150px}}
 .wrap{max-width:1500px;margin:0 auto;padding:18px 26px 40px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:18px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden;border-left:4px solid var(--brand)}
@@ -295,8 +310,10 @@ body.locked{overflow:hidden}
   <div class="ms" data-dim="vend"></div>
   <div class="ms" data-dim="sector"></div>
   <div class="ms" data-dim="marca"></div>
+  <div class="ms" data-dim="cli"></div>
   <button class="reset" onclick="APP.reset()">Limpiar todo</button>
 </div>
+<div class="timebar" id="timebar"></div>
 <div class="chips" id="chips"></div>
 
 <div class="wrap">
@@ -393,7 +410,8 @@ function initMeta(){DIMS={mes:{field:R.MES,names:P.dims.mesLabels,label:'Mes'},
   grupo:{field:R.GRUPO,names:P.dims.grupo,label:'Grupo'},
   vend:{field:R.VEND,names:P.dims.vendedor,label:'Vendedor'},
   sector:{field:R.SECTOR,names:P.dims.sector,label:'Sector'},
-  marca:{field:R.MARCA,names:P.dims.marca,label:'Marca'}};
+  marca:{field:R.MARCA,names:P.dims.marca,label:'Marca'},
+  cli:{field:R.CLI,names:P.dims.cliente,label:'Cliente'}};
   nameIdx={};for(const k in DIMS){nameIdx[k]=new Map(DIMS[k].names.map((n,i)=>[n,i]))}}
 const money=v=>'$'+(v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v));
 const moneyFull=v=>'$'+Math.round(v).toLocaleString('es');
@@ -451,12 +469,12 @@ function printReport(sel,title){
 
 class App{
   constructor(){
-    this.f={mes:new Set(),grupo:new Set(),vend:new Set(),sector:new Set(),marca:new Set()};
+    this.f={mes:new Set(),grupo:new Set(),vend:new Set(),sector:new Set(),marca:new Set(),cli:new Set()};
     this.ch={};this.tab='resumen';this.tsort={};
     document.getElementById('meta').textContent=`Período ${fmtDate(P.dateMin)}–${fmtDate(P.dateMax)} · ${P.rows.length.toLocaleString('es')} líneas de factura`;
     document.getElementById('ver').textContent='Corte al '+fmtDate(P.dateMax);
     document.getElementById('foot').innerHTML=`<b>Distribuidora y Suministros IP</b> &nbsp;·&nbsp; Información actualizada del ${fmtDate(P.dateMin)} al ${fmtDate(P.dateMax)} &nbsp;·&nbsp; Autor: Ing. Roberts Flores`;
-    this.buildFilters();this.buildKPIs();this.injectInfo();this.bindTabs();
+    this.buildFilters();this.buildKPIs();this.injectInfo();this.bindTabs();this.buildTimeSlider();
     window.addEventListener('resize',()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()});
     this.render();
   }
@@ -471,7 +489,9 @@ class App{
       const list=host.querySelector('.list');
       d.names.forEach((n,i)=>{list.insertAdjacentHTML('beforeend',`<label><input type="checkbox" value="${i}"><span>${n}</span></label>`)});
       host.querySelector('button').onclick=e=>{e.stopPropagation();
-        document.querySelectorAll('.ms').forEach(m=>m!==host&&m.classList.remove('open'));host.classList.toggle('open')};
+        document.querySelectorAll('.ms').forEach(m=>m!==host&&m.classList.remove('open'));
+        const opening=!host.classList.contains('open');host.classList.toggle('open');
+        if(opening){const set=this.f[key];list.querySelectorAll('input').forEach(c=>c.checked=set.has(+c.value))}};
       host.querySelector('.pop').onclick=e=>e.stopPropagation();
       host.querySelector('.search').oninput=e=>{const q=e.target.value.toLowerCase();
         list.querySelectorAll('label').forEach(l=>l.style.display=l.textContent.toLowerCase().includes(q)?'':'none')};
@@ -488,17 +508,46 @@ class App{
       const host=document.querySelector(`.ms[data-dim="${key}"]`);
       const cnt=host.querySelector('.cnt');const n=this.f[key].size;
       cnt.textContent=n?n+' sel.':'Todos';cnt.className='cnt'+(n?'':' off');
-      host.querySelectorAll('.list input').forEach(c=>c.checked=this.f[key].has(+c.value));
     }
     const chips=document.getElementById('chips');chips.innerHTML='';
-    for(const key in DIMS){for(const i of this.f[key]){
+    const nM=P.dims.mes.length;const tr=this.timeRange||[0,nM-1];
+    if(tr[0]>0||tr[1]<nM-1){
       const c=document.createElement('div');c.className='chip';
-      c.innerHTML=`<b>${DIMS[key].label}:</b> ${DIMS[key].names[i]} <span>✕</span>`;
-      c.querySelector('span').onclick=()=>{this.f[key].delete(i);this.render()};chips.appendChild(c)}}
+      c.innerHTML=`<b>Tiempo:</b> ${P.dims.mesLabels[tr[0]]} – ${P.dims.mesLabels[tr[1]]} <span>✕</span>`;
+      c.querySelector('span').onclick=()=>this.resetTime();chips.appendChild(c);
+    }
+    for(const key in DIMS){const set=this.f[key];if(!set.size)continue;
+      const c=document.createElement('div');c.className='chip';
+      const txt=set.size===1?DIMS[key].names[[...set][0]]:set.size+' seleccionadas';
+      c.innerHTML=`<b>${DIMS[key].label}:</b> ${txt} <span>✕</span>`;
+      c.querySelector('span').onclick=()=>{this.f[key].clear();this.render()};chips.appendChild(c);}
   }
-  reset(){for(const k in this.f)this.f[k].clear();this.render()}
+  reset(){for(const k in this.f)this.f[k].clear();this.resetTime(false);this.render()}
+  resetTime(rerender=true){const n=P.dims.mes.length;this.timeRange=[0,n-1];
+    const mn=document.getElementById('tsMin'),mx=document.getElementById('tsMax');
+    if(mn){mn.value=0;mx.value=n-1;}this.paintTime();if(rerender)this.render();}
+  buildTimeSlider(){const n=P.dims.mes.length;this.timeRange=[0,Math.max(0,n-1)];
+    const host=document.getElementById('timebar');if(!host)return;
+    if(n<2){host.style.display='none';return;}
+    host.innerHTML=`<span class="tlab">🕒 Rango de tiempo</span>`+
+      `<div class="tslider"><div class="ttrack"><div class="tfill" id="tsFill"></div></div>`+
+      `<input type="range" class="trange" id="tsMin" min="0" max="${n-1}" value="0">`+
+      `<input type="range" class="trange" id="tsMax" min="0" max="${n-1}" value="${n-1}"></div>`+
+      `<span class="tval" id="tsVal"></span><a class="tclear" id="tsClear">Todo el período</a>`;
+    const mn=document.getElementById('tsMin'),mx=document.getElementById('tsMax');
+    const upd=side=>{let a=+mn.value,b=+mx.value;
+      if(a>b){if(side==='min'){mx.value=a;b=a;}else{mn.value=b;a=b;}}
+      this.timeRange=[a,b];this.paintTime();this.render();};
+    mn.oninput=()=>upd('min');mx.oninput=()=>upd('max');
+    document.getElementById('tsClear').onclick=()=>this.resetTime();
+    this.paintTime();}
+  paintTime(){const n=P.dims.mes.length;const tr=this.timeRange||[0,n-1];const a=tr[0],b=tr[1];
+    const fill=document.getElementById('tsFill');
+    if(fill&&n>1){fill.style.left=(a/(n-1)*100)+'%';fill.style.right=(100-b/(n-1)*100)+'%';}
+    const val=document.getElementById('tsVal');if(val)val.textContent=P.dims.mesLabels[a]+' – '+P.dims.mesLabels[b];}
   filtered(){const f=this.f;const has=(s,v)=>s.size===0||s.has(v);
-    return P.rows.filter(r=>has(f.mes,r[R.MES])&&has(f.grupo,r[R.GRUPO])&&has(f.vend,r[R.VEND])&&has(f.sector,r[R.SECTOR])&&has(f.marca,r[R.MARCA]));}
+    const tr=this.timeRange||[0,P.dims.mes.length-1];const ta=tr[0],tb=tr[1];
+    return P.rows.filter(r=>r[R.MES]>=ta&&r[R.MES]<=tb&&has(f.mes,r[R.MES])&&has(f.grupo,r[R.GRUPO])&&has(f.vend,r[R.VEND])&&has(f.sector,r[R.SECTOR])&&has(f.marca,r[R.MARCA])&&has(f.cli,r[R.CLI]));}
   toggleFilter(key,name){const i=nameIdx[key].get(name);if(i==null)return;
     this.f[key].has(i)?this.f[key].delete(i):this.f[key].add(i);this.render()}
   monthly(rows){const n=P.dims.mes.length;const o={neto:Array(n).fill(0),cant:Array(n).fill(0),dev:Array(n).fill(0),
