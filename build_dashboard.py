@@ -48,9 +48,11 @@ def main():
     cant = df["CANTIDAD"].round(2).tolist()
     dev = df["CNTDEVUELT"].round(2).tolist()
     neto = df["SUMANETO"].round(2).tolist()
+    _daymin = df["FECHADOC"].dt.normalize().min()
+    dayoff = ((df["FECHADOC"].dt.normalize() - _daymin).dt.days).astype(int).tolist()
 
     rows = [[mes_i[k], grupo_i[k], vend_i[k], sector_i[k], marca_i[k],
-             cli_i[k], prod_i[k], doc_i[k], cant[k], dev[k], neto[k]]
+             cli_i[k], prod_i[k], doc_i[k], cant[k], dev[k], neto[k], dayoff[k]]
             for k in range(len(df))]
 
     meses_es = {"01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May",
@@ -67,6 +69,7 @@ def main():
         "dateMin": df["FECHADOC"].min().strftime("%Y-%m-%d"),
         "dateMax": df["FECHADOC"].max().strftime("%Y-%m-%d"),
         "year": year,
+        "dayZero": _daymin.strftime("%Y-%m-%d"), "dayCount": (int(max(dayoff))+1) if dayoff else 0,
         "dims": {
             "mes": mes_vals, "mesLabels": mes_labels, "fullLabels": full_labels,
             "histMonthNums": hist_month_nums,
@@ -185,6 +188,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .tval{font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap;font-variant-numeric:tabular-nums}
 .tclear{font-size:12px;color:var(--muted);cursor:pointer;font-weight:600;text-decoration:underline;white-space:nowrap}
 .tclear:hover{color:var(--brand)}
+.dlab{font-size:12px;font-weight:600;color:var(--navy);display:inline-flex;align-items:center;gap:5px}
+.dlab input[type=date]{font:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;color:var(--navy);background:#fff}
+.dpre{display:flex;gap:5px;flex-wrap:wrap}
+.dpre a{font-size:11px;color:var(--brand);cursor:pointer;font-weight:700;border:1px solid #ffd9cd;border-radius:12px;padding:3px 9px}
+.dpre a:hover{background:#fff2ee}
+.calkey{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:12px;color:var(--muted)}
+.calkey b{color:var(--navy)}
 @media(max-width:640px){.timebar{padding:8px 12px;gap:10px}.tslider{min-width:150px}}
 .wrap{max-width:1500px;margin:0 auto;padding:18px 26px 40px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:18px}
@@ -335,6 +345,7 @@ body.locked{overflow:hidden}
   </div>
 
   <div class="panel active" data-panel="resumen">
+    <div class="grid"><div class="card"><h3>Calendario de ventas por día</h3><div class="hint">Cada celda es un día · color = venta neta de ese día · pasa el mouse para el detalle · respeta los filtros</div><div id="c-cal" class="chart" style="height:190px"></div><div id="cal-key" class="calkey"></div></div></div>
     <div class="grid g3">
       <div class="card"><h3>Venta neta mensual y proyección</h3><div class="hint">Barras = real · línea punteada = proyección</div><div id="c-trend" class="chart tall"></div></div>
       <div class="card"><h3>Participación por grupo</h3><div class="hint">Clic para filtrar por grupo</div><div id="c-grupo" class="chart tall"></div></div>
@@ -405,7 +416,7 @@ body.locked{overflow:hidden}
 <script>
 const ENC = __ENC_JSON__;
 let P=null;
-const R={MES:0,GRUPO:1,VEND:2,SECTOR:3,MARCA:4,CLI:5,PROD:6,DOC:7,CANT:8,DEV:9,NETO:10};
+const R={MES:0,GRUPO:1,VEND:2,SECTOR:3,MARCA:4,CLI:5,PROD:6,DOC:7,CANT:8,DEV:9,NETO:10,DAY:11};
 const PAL=['#ff4f20','#24205b','#17a39a','#f4a72c','#5b6aa0','#e0708a','#3aa0d1','#7c9a2b','#b0552c','#9488c9','#e8b64a','#2f8f86'];
 let DIMS={},nameIdx={};
 function initMeta(){DIMS={mes:{field:R.MES,names:P.dims.mesLabels,label:'Mes'},
@@ -438,7 +449,8 @@ const TIPS={'c-trend':'Venta neta real por mes (barras) y proyección lineal has
   'c-prodneto':'Productos (SKU) ordenados por venta neta. Desliza para ver más.',
   'c-produ':'Productos (SKU) ordenados por unidades vendidas. Desliza para ver más.',
   'c-clicmp':'Trayectoria mensual de venta neta de los 6 clientes líderes.',
-  'c-prodcmp':'Trayectoria mensual de venta neta de los 6 productos líderes.'};
+  'c-prodcmp':'Trayectoria mensual de venta neta de los 6 productos líderes.',
+  'c-cal':'Cada celda es un día; el color indica la venta neta de ese día. Respeta los filtros activos.'};
 
 const PRINT_CSS=`*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 body{padding:28px;color:#24205b}.rephead{display:flex;justify-content:space-between;border-bottom:3px solid #ff4f20;padding-bottom:12px;margin-bottom:16px}
@@ -478,7 +490,7 @@ class App{
     document.getElementById('meta').textContent=`Período ${fmtDate(P.dateMin)}–${fmtDate(P.dateMax)} · ${P.rows.length.toLocaleString('es')} líneas de factura`;
     document.getElementById('ver').textContent='Corte al '+fmtDate(P.dateMax);
     document.getElementById('foot').innerHTML=`<b>Distribuidora y Suministros IP</b> &nbsp;·&nbsp; Información actualizada del ${fmtDate(P.dateMin)} al ${fmtDate(P.dateMax)} &nbsp;·&nbsp; Autor: Ing. Roberts Flores`;
-    this.buildFilters();this.buildKPIs();this.injectInfo();this.bindTabs();this.buildTimeSlider();
+    this.buildFilters();this.buildKPIs();this.injectInfo();this.bindTabs();this.buildDayBar();
     this._wasMob=this.isMob();
     window.addEventListener('resize',()=>{const m=this.isMob();if(m!==this._wasMob){this._wasMob=m;if(this.d)this.renderTab();}for(const k in this.ch)this.ch[k]&&this.ch[k].resize()});
     this.render();
@@ -515,11 +527,11 @@ class App{
       cnt.textContent=n?n+' sel.':'Todos';cnt.className='cnt'+(n?'':' off');
     }
     const chips=document.getElementById('chips');chips.innerHTML='';
-    const nM=P.dims.mes.length;const tr=this.timeRange||[0,nM-1];
-    if(tr[0]>0||tr[1]<nM-1){
+    const nD=P.dayCount||0;const dr=this.dayRange||[0,nD-1];
+    if(nD>0&&(dr[0]>0||dr[1]<nD-1)){
       const c=document.createElement('div');c.className='chip';
-      c.innerHTML=`<b>Tiempo:</b> ${P.dims.mesLabels[tr[0]]} – ${P.dims.mesLabels[tr[1]]} <span>✕</span>`;
-      c.querySelector('span').onclick=()=>this.resetTime();chips.appendChild(c);
+      c.innerHTML=`<b>Fechas:</b> ${fmtDate(this.offToDate(dr[0]))} – ${fmtDate(this.offToDate(dr[1]))} <span>✕</span>`;
+      c.querySelector('span').onclick=()=>this.resetDay();chips.appendChild(c);
     }
     for(const key in DIMS){const set=this.f[key];if(!set.size)continue;
       const c=document.createElement('div');c.className='chip';
@@ -527,32 +539,41 @@ class App{
       c.innerHTML=`<b>${DIMS[key].label}:</b> ${txt} <span>✕</span>`;
       c.querySelector('span').onclick=()=>{this.f[key].clear();this.render()};chips.appendChild(c);}
   }
-  reset(){for(const k in this.f)this.f[k].clear();this.resetTime(false);this.render()}
-  resetTime(rerender=true){const n=P.dims.mes.length;this.timeRange=[0,n-1];
-    const mn=document.getElementById('tsMin'),mx=document.getElementById('tsMax');
-    if(mn){mn.value=0;mx.value=n-1;}this.paintTime();if(rerender)this.render();}
-  buildTimeSlider(){const n=P.dims.mes.length;this.timeRange=[0,Math.max(0,n-1)];
+  reset(){for(const k in this.f)this.f[k].clear();this.resetDay(false);this.render()}
+  resetDay(rerender=true){const n=P.dayCount||0;this.dayRange=[0,Math.max(0,n-1)];this.paintDay();if(rerender)this.render();}
+  offToDate(off){const d=new Date((P.dayZero||'2000-01-01')+'T00:00:00');d.setDate(d.getDate()+off);
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+  dateToOff(str){if(!str)return NaN;const a=new Date((P.dayZero||'2000-01-01')+'T00:00:00'),b=new Date(str+'T00:00:00');
+    return Math.round((b-a)/86400000);}
+  buildDayBar(){const n=P.dayCount||0;this.dayRange=[0,Math.max(0,n-1)];
     const host=document.getElementById('timebar');if(!host)return;
-    if(n<2){host.style.display='none';return;}
-    host.innerHTML=`<span class="tlab">🕒 Rango de tiempo</span>`+
-      `<div class="tslider"><div class="ttrack"><div class="tfill" id="tsFill"></div></div>`+
-      `<input type="range" class="trange" id="tsMin" min="0" max="${n-1}" value="0">`+
-      `<input type="range" class="trange" id="tsMax" min="0" max="${n-1}" value="${n-1}"></div>`+
-      `<span class="tval" id="tsVal"></span><a class="tclear" id="tsClear">Todo el período</a>`;
-    const mn=document.getElementById('tsMin'),mx=document.getElementById('tsMax');
-    const upd=side=>{let a=+mn.value,b=+mx.value;
-      if(a>b){if(side==='min'){mx.value=a;b=a;}else{mn.value=b;a=b;}}
-      this.timeRange=[a,b];this.paintTime();this.render();};
-    mn.oninput=()=>upd('min');mx.oninput=()=>upd('max');
-    document.getElementById('tsClear').onclick=()=>this.resetTime();
-    this.paintTime();}
-  paintTime(){const n=P.dims.mes.length;const tr=this.timeRange||[0,n-1];const a=tr[0],b=tr[1];
-    const fill=document.getElementById('tsFill');
-    if(fill&&n>1){fill.style.left=(a/(n-1)*100)+'%';fill.style.right=(100-b/(n-1)*100)+'%';}
-    const val=document.getElementById('tsVal');if(val)val.textContent=P.dims.mesLabels[a]+' – '+P.dims.mesLabels[b];}
+    if(!P.dayZero||n<2){host.style.display='none';return;}
+    const dmin=P.dayZero,dmax=this.offToDate(n-1);
+    host.innerHTML=`<span class="tlab">🗓️ Rango de fechas</span>`+
+      `<label class="dlab">Desde <input type="date" id="dFrom" min="${dmin}" max="${dmax}" value="${dmin}"></label>`+
+      `<label class="dlab">Hasta <input type="date" id="dTo" min="${dmin}" max="${dmax}" value="${dmax}"></label>`+
+      `<span class="dpre"><a data-p="hoy">Último día</a><a data-p="sem">7 días</a><a data-p="mes">Este mes</a><a data-p="all">Todo</a></span>`+
+      `<span class="tval" id="dVal"></span>`;
+    const fromI=document.getElementById('dFrom'),toI=document.getElementById('dTo');
+    const apply=()=>{let a=this.dateToOff(fromI.value),b=this.dateToOff(toI.value);
+      if(isNaN(a))a=0;if(isNaN(b))b=n-1;if(a>b){const t=a;a=b;b=t;}
+      a=Math.max(0,Math.min(n-1,a));b=Math.max(0,Math.min(n-1,b));
+      this.dayRange=[a,b];this.paintDay();this.render();};
+    fromI.onchange=apply;toI.onchange=apply;
+    host.querySelectorAll('.dpre a').forEach(el=>el.onclick=()=>this.dayPreset(el.dataset.p));
+    this.paintDay();}
+  dayPreset(p){const n=P.dayCount||0;let a=0,b=n-1;
+    if(p==='hoy'){a=n-1;}
+    else if(p==='sem'){a=Math.max(0,n-7);}
+    else if(p==='mes'){const last=this.offToDate(n-1);const first=last.slice(0,7)+'-01';a=Math.max(0,this.dateToOff(first));}
+    this.dayRange=[a,b];this.paintDay();this.render();}
+  paintDay(){const n=P.dayCount||0;const dr=this.dayRange||[0,n-1];const a=dr[0],b=dr[1];
+    const fromI=document.getElementById('dFrom'),toI=document.getElementById('dTo');
+    if(fromI){fromI.value=this.offToDate(a);toI.value=this.offToDate(b);}
+    const val=document.getElementById('dVal');if(val)val.textContent=(b-a+1)+' día'+((b-a)?'s':'');}
   filtered(){const f=this.f;const has=(s,v)=>s.size===0||s.has(v);
-    const tr=this.timeRange||[0,P.dims.mes.length-1];const ta=tr[0],tb=tr[1];
-    return P.rows.filter(r=>r[R.MES]>=ta&&r[R.MES]<=tb&&has(f.mes,r[R.MES])&&has(f.grupo,r[R.GRUPO])&&has(f.vend,r[R.VEND])&&has(f.sector,r[R.SECTOR])&&has(f.marca,r[R.MARCA])&&has(f.cli,r[R.CLI]));}
+    const nD=P.dayCount||0;const dr=this.dayRange||[0,nD-1];const da=dr[0],db=dr[1];
+    return P.rows.filter(r=>(nD?(r[R.DAY]>=da&&r[R.DAY]<=db):true)&&has(f.mes,r[R.MES])&&has(f.grupo,r[R.GRUPO])&&has(f.vend,r[R.VEND])&&has(f.sector,r[R.SECTOR])&&has(f.marca,r[R.MARCA])&&has(f.cli,r[R.CLI]));}
   toggleFilter(key,name){const i=nameIdx[key].get(name);if(i==null)return;
     this.f[key].has(i)?this.f[key].delete(i):this.f[key].add(i);this.render()}
   monthly(rows){const n=P.dims.mes.length;const o={neto:Array(n).fill(0),cant:Array(n).fill(0),dev:Array(n).fill(0),
@@ -619,6 +640,25 @@ class App{
         label:{show:true,position:'right',formatter:p=>axf(p.value),fontSize:mob?8:9,color:'#6b7392'}}]},true);
     if(opt.click){c.off('click');c.on('click',p=>{if(p.componentType==='series')opt.click(p.name)})}}
   render(){this.syncFilterUI();const d=this.filtered();this.d=d;this.mo=this.monthly(d);this.renderKPIs(this.mo);this.renderTab();}
+  calHeatmap(d){const n=P.dayCount||0;if(!n||!P.dayZero)return;
+    const daily=Array(n).fill(0);d.forEach(r=>{if(r[R.DAY]!=null)daily[r[R.DAY]]+=r[R.NETO];});
+    const calData=[];for(let i=0;i<n;i++){if(daily[i]!==0)calData.push([this.offToDate(i),Math.round(daily[i])]);}
+    const maxv=Math.max(1,...daily.map(v=>Math.abs(v)));
+    const cc=this.chart('c-cal');
+    cc.setOption({tooltip:{formatter:p=>p.value?fmtDate(p.value[0])+': '+moneyFull(p.value[1]):''},
+      visualMap:{min:0,max:maxv,show:false,inRange:{color:['#ffe1d6','#ff8a63','#ff4f20','#24205b']}},
+      calendar:{top:24,left:34,right:14,bottom:8,cellSize:['auto',13],range:[P.dayZero,this.offToDate(n-1)],
+        itemStyle:{borderColor:'#fff',borderWidth:2,color:'#eef0f6'},yearLabel:{show:false},
+        dayLabel:{firstDay:1,nameMap:['D','L','M','M','J','V','S'],fontSize:9,color:'#8b93b0'},
+        monthLabel:{nameMap:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],fontSize:10,color:'#24205b'},splitLine:{show:false}},
+      series:[{type:'heatmap',coordinateSystem:'calendar',data:calData}]},true);
+    let maxi=-1,maxval=-Infinity;daily.forEach((v,i)=>{if(v>maxval){maxval=v;maxi=i;}});
+    const activos=daily.filter(v=>v>0).length;const prom=activos?daily.reduce((a,b)=>a+b,0)/activos:0;
+    const kb=document.getElementById('cal-key');
+    if(kb)kb.innerHTML='<span><b>Día top:</b> '+(maxi>=0?fmtDate(this.offToDate(maxi))+' ('+moneyFull(maxval)+')':'—')+'</span>'+
+      '<span><b>Días con venta:</b> '+activos+'</span>'+
+      '<span><b>Promedio diario:</b> '+moneyFull(prom)+'</span>'+
+      '<span><b>Último corte:</b> '+fmtDate(P.dateMax)+'</span>';}
   bindTabs(){document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -641,6 +681,7 @@ class App{
     const lastReal=idxData[idxData.length-1];if(lastReal>=0)projOnly[lastReal]=proj[lastReal];
     return {yFull,proj,realOnly,projOnly,lr,idxData,partial:pi.partial,partialCal,lastFullEst,pi};}
   tResumen(d,mo){
+    this.calHeatmap(d);
     const pj=this.projLine(mo);const c=this.chart('c-trend');
     c.setOption({grid:{top:20,bottom:30,left:55,right:20,containLabel:true},legend:{data:['Real','Proyección'],bottom:0},
       tooltip:{trigger:'axis',valueFormatter:v=>v==null?'–':moneyFull(v)},

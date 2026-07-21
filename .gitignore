@@ -1,5 +1,6 @@
 secrets.json
 data_ip.xlsx
+*.xlsx
 patch.py
 site/
 *.log

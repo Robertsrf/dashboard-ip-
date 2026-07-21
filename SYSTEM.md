@@ -57,8 +57,9 @@ Excel ventas ──> build_dashboard.py ──> encode dims + rows ──> combi
 
 Cada fila `P.rows[i]` es un array; los índices están en `R`:
 ```
-R = {MES:0, GRUPO:1, VEND:2, SECTOR:3, MARCA:4, CLI:5, PROD:6, DOC:7, CANT:8, DEV:9, NETO:10}
+R = {MES:0, GRUPO:1, VEND:2, SECTOR:3, MARCA:4, CLI:5, PROD:6, DOC:7, CANT:8, DEV:9, NETO:10, DAY:11}
 ```
+`DAY` = días transcurridos desde `P.dayZero` (fecha de la venta más antigua). `P.dayCount` = total de días. Con esto se filtra por día/semana y se pinta el calendario. (Requiere regenerar; si `P.dayZero` no existe, la UI de fechas se oculta y no filtra por día.)
 `P.dims` contiene los nombres/labels por dimensión:
 `mes, mesLabels, fullLabels, histMonthNums, grupo, vendedor, sector, marca, cliente, producto`.
 
@@ -112,6 +113,19 @@ La pestaña `log` (registro de ingresos) se **eliminó** al pasar a GitHub Pages
 4. **Tarea automática (Cowork, cada 3 días):** genera `index.html` con `build_dashboard.py` y luego llama a **`python publish.py`** (git add/commit/push). Antes desplegaba a Netlify; ahora publica por git. El entorno de la tarea necesita credenciales de push a GitHub (token/PAT o SSH).
 5. **Ya NO hay funciones serverless.** Se quitó la función `log` (registro de ingresos) porque GitHub Pages es solo estático. El login sigue igual; solo no se registra quién entra.
 
+## 8b. Regeneración manual (cuando la tarea automática no puede)
+
+Para regenerar `index.html` a mano en esta PC (reproduce producción + datos por día). Requiere `cryptography` y `pandas` (ya instalados) y, en la carpeta del repo, `secrets.json` + `data_ip.xlsx` + `risk_list.xlsx` (los dos xlsx están en `.gitignore`).
+
+- **Versión:** formato `<dataFileId>|<modifiedTime>|<size>~E:<execId>~R:<riskId>~L:<listId>`. Se ve en el `<!-- DATA_VERSION -->` del `index.html`. Usar la MISMA versión evita que `reports.py` duplique el corte en `history.json` (solo agrega si la versión cambia).
+- **Comando** (desde la carpeta del repo):
+  ```
+  EXEC_ID=<execId> RISK_ID=<riskId> LIST_ID=<listId> RISK_LIST_XLSX=./risk_list.xlsx \
+  SECRETS_PATH=./secrets.json python build_dashboard.py ./data_ip.xlsx "<VERSION>" ./index.html
+  ```
+- Validar: descifrar con un PIN real y comprobar los 4 logins, `dayCount`, `riskList` y `driveLinks`; luego `git push`.
+- Los IDs de Drive (E/R/L) y la carpeta de datos están en el Drive del usuario (carpeta "Informes IP", parentId `1K1FPQkJBgwqjzSoVxEX6AbZFVzhQzscE`).
+
 ## 9. Respaldos
 
 Cada vez que subimos un cambio se guarda una copia completa del sistema en:
@@ -133,5 +147,6 @@ C:\Users\RJ\Desktop\Sitios web  pruebas\dashboard-ip-_backups\prod_<FECHA-HORA>\
   (3) Nuevo **slider deslizable de rango de tiempo** (`#timebar`, se combina con el filtro Mes). (4) Casillas
   de los menús se sincronizan solo al abrir (rendimiento).
 - **2026-07-21 (b)** — (1) **Tendencia/proyección con mes parcial** (ver §5b): escala el mes incompleto a cierre y corrige el desfase de la regresión. (2) **Gráficos de barras responsive** con ventana fija + slider vertical y eje X que se reescala a lo visible (móvil y escritorio). (3) Nuevos **gráficos de comparación mensual** en Clientes (`c-clicmp`) y Productos (`c-prodcmp`) — top 6 (Vendedores y Marcas ya los tenían).
+- **2026-07-21 (e)** — **Datos por día** (regenerado desde el Excel real): cada fila trae `DAY` (offset desde `dayZero`). Nuevo **filtro por rango de fechas con calendario** (inputs `Desde/Hasta` + atajos: Último día/7 días/Este mes/Todo) que reemplaza el slider mensual. Nueva **tarjeta calendario mapa de calor** (`c-cal`, venta por día) + datos clave (día top, días con venta, promedio diario, último corte). Se preservaron logins, informes, lista de riesgo y links de Drive. Ver §8b.
 - **2026-07-21 (d)** — Botón de **info (i)** en cada tarjeta KPI con explicación de qué mide y qué significa el delta ▲/▼ y "(proy.)". CSS `.kpi` pasa a `overflow:visible` para que el tooltip no se recorte.
 - **2026-07-21 (c)** — Migración a **GitHub Pages**: (1) se eliminó la función serverless `log` y la pestaña 🔒 Registro (login sigue igual, ya no se registran accesos). (2) `package.json` sin dependencias Netlify. (3) Nuevo `publish.py` (git add/commit/push) y `.nojekyll`. (4) La tarea automática ahora publica por git en vez de Netlify.
