@@ -141,6 +141,10 @@ C:\Users\RJ\Desktop\Sitios web  pruebas\dashboard-ip-_backups\prod_<FECHA-HORA>\
 - `filterMode:'filter'` → al desplazarte, el **eje X se reescala a las barras visibles** (soluciona el problema de que un valor enorme aplaste a los pequeños).
 - `isMob()` (ancho ≤640) ajusta ventana, márgenes, truncado de etiquetas y tamaños de fuente. Al cruzar el breakpoint se re-renderiza la pestaña.
 
+## Sección Sectores / Zonas
+
+Los sectores son ciudades de Venezuela en formato `CIUDAD,ESTADO,VE` (estados: Trujillo, Zulia, Mérida, Táchira, Portuguesa). Pestaña `sector` (`tSector`): ranking (`c-secrank`, hbz windowed + clic filtra), **ventas por estado** (`c-secestado`, pie; el estado se saca de `sector.split(',')[1]`), comparación mensual top 6 (`c-seccmp`) y tabla (`t-sector`). **Mapa geográfico pendiente** (decidir estilo: tile tipo Google Maps con coordenadas por ciudad vs. choropleth por estado).
+
 ## 10. Registro de cambios
 
 - **2026-07-21 (a)** — (1) Chips de filtro colapsados a un solo chip con conteo. (2) Nuevo segmentador **Cliente**.

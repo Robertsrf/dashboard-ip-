@@ -342,6 +342,7 @@ body.locked{overflow:hidden}
     <button data-tab="tend">Tendencia y proyección</button>
     <button data-tab="vend">Vendedores</button>
     <button data-tab="marca">Marcas y grupos</button>
+    <button data-tab="sector">🗺️ Sectores / Zonas</button>
     <button data-tab="cli">Clientes</button>
     <button data-tab="prod">Productos / SKU</button>
     <button data-tab="comp">⚖️ Comparar</button>
@@ -391,6 +392,15 @@ body.locked{overflow:hidden}
       <div class="card"><h3>Grupos por mes</h3><div class="hint">Venta neta apilada por grupo</div><div id="c-grupomes" class="chart"></div></div>
       <div class="card"><h3>Tabla de marcas</h3><input class="tsearch" id="s-marca" placeholder="Buscar marca..."><div class="tblwrap"><table id="t-marca"></table></div></div>
     </div>
+  </div>
+
+  <div class="panel" data-panel="sector">
+    <div class="grid g2">
+      <div class="card"><h3>Ranking de sectores por venta neta</h3><div class="hint">Muestra ~10 · desliza para ver el resto · clic para filtrar</div><div id="c-secrank" class="chart tall"></div></div>
+      <div class="card"><h3>Ventas por estado</h3><div class="hint">Agrupa los sectores por estado (Trujillo, Zulia, Mérida…)</div><div id="c-secestado" class="chart tall"></div></div>
+    </div>
+    <div class="grid"><div class="card"><h3>Comparación mensual de sectores (top 6)</h3><div class="hint">Trayectoria de venta neta de las 6 zonas líderes</div><div id="c-seccmp" class="chart tall"></div></div></div>
+    <div class="grid"><div class="card"><h3>Tabla de sectores</h3><input class="tsearch" id="s-sector" placeholder="Buscar sector..."><div class="tblwrap"><table id="t-sector"></table></div></div></div>
   </div>
 
   <div class="panel" data-panel="cli">
@@ -465,7 +475,10 @@ const TIPS={'c-trend':'Venta neta real por mes (barras) y proyección lineal has
   'c-produ':'Productos (SKU) ordenados por unidades vendidas. Desliza para ver más.',
   'c-clicmp':'Trayectoria mensual de venta neta de los 6 clientes líderes.',
   'c-prodcmp':'Trayectoria mensual de venta neta de los 6 productos líderes.',
-  'c-cal':'Cada celda es un día; el color indica la venta neta de ese día. Respeta los filtros activos.'};
+  'c-cal':'Cada celda es un día; el color indica la venta neta de ese día. Respeta los filtros activos.',
+  'c-secrank':'Sectores/zonas ordenados por venta neta. Muestra ~10 y desliza para ver el resto. Clic para filtrar.',
+  'c-secestado':'Venta neta agrupada por estado.',
+  'c-seccmp':'Trayectoria mensual de venta neta de las 6 zonas líderes.'};
 
 const PRINT_CSS=`*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 body{padding:28px;color:#24205b}.rephead{display:flex;justify-content:space-between;border-bottom:3px solid #ff4f20;padding-bottom:12px;margin-bottom:16px}
@@ -703,7 +716,7 @@ class App{
     setTimeout(()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()},30)})}
   renderTab(){const t=this.tab,d=this.d,mo=this.mo;
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
-    else if(t==='marca')this.tMarca(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='comp')this.tComp();else if(t==='rlist')renderRList();}
+    else if(t==='marca')this.tMarca(d,mo);else if(t==='sector')this.tSector(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='comp')this.tComp();else if(t==='rlist')renderRList();}
   projLine(mo){const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);
     mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);
     const eo=this.effNeto(mo),pi=eo.pi;const xs=idxData,ys=eo.eff,nn=xs.length;
@@ -788,6 +801,17 @@ class App{
       yAxis:{type:'value',axisLabel:{formatter:money}},color:PAL,
       series:gtop.map((i,k)=>({name:P.dims.grupo[i],type:'bar',stack:'g',data:gmap[i].map(Math.round),barMaxWidth:38}))},true);
     this.entTable('t-marca','s-marca',g,P.dims.marca,'Marca',n=>this.toggleFilter('marca',n))}
+  tSector(d,mo){
+    const g=this.groupBy(d,R.SECTOR);
+    this.hbz('c-secrank',this.topN(g,P.dims.sector,999999).map(x=>[x[0],x[1]]),{color:'#3aa0d1',left:180,trunc:26,zoom:true,window:10,click:n=>this.toggleFilter('sector',n)});
+    const est={};g.forEach((o,i)=>{const p=(P.dims.sector[i]||'').split(',');const st=(p[1]||p[0]||'?').trim();est[st]=(est[st]||0)+o.neto;});
+    const ee=Object.keys(est).map(k=>({name:k,value:Math.round(est[k])})).sort((a,b)=>b.value-a.value);
+    const ec=this.chart('c-secestado');ec.setOption({tooltip:{trigger:'item',valueFormatter:v=>moneyFull(v)},legend:{type:'scroll',bottom:0},
+      series:[{type:'pie',radius:['42%','70%'],center:['50%','45%'],itemStyle:{borderColor:'#fff',borderWidth:2},label:{formatter:'{b}\n{d}%',fontSize:11,color:'#24205b'},data:ee,color:PAL}]},true);
+    const cmp=this.chart('c-seccmp');cmp.setOption({grid:{top:20,bottom:34,left:55,right:20,containLabel:true},legend:{type:'scroll',bottom:0},
+      tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
+      series:this.monthlyByDim(d,R.SECTOR,P.dims.sector,6),color:PAL},true);
+    this.entTable('t-sector','s-sector',g,P.dims.sector,'Sector',n=>this.toggleFilter('sector',n))}
   tCli(d,mo){
     const g=this.groupBy(d,R.CLI);
     this.hbz('c-cli',this.topN(g,P.dims.cliente,999999).map(x=>[x[0],x[1]]),{color:'#e0708a',left:190,trunc:30,zoom:true,window:10});
