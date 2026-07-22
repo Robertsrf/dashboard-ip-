@@ -516,20 +516,22 @@ class App{
   injectDownloads(){document.querySelectorAll('.card').forEach(card=>{
     const cv=card.querySelector('.chart');if(!cv||!cv.id)return;
     const h=card.querySelector('h3');if(!h||h.querySelector('.dlimg'))return;
-    const b=document.createElement('span');b.className='dlimg';b.textContent='⬇';b.title='Descargar imagen';
+    const b=document.createElement('span');b.className='dlimg';b.textContent='⬇';b.title='Descargar imagen HD';
     b.onclick=()=>{const c=this.ch[cv.id];if(!c){alert('Abre la pestaña del gráfico primero.');return;}
       const title=(h.firstChild&&h.firstChild.nodeType===3?h.firstChild.textContent:h.textContent).trim();
       const hn=card.querySelector('.hint');const sub=hn?hn.textContent.trim():'';
-      const durl=c.getDataURL({type:'png',pixelRatio:2,backgroundColor:'#fff'});
-      const img=new Image();img.onload=()=>{
-        const pad=40,headH=sub?126:84;const cvs=document.createElement('canvas');
-        cvs.width=img.width;cvs.height=img.height+headH;const ctx=cvs.getContext('2d');
-        ctx.fillStyle='#fff';ctx.fillRect(0,0,cvs.width,cvs.height);ctx.textBaseline='top';
-        ctx.fillStyle='#24205b';ctx.font='700 30px Inter,Arial,sans-serif';ctx.fillText(title,pad,34);
-        if(sub){ctx.fillStyle='#6b7392';ctx.font='400 19px Inter,Arial,sans-serif';ctx.fillText(sub,pad,76);}
-        ctx.fillStyle='#ff4f20';ctx.fillRect(pad,headH-12,cvs.width-2*pad,3);ctx.drawImage(img,0,headH);
+      const w=c.getWidth()||700,chh=c.getHeight()||360,headBase=sub?66:44,TARGET=1200;
+      let pr=Math.max(2,Math.ceil(TARGET/w),Math.ceil(TARGET/(chh+headBase)));pr=Math.min(pr,8);
+      const durl=c.getDataURL({type:'png',pixelRatio:pr,backgroundColor:'#fff'});
+      const img=new Image();img.onload=()=>{const s=pr,pad=Math.round(20*s),headH=Math.round(headBase*s);
+        const cvs=document.createElement('canvas');cvs.width=img.width;cvs.height=img.height+headH;
+        const ctx=cvs.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cvs.width,cvs.height);ctx.textBaseline='top';
+        ctx.fillStyle='#24205b';ctx.font='700 '+Math.round(15*s)+'px Inter,Arial,sans-serif';ctx.fillText(title,pad,Math.round(16*s));
+        if(sub){ctx.fillStyle='#6b7392';ctx.font='400 '+Math.round(10*s)+'px Inter,Arial,sans-serif';ctx.fillText(sub,pad,Math.round(37*s));}
+        ctx.fillStyle='#ff4f20';ctx.fillRect(pad,headH-Math.round(6*s),cvs.width-2*pad,Math.max(2,Math.round(1.5*s)));
+        ctx.drawImage(img,0,headH);
         const a=document.createElement('a');a.href=cvs.toDataURL('image/png');
-        a.download=(title||'grafico').replace(/[^\w]+/g,'_').slice(0,40)+'.png';document.body.appendChild(a);a.click();a.remove();};
+        a.download=(title||'grafico').replace(/[^\w]+/g,'_').slice(0,40)+'_HD.png';document.body.appendChild(a);a.click();a.remove();};
       img.src=durl;};
     h.appendChild(b);});}
   buildFilters(){
