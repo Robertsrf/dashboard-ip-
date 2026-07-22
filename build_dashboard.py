@@ -520,8 +520,8 @@ class App{
     b.onclick=()=>{const c=this.ch[cv.id];if(!c){alert('Abre la pestaña del gráfico primero.');return;}
       const title=(h.firstChild&&h.firstChild.nodeType===3?h.firstChild.textContent:h.textContent).trim();
       const hn=card.querySelector('.hint');const sub=hn?hn.textContent.trim():'';
-      const w=c.getWidth()||700,chh=c.getHeight()||360,headBase=sub?66:44,TARGET=1200;
-      let pr=Math.max(2,Math.ceil(TARGET/w),Math.ceil(TARGET/(chh+headBase)));pr=Math.min(pr,8);
+      const w=c.getWidth()||700,chh=c.getHeight()||360,headBase=sub?66:44,Wm=w,Hm=chh+headBase;
+      let pr=Math.max(2,Math.ceil(2048/Math.max(Wm,Hm)),Math.ceil(1280/Math.min(Wm,Hm)));pr=Math.min(pr,8);
       const durl=c.getDataURL({type:'png',pixelRatio:pr,backgroundColor:'#fff'});
       const img=new Image();img.onload=()=>{const s=pr,pad=Math.round(20*s),headH=Math.round(headBase*s);
         const cvs=document.createElement('canvas');cvs.width=img.width;cvs.height=img.height+headH;
