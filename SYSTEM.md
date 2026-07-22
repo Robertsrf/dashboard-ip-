@@ -143,9 +143,11 @@ C:\Users\RJ\Desktop\Sitios web  pruebas\dashboard-ip-_backups\prod_<FECHA-HORA>\
 
 ## Sección Sectores / Zonas
 
-Los sectores son ciudades de Venezuela en formato `CIUDAD,ESTADO,VE` (estados: Trujillo, Zulia, Mérida, Táchira, Portuguesa). Pestaña `sector` (`tSector`): ranking (`c-secrank`, hbz windowed + clic filtra), **ventas por estado** (`c-secestado`, pie; el estado se saca de `sector.split(',')[1]`), comparación mensual top 6 (`c-seccmp`) y tabla (`t-sector`). **Mapa geográfico pendiente** (decidir estilo: tile tipo Google Maps con coordenadas por ciudad vs. choropleth por estado).
+Los sectores son ciudades de Venezuela en formato `CIUDAD,ESTADO,VE` (estados: Trujillo, Zulia, Mérida, Táchira, Portuguesa). Pestaña `sector` (`tSector`): ranking (`c-secrank`, hbz windowed + clic filtra), **ventas por estado** (`c-secestado`, pie; el estado se saca de `sector.split(',')[1]`), comparación mensual top 6 (`c-seccmp`) y tabla (`t-sector`). **Mapa choropleth de estados** (`c-secmap`): `ve_states.geojson` (25 estados VE simplificados, ~34 KB) se embebe vía placeholder `__VE_GEO__` → `const VE_GEO`; se registra con `echarts.registerMap('VE',...)`, colorea por venta (estado sacado de `sector.split(',')[1]`, emparejado con `vnorm` = mayús+sin acentos), roam (zoom/pan) y clic → `filterByState` filtra los sectores de ese estado. `ve_states.geojson` vive en el repo (regenerarlo: `scratchpad/simplify_geo.py` desde geoBoundaries VEN ADM1).
 
 ## 10. Registro de cambios
+
+- **2026-07-21 (i)** — Nueva **sección Sectores/Zonas** con KPIs (ranking, ventas por estado, comparación mensual, tabla) + **mapa choropleth interactivo de los estados de Venezuela** (`ve_states.geojson` embebido, clic filtra sectores del estado). Ver sección "Sectores / Zonas".
 
 - **2026-07-21 (a)** — (1) Chips de filtro colapsados a un solo chip con conteo. (2) Nuevo segmentador **Cliente**.
   (3) Nuevo **slider deslizable de rango de tiempo** (`#timebar`, se combina con el filtro Mes). (4) Casillas

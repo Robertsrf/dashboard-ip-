@@ -119,8 +119,11 @@ def main():
     enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
     logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.svg")
     logo_svg = open(logo_path, encoding="utf-8").read() if os.path.exists(logo_path) else '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#24205b" stroke-width="5"/><text x="50" y="66" font-size="46" font-weight="700" fill="#ff4f20" text-anchor="middle" font-family="Georgia,serif">IP</text></svg>'
+    ve_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ve_states.geojson")
+    ve_geo = open(ve_path, encoding="utf-8").read() if os.path.exists(ve_path) else '{"type":"FeatureCollection","features":[]}'
     out_html = (TEMPLATE.replace("__VERSION__", html.escape(version))
                         .replace("__ENC_JSON__", enc_json)
+                        .replace("__VE_GEO__", ve_geo)
                         .replace("__LOGO_SVG__", logo_svg))
     with open(out, "w", encoding="utf-8") as f:
         f.write(out_html)
@@ -399,6 +402,7 @@ body.locked{overflow:hidden}
       <div class="card"><h3>Ranking de sectores por venta neta</h3><div class="hint">Muestra ~10 · desliza para ver el resto · clic para filtrar</div><div id="c-secrank" class="chart tall"></div></div>
       <div class="card"><h3>Ventas por estado</h3><div class="hint">Agrupa los sectores por estado (Trujillo, Zulia, Mérida…)</div><div id="c-secestado" class="chart tall"></div></div>
     </div>
+    <div class="grid"><div class="card"><h3>Mapa de ventas por estado</h3><div class="hint">Color = venta neta · mouse para el detalle · clic en un estado para filtrar sus sectores · rueda del mouse para zoom</div><div id="c-secmap" class="chart" style="height:520px"></div></div></div>
     <div class="grid"><div class="card"><h3>Comparación mensual de sectores (top 6)</h3><div class="hint">Trayectoria de venta neta de las 6 zonas líderes</div><div id="c-seccmp" class="chart tall"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de sectores</h3><input class="tsearch" id="s-sector" placeholder="Buscar sector..."><div class="tblwrap"><table id="t-sector"></table></div></div></div>
   </div>
@@ -440,6 +444,7 @@ body.locked{overflow:hidden}
 
 <script>
 const ENC = __ENC_JSON__;
+const VE_GEO=__VE_GEO__;
 let P=null;
 const R={MES:0,GRUPO:1,VEND:2,SECTOR:3,MARCA:4,CLI:5,PROD:6,DOC:7,CANT:8,DEV:9,NETO:10,DAY:11};
 const PAL=['#ff4f20','#24205b','#17a39a','#f4a72c','#5b6aa0','#e0708a','#3aa0d1','#7c9a2b','#b0552c','#9488c9','#e8b64a','#2f8f86'];
@@ -453,6 +458,7 @@ function initMeta(){DIMS={mes:{field:R.MES,names:P.dims.mesLabels,label:'Mes'},
   nameIdx={};for(const k in DIMS){nameIdx[k]=new Map(DIMS[k].names.map((n,i)=>[n,i]))}}
 const money=v=>'$'+(v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':Math.round(v));
 const moneyFull=v=>'$'+Math.round(v).toLocaleString('es');
+const vnorm=s=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 const intf=v=>Math.round(v).toLocaleString('es');
 const pct=v=>(v>=0?'+':'')+v.toFixed(1)+'%';
 const fmtDate=s=>{const p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]};
@@ -808,10 +814,27 @@ class App{
     const ee=Object.keys(est).map(k=>({name:k,value:Math.round(est[k])})).sort((a,b)=>b.value-a.value);
     const ec=this.chart('c-secestado');ec.setOption({tooltip:{trigger:'item',valueFormatter:v=>moneyFull(v)},legend:{type:'scroll',bottom:0},
       series:[{type:'pie',radius:['42%','70%'],center:['50%','45%'],itemStyle:{borderColor:'#fff',borderWidth:2},label:{formatter:'{b}\n{d}%',fontSize:11,color:'#24205b'},data:ee,color:PAL}]},true);
+    if(VE_GEO&&VE_GEO.features&&VE_GEO.features.length){
+      if(!this._veReg){echarts.registerMap('VE',VE_GEO);this._veReg=true;this._veName={};VE_GEO.features.forEach(ff=>{this._veName[vnorm(ff.properties.name)]=ff.properties.name;});}
+      const mapData=Object.keys(est).map(k=>({name:this._veName[vnorm(k)]||k,value:Math.round(est[k])}));
+      const mv=Math.max(1,...mapData.map(x=>x.value));
+      const mc=this.chart('c-secmap');
+      mc.setOption({tooltip:{trigger:'item',formatter:p=>p.name+': '+(p.value?moneyFull(p.value):'sin ventas')},
+        visualMap:{left:12,bottom:16,min:0,max:mv,text:['Más','Menos'],calculable:true,inRange:{color:['#eef0f6','#9fc3e6','#3aa0d1','#24205b']},textStyle:{fontSize:10,color:'#6b7392'}},
+        series:[{type:'map',map:'VE',roam:true,nameProperty:'name',data:mapData,scaleLimit:{min:1,max:12},
+          label:{show:false},itemStyle:{borderColor:'#fff',borderWidth:1,areaColor:'#f5f6fa'},
+          emphasis:{label:{show:true,fontSize:10,color:'#24205b'},itemStyle:{areaColor:'#ffb59e'}}}]},true);
+      mc.off('click');mc.on('click',p=>{if(p&&p.name)this.filterByState(p.name);});
+    }
     const cmp=this.chart('c-seccmp');cmp.setOption({grid:{top:20,bottom:34,left:55,right:20,containLabel:true},legend:{type:'scroll',bottom:0},
       tooltip:{trigger:'axis',valueFormatter:v=>moneyFull(v)},xAxis:{type:'category',data:P.dims.mesLabels},yAxis:{type:'value',axisLabel:{formatter:money}},
       series:this.monthlyByDim(d,R.SECTOR,P.dims.sector,6),color:PAL},true);
     this.entTable('t-sector','s-sector',g,P.dims.sector,'Sector',n=>this.toggleFilter('sector',n))}
+  filterByState(stateName){const t=vnorm(stateName);const idxs=[];
+    P.dims.sector.forEach((s,i)=>{const st=vnorm((s.split(',')[1]||s));if(st===t)idxs.push(i);});
+    if(!idxs.length)return;const cur=this.f.sector;
+    const same=cur.size===idxs.length&&idxs.every(i=>cur.has(i));
+    this.f.sector=same?new Set():new Set(idxs);this.render();}
   tCli(d,mo){
     const g=this.groupBy(d,R.CLI);
     this.hbz('c-cli',this.topN(g,P.dims.cliente,999999).map(x=>[x[0],x[1]]),{color:'#e0708a',left:190,trunc:30,zoom:true,window:10});
