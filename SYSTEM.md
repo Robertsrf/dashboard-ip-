@@ -147,6 +147,7 @@ Los sectores son ciudades de Venezuela en formato `CIUDAD,ESTADO,VE` (estados: T
 
 ## 10. Registro de cambios
 
+- **2026-07-21 (j)** — Leyendas con **valores** para gráficos "solo color" (para que la imagen descargada se entienda): mapa con **escala numérica** ($0→máx) + **etiqueta de monto sobre cada estado** con datos; calendario con **escala de color numérica** visible (antes oculta).
 - **2026-07-21 (i)** — Nueva **sección Sectores/Zonas** con KPIs (ranking, ventas por estado, comparación mensual, tabla) + **mapa choropleth interactivo de los estados de Venezuela** (`ve_states.geojson` embebido, clic filtra sectores del estado). Ver sección "Sectores / Zonas".
 
 - **2026-07-21 (a)** — (1) Chips de filtro colapsados a un solo chip con conteo. (2) Nuevo segmentador **Cliente**.

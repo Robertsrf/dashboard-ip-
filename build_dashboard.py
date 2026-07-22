@@ -701,8 +701,8 @@ class App{
     const maxv=Math.max(1,...daily.map(v=>Math.abs(v)));
     const cc=this.chart('c-cal');
     cc.setOption({tooltip:{formatter:p=>p.value?fmtDate(p.value[0])+': '+moneyFull(p.value[1]):''},
-      visualMap:{min:0,max:maxv,show:false,inRange:{color:['#ffe1d6','#ff8a63','#ff4f20','#24205b']}},
-      calendar:{top:24,left:34,right:14,bottom:8,cellSize:['auto',13],range:[P.dayZero,this.offToDate(n-1)],
+      visualMap:{min:0,max:maxv,show:true,right:6,top:'middle',itemWidth:11,itemHeight:90,calculable:true,text:[moneyFull(maxv),'$0'],textStyle:{fontSize:9,color:'#6b7392'},inRange:{color:['#ffe1d6','#ff8a63','#ff4f20','#24205b']}},
+      calendar:{top:24,left:34,right:72,bottom:8,cellSize:['auto',13],range:[P.dayZero,this.offToDate(n-1)],
         itemStyle:{borderColor:'#fff',borderWidth:2,color:'#eef0f6'},yearLabel:{show:false},
         dayLabel:{firstDay:1,nameMap:['D','L','M','M','J','V','S'],fontSize:9,color:'#8b93b0'},
         monthLabel:{nameMap:['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],fontSize:10,color:'#24205b'},splitLine:{show:false}},
@@ -820,9 +820,9 @@ class App{
       const mv=Math.max(1,...mapData.map(x=>x.value));
       const mc=this.chart('c-secmap');
       mc.setOption({tooltip:{trigger:'item',formatter:p=>p.name+': '+(p.value?moneyFull(p.value):'sin ventas')},
-        visualMap:{left:12,bottom:16,min:0,max:mv,text:['Más','Menos'],calculable:true,inRange:{color:['#eef0f6','#9fc3e6','#3aa0d1','#24205b']},textStyle:{fontSize:10,color:'#6b7392'}},
+        visualMap:{left:12,bottom:16,min:0,max:mv,text:[moneyFull(mv),'$0'],calculable:true,inRange:{color:['#eef0f6','#9fc3e6','#3aa0d1','#24205b']},textStyle:{fontSize:10,color:'#6b7392'}},
         series:[{type:'map',map:'VE',roam:true,nameProperty:'name',data:mapData,scaleLimit:{min:1,max:12},
-          label:{show:false},itemStyle:{borderColor:'#fff',borderWidth:1,areaColor:'#f5f6fa'},
+          label:{show:true,fontSize:9,color:'#24205b',formatter:p=>(p.value&&!isNaN(p.value))?p.name+'\n'+money(p.value):''},itemStyle:{borderColor:'#fff',borderWidth:1,areaColor:'#f5f6fa'},
           emphasis:{label:{show:true,fontSize:10,color:'#24205b'},itemStyle:{areaColor:'#ffb59e'}}}]},true);
       mc.off('click');mc.on('click',p=>{if(p&&p.name)this.filterByState(p.name);});
     }
