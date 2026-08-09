@@ -22,5 +22,17 @@
   "recuperados": 17,
   "top10_share": 34.7,
   "ticket": 193.95
+ },
+ {
+  "version": "1eWDRLFfBu3LbJjRN9PPSOsicF8khAypl|2026-08-08T19:33:46Z|5174792~E:embed",
+  "dateMax": "2026-07-31",
+  "total": 2964385.29,
+  "best_month": "2026-05",
+  "best_val": 553580.92,
+  "clientes": 1333,
+  "riesgo": 428,
+  "recuperados": 38,
+  "top10_share": 34.3,
+  "ticket": 193.14
  }
 ]
