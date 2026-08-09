@@ -5,6 +5,16 @@ Mantiene history.json (cortes) para comparaciones."""
 import os, json, calendar
 import pandas as pd
 
+# Los primeros informes se hicieron a mano, ANTES de que existiera el sistema, y
+# por eso no estan en history.json. El numero de corte que sale en los informes
+# es len(history.json) + CORTE_OFFSET.
+#   history.json:  2026-06-30 -> Corte 5   ·   2026-07-15 -> Corte 6
+#   proximo corte (2026-07-30)             ->  Corte 7
+# Si algun dia se recuperan los cortes historicos y se cargan en history.json,
+# hay que bajar este offset en la misma cantidad. Se puede pisar con la variable
+# de entorno CORTE_OFFSET sin tocar el codigo.
+CORTE_OFFSET = int(os.environ.get("CORTE_OFFSET", "4"))
+
 M = lambda x: f"${x:,.0f}"
 def tbl(headers, rows, nums=None):
     nums = nums or set()
@@ -104,7 +114,7 @@ def metrics(df, history_path, version):
         cli_tot=cli_tot,cli_fac=cli_fac,ncli=ncli,top10=top10,sec=sec,
         risk=risk,risk_val=risk_val,rv=rv,rs=rs,risk20=risk20,last_pur=last_pur,dom_v=dom_v,dom_s=dom_s,
         recov=recov,recov_val=recov_val,rbv=rbv,recov_top=recov_top,lastval=lastval,cli_months=cli_months,
-        hist=hist,corte=len(hist),snap=snap)
+        hist=hist,corte=len(hist)+CORTE_OFFSET,snap=snap)
 
 
 def _perfil(r, tk_med):
@@ -138,14 +148,14 @@ def render_exec_full(m):
     # 1.1 cortes
     parts.append('<h3>1.1 Evolución entre cortes</h3>')
     if len(hist)>=2:
-        hdr=["Indicador"]+[f"Corte {i+1}" for i in range(len(hist))]
+        hdr=["Indicador"]+[f"Corte {i+1+CORTE_OFFSET}" for i in range(len(hist))]
         rows=[["Ingresos acumulados"]+[M(h["total"]) for h in hist],
               ["Clientes únicos"]+[f'{h["clientes"]:,}' for h in hist],
               ["Concentración Top 10"]+[f'{h["top10_share"]}%' for h in hist],
               ["Clientes en riesgo"]+[str(h["riesgo"]) for h in hist]]
         parts.append(tbl(hdr,rows,set(range(1,len(hist)+1))))
         dv=hist[-1]["total"]-hist[-2]["total"]; dp=dv/hist[-2]["total"]*100 if hist[-2]["total"] else 0
-        parts.append(f'<p>El crecimiento entre el corte {len(hist)-1} y el {len(hist)} es de <b>{M(dv)} ({dp:+.1f}%)</b>.</p>')
+        parts.append(f'<p>El crecimiento entre el corte {len(hist)-1+CORTE_OFFSET} y el {len(hist)+CORTE_OFFSET} es de <b>{M(dv)} ({dp:+.1f}%)</b>.</p>')
     else:
         parts.append('<p><i>Primer corte de la serie: las comparaciones entre cortes se poblarán automáticamente a partir del próximo informe.</i></p>')
     # 1.3 hallazgos
@@ -289,7 +299,7 @@ def render_risk_full(m):
     p.append(f'<p>Se aplican los parámetros de riesgo sobre toda la data actualizada para detectar el universo completo de clientes que requieren reactivación. Hay <b>{len(m["risk"])} clientes en riesgo</b> ({M(m["risk_val"])} históricos) y <b>{len(m["recov"])} recuperados</b> en {MES[mm].lower()} ({M(m["recov_val"])}).</p>')
     if len(m["hist"])>=2:
         p.append('<h3>1.1 Evolución de la cartera entre cortes</h3>')
-        p.append(tbl(["Corte","Fecha","En riesgo","Recuperados"],[[i+1,h["dateMax"],str(h["riesgo"]),str(h.get("recuperados","-"))] for i,h in enumerate(m["hist"])],{2,3}))
+        p.append(tbl(["Corte","Fecha","En riesgo","Recuperados"],[[i+1+CORTE_OFFSET,h["dateMax"],str(h["riesgo"]),str(h.get("recuperados","-"))] for i,h in enumerate(m["hist"])],{2,3}))
     p.append(box("✅ LA RECUPERACIÓN CONTINÚA",
         f'{len(m["recov"])} clientes dormidos volvieron a comprar en {MES[mm].lower()}, aportando {M(m["recov_val"])}. Muchos clientes tienen ciclos de compra largos y regresan naturalmente; los que llevan meses sin comprar requieren contacto activo, no espera pasiva.','g'))
     p.append(f'<h2>2. Nuevo universo de riesgo — {len(m["risk"])} clientes</h2>')
