@@ -81,8 +81,15 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .content{flex:1 1 auto;min-width:0}
 #sidenav{flex:0 0 234px;width:234px;position:sticky;top:66px;align-self:flex-start;max-height:calc(100vh - 84px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 10px;transition:flex-basis .22s ease,width .22s ease,opacity .18s ease,padding .22s ease}
 body.nav-collapsed #sidenav{flex-basis:0;width:0;opacity:0;padding-left:0;padding-right:0;overflow:hidden;pointer-events:none;border-width:0}
-.navtoggle{background:#fff;border:1px solid var(--line);border-radius:11px;width:40px;height:40px;font-size:18px;line-height:1;color:var(--navy);cursor:pointer;flex:0 0 auto;box-shadow:var(--shadow);transition:.15s}
-.navtoggle:hover{border-color:var(--brand);color:var(--brand)}
+/* Boton de ocultar: primera fila DENTRO del panel, sobre los grupos. */
+.navtoggle{display:flex;align-items:center;gap:9px;width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;margin-bottom:6px;transition:.15s}
+.navtoggle span{font-size:16px;line-height:1;color:var(--navy)}
+.navtoggle:hover{border-color:var(--brand);color:var(--brand);background:#fff2ee}
+.navtoggle:hover span{color:var(--brand)}
+/* Reapertura: solo visible cuando el panel esta oculto. */
+#navopen{display:none;position:fixed;left:14px;top:96px;z-index:45;width:42px;height:42px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:18px;line-height:1;color:var(--navy);cursor:pointer;box-shadow:0 4px 16px rgba(36,32,91,.16);transition:.15s}
+#navopen:hover{border-color:var(--brand);color:var(--brand)}
+body.nav-collapsed #navopen{display:block}
 .navgrp{font-size:10.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);padding:12px 10px 5px}
 .navgrp:first-child{padding-top:4px}
 #navscrim{display:none;position:fixed;inset:0;z-index:110;background:rgba(20,24,48,.42)}
@@ -179,7 +186,11 @@ body.locked{overflow:hidden}
 @media(max-width:640px){
   .top{padding:12px 14px}.top h1{font-size:16px}.top .logo{width:46px;height:46px}.top .logo svg{width:40px;height:40px}
   .top .status{font-size:11px}.wrap{padding:12px 12px 30px;display:block}
-  .top .brand{gap:10px}.navtoggle{width:36px;height:36px;font-size:16px}
+  .top .brand{gap:10px}
+  /* En movil el cajon arranca cerrado, asi que el boton de abrir se ve siempre
+     salvo cuando el cajon ya esta abierto (ahi se usa el de dentro o el scrim). */
+  #navopen{display:block;top:80px;left:10px;width:38px;height:38px;font-size:16px}
+  body.nav-open #navopen{display:none}
   /* En movil el panel es un cajon superpuesto (off-canvas) y arranca cerrado:
      no come ancho al area de graficos. nav-collapsed (escritorio) se neutraliza. */
   #sidenav{position:fixed;top:0;left:0;bottom:0;z-index:120;width:266px;flex:none;max-height:none;height:100%;border-radius:0;border-width:0;border-right:1px solid var(--line);padding:16px 12px 24px;transform:translateX(-100%);transition:transform .22s ease;opacity:1;pointer-events:auto;overflow-y:auto}
@@ -199,7 +210,7 @@ body.locked{overflow:hidden}
 .wcard{background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(36,32,91,.3);padding:28px 40px;text-align:center;border-top:5px solid var(--brand);animation:wpop .35s ease}
 .wemoji{font-size:38px}.wcard h2{color:var(--navy);font-size:23px;margin:6px 0 2px}.wcard p{color:var(--muted);font-size:13px}
 @keyframes wpop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
-@media print{body{background:#fff}.top,.bar,.chips,.tabs,#sidenav,#navscrim,.navtoggle,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0;display:block}.rep{border:none;box-shadow:none;max-width:none}}
+@media print{body{background:#fff}.top,.bar,.chips,.tabs,#sidenav,#navscrim,#navopen,.navtoggle,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0;display:block}.rep{border:none;box-shadow:none;max-width:none}}
 @media(max-width:1050px){.g2,.g3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -208,7 +219,6 @@ body.locked{overflow:hidden}
 <div id="greet" style="display:none"></div>
 <div class="top">
   <div class="brand">
-    <button id="navtoggle" class="navtoggle" type="button" onclick="toggleNav()" title="Mostrar / ocultar el menú" aria-label="Mostrar u ocultar el menú de secciones">☰</button>
     <div class="logo">__LOGO_SVG__</div>
     <div><h1>Distribuidora y Suministros IP</h1><div class="meta" id="meta"></div></div>
   </div>
@@ -228,8 +238,12 @@ body.locked{overflow:hidden}
 <div class="chips" id="chips"></div>
 
 <div id="navscrim" onclick="toggleNav()"></div>
+<!-- Con el boton de ocultar DENTRO del panel, al cerrarlo desaparece con el.
+     Este es el unico modo de volver a abrirlo: solo se ve con el panel oculto. -->
+<button id="navopen" type="button" onclick="toggleNav()" title="Mostrar el menú" aria-label="Mostrar el menú de secciones">☰</button>
 <div class="wrap">
   <aside id="sidenav">
+    <button id="navtoggle" class="navtoggle" type="button" onclick="toggleNav()" title="Ocultar el menú" aria-label="Ocultar el menú de secciones"><span>☰</span> Ocultar menú</button>
     <div class="tabs" id="tabs">
       <div class="navgrp">Resumen</div>
       <button data-tab="resumen" class="active">Resumen ejecutivo</button>
