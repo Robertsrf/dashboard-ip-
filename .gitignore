@@ -9,3 +9,5 @@ site/
 pipeline/*.json
 pipeline/*.doc
 pipeline/*.pkl
+__pycache__/
+*.pyc
