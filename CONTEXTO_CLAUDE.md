@@ -329,15 +329,15 @@ Dos informes, cada uno con **resumen** (visible en la pestaña) e **informe comp
 ### `history.json`
 Una entrada **por corte**, con: `version, dateMax, total, best_month, best_val, clientes, riesgo, recuperados, top10_share, ticket`. El corte se identifica por **`dateMax`**: si regeneras el mismo corte con otra versión, `reports.py` **reemplaza** la entrada en vez de añadir una nueva (antes solo comparaba `version`, y por eso se acumularon 7 entradas del corte 2026-06-30). Hoy tiene **2 entradas**: 2026-06-30 y 2026-07-15 (total 2 799 090,11 · 1 309 clientes · 484 en riesgo · 17 recuperados · ticket 193,95 · top10 34,7 %).
 
-**Numeración de cortes.** Los primeros informes se hicieron **a mano, antes de que existiera el sistema**, así que no están en `history.json`. Por eso `corte = len(hist) + CORTE_OFFSET`, con `CORTE_OFFSET = 4` en `reports.py` (pisable con la variable de entorno del mismo nombre).
+**Numeración de cortes.** Los primeros informes se hicieron **a mano, antes de que existiera el sistema**, así que no están en `history.json`. Por eso `corte = len(hist) + CORTE_OFFSET`, con `CORTE_OFFSET = 3` en `reports.py` (pisable con la variable de entorno del mismo nombre). **La numeración es la de los archivos de Drive.**
 
-| Entrada de `history.json` | Nº de corte en el informe |
-|---|---|
-| `2026-06-30` | Corte 5 |
-| `2026-07-15` | Corte 6 |
-| *(próximo: `2026-07-30`)* | **Corte 7** |
+| Entrada de `history.json` | Nº de corte | Archivo en Drive |
+|---|---|---|
+| `2026-06-30` | Corte 4 | `Informe_Ejecutivo_4toCorte_CierreSemestre_Junio2026…` |
+| `2026-07-15` | Corte 5 | `Informe_Ejecutivo_5toCorte_Julio2026…` |
+| *(próximo: `2026-07-30`)* | **Corte 6** | `Informe_Ejecutivo_6toCorte_Julio2026…` |
 
-Si algún día se recuperan los cortes 1–4 y se cargan en `history.json`, hay que **bajar el offset en la misma cantidad**.
+Si algún día se recuperan los cortes 1–3 y se cargan en `history.json`, hay que **bajar el offset en la misma cantidad**.
 
 ### `risk_list.xlsx` (Drive, opcional)
 7 hojas: `Índice`, `🔴 En Riesgo (478)`, `🟢 Recuperados Julio (18)`, `🟢 Recuperados Junio (48)`, `🟢 Recuperados Mayo (139)`, `📊 Riesgo x Vendedor`, `📊 Riesgo x Sector`. `risklist.py` salta la hoja "Índice", detecta la fila de encabezados buscando `#`/`Cliente`/`Vendedor`/`Sector / Zona` en las primeras 4 filas, y devuelve `{order, sheets:{nombre:{title, headers, rows, count}}}`.
@@ -462,7 +462,7 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 - **Datos sucios sin limpiar en el dashboard** (`VENDEDOR` "23"/"2", `GRUPO` "6") aparecen como opciones reales en los filtros. El **pipeline de informes** sí los excluye (`pipeline/clean.py`), pero el dashboard no.
 - **Sin tests.** La validación es manual (`node --check`, `py_compile`, comparación de salida, revisión visual).
 - `netlify.toml` y la carpeta `netlify/functions` son residuales.
-- **`history.json` solo tiene 2 cortes registrados** (`2026-06-30` y `2026-07-15`); los cortes 1–4 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 4` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, dos).
+- **`history.json` solo tiene 2 cortes registrados** (`2026-06-30` y `2026-07-15`); los cortes 1–3 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 3` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, dos).
 
 ---
 

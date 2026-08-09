@@ -8,12 +8,14 @@ import pandas as pd
 # Los primeros informes se hicieron a mano, ANTES de que existiera el sistema, y
 # por eso no estan en history.json. El numero de corte que sale en los informes
 # es len(history.json) + CORTE_OFFSET.
-#   history.json:  2026-06-30 -> Corte 5   ·   2026-07-15 -> Corte 6
-#   proximo corte (2026-07-30)             ->  Corte 7
+#   history.json:  2026-06-30 -> Corte 4   ·   2026-07-15 -> Corte 5
+#   proximo corte (2026-07-30)             ->  Corte 6
+# La numeracion es la de los archivos de Drive: 4toCorte (junio, cierre de
+# semestre), 5toCorte (15-jul), 6toCorte (30-jul).
 # Si algun dia se recuperan los cortes historicos y se cargan en history.json,
 # hay que bajar este offset en la misma cantidad. Se puede pisar con la variable
 # de entorno CORTE_OFFSET sin tocar el codigo.
-CORTE_OFFSET = int(os.environ.get("CORTE_OFFSET", "4"))
+CORTE_OFFSET = int(os.environ.get("CORTE_OFFSET", "3"))
 
 M = lambda x: f"${x:,.0f}"
 def tbl(headers, rows, nums=None):
