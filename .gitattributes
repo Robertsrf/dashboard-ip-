@@ -1,0 +1,3 @@
+# El bundle minificado de ECharts se guarda tal cual: git no debe tocarle los
+# finales de linea (core.autocrlf=true los convertiria a CRLF sin necesidad).
+vendor/echarts.min.js -text
