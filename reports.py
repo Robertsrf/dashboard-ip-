@@ -85,8 +85,16 @@ def metrics(df, history_path, version):
           "best_month":best_m,"best_val":round(float(best_v),2),"clientes":int(ncli),
           "riesgo":len(risk),"recuperados":len(recov),"top10_share":round(float(top10),1),
           "ticket":round(float(total/monthly['fac'].sum()),2) if monthly['fac'].sum() else 0}
-    if not hist or hist[-1].get("version")!=version:
+    # Un corte = una fecha de datos (dateMax). Si se regenera el MISMO corte con
+    # otra version (pruebas ~fav/~dl2, IDs de Drive distintos), se reemplaza la
+    # entrada en vez de acumular duplicados que ensucian las comparaciones.
+    if hist and hist[-1].get("dateMax")==snap["dateMax"]:
+        dirty = hist[-1]!=snap
+        hist[-1]=snap
+    else:
         hist.append(snap)
+        dirty = True
+    if dirty:
         try: json.dump(hist,open(history_path,"w",encoding="utf-8"),ensure_ascii=False,indent=1)
         except Exception: pass
     return dict(df=df,months=months,L=L,mm=mm,yy=yy,dim=dim,day_max=day_max,daily=daily,proj_last=proj_last,
