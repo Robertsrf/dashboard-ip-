@@ -55,8 +55,20 @@ En cada corrida se identifican por **fecha de creación más reciente**:
 |------|------------------|-------------|
 | Excel de datos | empieza por `Data_IP_Actualizada` (.xlsx) | **Sí** |
 | Word Ejecutivo | `.docx` con "Ejecutivo" | No (opcional) |
-| Word Seguimiento | `.docx` con "Seguimiento" / "Clientes" / "Riesgo" / "Recuperados" | No (opcional) |
-| Excel Lista de riesgo | `.xlsx` con "Lista" y ("Riesgo" o "Clientes") | No (opcional) |
+| Excel de riesgo y recuperados | `.xlsx` con ("Lista" **o** "Seguimiento") y ("Riesgo" o "Clientes") | No (opcional) |
+| ~~Word Seguimiento~~ | Ya no se usa | — |
+
+> ⚠️ **El patrón del Excel de riesgo cambió el 2026-08-09.** Antes exigía la palabra
+> **"Lista"**, y desde el 6.º corte el archivo pasó a llamarse
+> `Seguimiento_Clientes_Riesgo_y_Recuperados_…xlsx`, **sin "Lista"**. Con el patrón viejo
+> la tarea no lo encontraría y la pestaña *Clientes en riesgo y recuperados* desaparecería
+> en la siguiente corrida automática. Si el prompt de la tarea de Cowork todavía tiene el
+> patrón antiguo, **hay que actualizarlo**; como alternativa, basta con volver a incluir la
+> palabra "Lista" en el nombre del archivo al subirlo a Drive.
+
+> **El Word de Seguimiento ya no hace falta.** Su pestaña se eliminó del dashboard: el
+> seguimiento de cartera se fusionó en el mismo Excel de riesgo y recuperados. La tarea
+> puede dejar de descargarlo y `RISK_DOCX` / `RISK_ID` pueden ir vacíos.
 
 Con estos se construye una **huella de versión** (`VERSION`) que combina el ID, la fecha de modificación y el tamaño del Excel de datos, más los IDs de los otros tres archivos:
 
