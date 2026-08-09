@@ -5,3 +5,9 @@ data_ip.xlsx
 patch.py
 site/
 *.log
+# Intermedios del pipeline de informes (se regeneran en cada corte)
+pipeline/*.json
+pipeline/*.doc
+pipeline/*.pkl
+__pycache__/
+*.pyc

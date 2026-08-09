@@ -85,8 +85,16 @@ def metrics(df, history_path, version):
           "best_month":best_m,"best_val":round(float(best_v),2),"clientes":int(ncli),
           "riesgo":len(risk),"recuperados":len(recov),"top10_share":round(float(top10),1),
           "ticket":round(float(total/monthly['fac'].sum()),2) if monthly['fac'].sum() else 0}
-    if not hist or hist[-1].get("version")!=version:
+    # Un corte = una fecha de datos (dateMax). Si se regenera el MISMO corte con
+    # otra version (pruebas ~fav/~dl2, IDs de Drive distintos), se reemplaza la
+    # entrada en vez de acumular duplicados que ensucian las comparaciones.
+    if hist and hist[-1].get("dateMax")==snap["dateMax"]:
+        dirty = hist[-1]!=snap
+        hist[-1]=snap
+    else:
         hist.append(snap)
+        dirty = True
+    if dirty:
         try: json.dump(hist,open(history_path,"w",encoding="utf-8"),ensure_ascii=False,indent=1)
         except Exception: pass
     return dict(df=df,months=months,L=L,mm=mm,yy=yy,dim=dim,day_max=day_max,daily=daily,proj_last=proj_last,
@@ -208,7 +216,7 @@ def render_exec_full(m):
         f=int(m["cli_fac"].get(c,0)); crows.append([i+1,c[:40],M(v),f'{f:,}',M(v/f) if f else "-"])
     parts.append(tbl(["#","Cliente","Acumulado","Facturas","Ticket"],crows,{2,3,4}))
     parts.append(box("📌 SEGUIMIENTO DE CARTERA",
-        f'El detalle de {len(m["recov"])} clientes recuperados y {len(m["risk"])} en riesgo se entrega en el informe de seguimiento de clientes (pestaña dedicada / descarga aparte).',"i"))
+        f'El detalle de {len(m["recov"])} clientes recuperados y {len(m["risk"])} en riesgo se entrega unificado en la pestaña "Clientes en riesgo y recuperados" y en su Excel descargable.',"i"))
     # 6. vendedores
     parts.append('<h2>6. Análisis de vendedores</h2>')
     parts.append(f'<p>El equipo cuenta con {m["nvend"]} vendedores activos. {vend.index[0]} y {vend.index[1]} se consolidan como los motores de mayor impulso.</p>')
