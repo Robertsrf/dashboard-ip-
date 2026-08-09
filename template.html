@@ -218,8 +218,7 @@ body.locked{overflow:hidden}
     <button data-tab="prod">Productos / SKU</button>
     <button data-tab="comp">⚖️ Comparar</button>
     <button data-tab="exec">📄 Informe ejecutivo</button>
-    <button data-tab="risk">📄 Riesgo y recuperados</button>
-    <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo</button>
+    <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo y recuperados</button>
   </div>
 
   <div class="panel active" data-panel="resumen">
@@ -303,10 +302,8 @@ body.locked{overflow:hidden}
   </div>
 
   <div class="panel" data-panel="exec" id="p-exec"></div>
-  <div class="panel" data-panel="risk" id="p-risk"></div>
   <div id="exec-full" style="display:none"></div>
-  <div id="risk-full" style="display:none"></div>
-  <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Detalle por cliente (lista cargada en Drive) · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
+  <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Seguimiento de cartera unificado: riesgo y recuperados en un solo Excel · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
   <div class="foot" id="foot"></div>
 </div>
 
@@ -793,9 +790,10 @@ async function boot(pin){const err=document.getElementById('gerr');
   if(!res){err.textContent='Código incorrecto';return;}
   P=res.obj.P;initMeta();
   document.getElementById('p-exec').innerHTML=res.obj.exec;
-  document.getElementById('p-risk').innerHTML=res.obj.risk;
   document.getElementById('exec-full').innerHTML=res.obj.execFull;
-  document.getElementById('risk-full').innerHTML=res.obj.riskFull;
+  // El seguimiento de clientes ya no tiene pestana propia: se unifico en el Excel
+  // de "Clientes en riesgo y recuperados". El payload sigue trayendo risk/riskFull
+  // por compatibilidad, pero no se renderiza.
   window.__docx={exec:res.obj.execDocx||'',risk:res.obj.riskDocx||'',list:res.obj.listDocx||''};
   window.__dl=res.obj.driveLinks||{};
   RL=res.obj.riskList||null;

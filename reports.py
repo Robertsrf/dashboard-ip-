@@ -208,7 +208,7 @@ def render_exec_full(m):
         f=int(m["cli_fac"].get(c,0)); crows.append([i+1,c[:40],M(v),f'{f:,}',M(v/f) if f else "-"])
     parts.append(tbl(["#","Cliente","Acumulado","Facturas","Ticket"],crows,{2,3,4}))
     parts.append(box("📌 SEGUIMIENTO DE CARTERA",
-        f'El detalle de {len(m["recov"])} clientes recuperados y {len(m["risk"])} en riesgo se entrega en el informe de seguimiento de clientes (pestaña dedicada / descarga aparte).',"i"))
+        f'El detalle de {len(m["recov"])} clientes recuperados y {len(m["risk"])} en riesgo se entrega unificado en la pestaña "Clientes en riesgo y recuperados" y en su Excel descargable.',"i"))
     # 6. vendedores
     parts.append('<h2>6. Análisis de vendedores</h2>')
     parts.append(f'<p>El equipo cuenta con {m["nvend"]} vendedores activos. {vend.index[0]} y {vend.index[1]} se consolidan como los motores de mayor impulso.</p>')
