@@ -9,6 +9,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<!-- B3 · Fallback local: si el CDN cae o no hay internet, se carga la MISMA
+     version 5.5.1 desde el repo. En condiciones normales no se descarga nada. -->
+<script>if(!window.echarts){document.write('<scr'+'ipt src="vendor/echarts.min.js"><\/scr'+'ipt>');}</script>
 <style>
 :root{
   --brand:#ff4f20;--navy:#24205b;--panel:#ffffff;--panel2:#f5f6fa;--ink:#24205b;--muted:#6b7392;
@@ -72,7 +75,18 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .cmpg{font-size:12.5px;color:var(--navy);display:inline-flex;align-items:center;gap:6px;font-weight:600}
 .cmpg input[type=date]{font:inherit;font-size:12px;padding:5px 7px;border:1px solid var(--line);border-radius:8px;color:var(--navy);background:#fff}
 @media(max-width:640px){.timebar{padding:8px 12px;gap:10px}.tslider{min-width:150px}}
-.wrap{max-width:1500px;margin:0 auto;padding:18px 26px 40px}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 26px 40px;display:flex;align-items:flex-start;gap:22px}
+/* min-width:0 es obligatorio: sin el, la columna flex no puede encogerse y los
+   graficos de ECharts se desbordan al ocultar/mostrar el panel lateral. */
+.content{flex:1 1 auto;min-width:0}
+#sidenav{flex:0 0 234px;width:234px;position:sticky;top:66px;align-self:flex-start;max-height:calc(100vh - 84px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 10px;transition:flex-basis .22s ease,width .22s ease,opacity .18s ease,padding .22s ease}
+body.nav-collapsed #sidenav{flex-basis:0;width:0;opacity:0;padding-left:0;padding-right:0;overflow:hidden;pointer-events:none;border-width:0}
+.navtoggle{background:#fff;border:1px solid var(--line);border-radius:11px;width:40px;height:40px;font-size:18px;line-height:1;color:var(--navy);cursor:pointer;flex:0 0 auto;box-shadow:var(--shadow);transition:.15s}
+.navtoggle:hover{border-color:var(--brand);color:var(--brand)}
+.navgrp{font-size:10.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);padding:12px 10px 5px}
+.navgrp:first-child{padding-top:4px}
+#navscrim{display:none;position:fixed;inset:0;z-index:110;background:rgba(20,24,48,.42)}
+body.nav-open #navscrim{display:block}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin-bottom:18px}
 .kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:visible;border-left:4px solid var(--brand)}
 .kpi:hover{z-index:5}
@@ -86,9 +100,10 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .kpi .spark{position:absolute;right:10px;bottom:8px;width:96px;height:38px;opacity:.9}
 .kpi.hero{background:linear-gradient(135deg,#24205b,#3a3480);color:#fff;border:none;border-left:4px solid var(--brand)}
 .kpi.hero .val{color:#fff}.kpi.hero .lab,.kpi.hero .sub{color:rgba(255,255,255,.78)}
-.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
-.tabs button{background:none;border:none;padding:11px 16px;font:inherit;font-size:14px;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap}
-.tabs button.active{color:var(--brand);border-bottom-color:var(--brand)}
+.tabs{display:flex;flex-direction:column;gap:2px}
+.tabs button{display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;border-radius:0 9px 9px 0;padding:9px 12px;font:inherit;font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer;line-height:1.3;transition:.15s}
+.tabs button:hover{background:var(--panel2);color:var(--navy)}
+.tabs button.active{color:var(--brand);background:#fff2ee;border-left-color:var(--brand)}
 .panel{display:none}.panel.active{display:block}
 .grid{display:grid;gap:16px;margin-bottom:16px}
 .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:2fr 1fr}
@@ -163,12 +178,18 @@ body.locked{overflow:hidden}
 .pdfbtn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
 @media(max-width:640px){
   .top{padding:12px 14px}.top h1{font-size:16px}.top .logo{width:46px;height:46px}.top .logo svg{width:40px;height:40px}
-  .top .status{font-size:11px}.wrap{padding:12px 12px 30px}
+  .top .status{font-size:11px}.wrap{padding:12px 12px 30px;display:block}
+  .top .brand{gap:10px}.navtoggle{width:36px;height:36px;font-size:16px}
+  /* En movil el panel es un cajon superpuesto (off-canvas) y arranca cerrado:
+     no come ancho al area de graficos. nav-collapsed (escritorio) se neutraliza. */
+  #sidenav{position:fixed;top:0;left:0;bottom:0;z-index:120;width:266px;flex:none;max-height:none;height:100%;border-radius:0;border-width:0;border-right:1px solid var(--line);padding:16px 12px 24px;transform:translateX(-100%);transition:transform .22s ease;opacity:1;pointer-events:auto;overflow-y:auto}
+  body.nav-collapsed #sidenav{width:266px;opacity:1;pointer-events:auto;padding:16px 12px 24px}
+  body.nav-open #sidenav{transform:translateX(0)}
   .bar{padding:10px 12px;gap:8px}.ms>button{padding:7px 10px;font-size:12px}.reset{padding:8px 12px}
   .kpis{grid-template-columns:1fr 1fr;gap:10px}.kpi .val{font-size:20px}.kpi{padding:12px 14px}
   .chart{height:300px}.chart.tall{height:360px}.chart.sm{height:250px}
   .card{padding:12px 14px}.card h3{font-size:14px}
-  .tabs button{padding:9px 11px;font-size:13px}
+  .tabs button{padding:11px 12px;font-size:14px}
   .rep{padding:16px 14px}.rcover h1,.rep h1{font-size:18px}.rep h2{font-size:15px}
   .repkpis{grid-template-columns:1fr 1fr}.rephead{flex-direction:column}.repbtns{width:100%}
   .gatecard{padding:26px 20px}.gatelogo{width:92px;height:92px}.gatelogo svg{width:92px;height:92px}
@@ -178,7 +199,7 @@ body.locked{overflow:hidden}
 .wcard{background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(36,32,91,.3);padding:28px 40px;text-align:center;border-top:5px solid var(--brand);animation:wpop .35s ease}
 .wemoji{font-size:38px}.wcard h2{color:var(--navy);font-size:23px;margin:6px 0 2px}.wcard p{color:var(--muted);font-size:13px}
 @keyframes wpop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
-@media print{body{background:#fff}.top,.bar,.chips,.tabs,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0}.rep{border:none;box-shadow:none;max-width:none}}
+@media print{body{background:#fff}.top,.bar,.chips,.tabs,#sidenav,#navscrim,.navtoggle,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0;display:block}.rep{border:none;box-shadow:none;max-width:none}}
 @media(max-width:1050px){.g2,.g3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -187,6 +208,7 @@ body.locked{overflow:hidden}
 <div id="greet" style="display:none"></div>
 <div class="top">
   <div class="brand">
+    <button id="navtoggle" class="navtoggle" type="button" onclick="toggleNav()" title="Mostrar / ocultar el menú" aria-label="Mostrar u ocultar el menú de secciones">☰</button>
     <div class="logo">__LOGO_SVG__</div>
     <div><h1>Distribuidora y Suministros IP</h1><div class="meta" id="meta"></div></div>
   </div>
@@ -205,21 +227,29 @@ body.locked{overflow:hidden}
 <div class="timebar" id="timebar"></div>
 <div class="chips" id="chips"></div>
 
+<div id="navscrim" onclick="toggleNav()"></div>
 <div class="wrap">
-  <div class="kpis" id="kpis"></div>
+  <aside id="sidenav">
+    <div class="tabs" id="tabs">
+      <div class="navgrp">Resumen</div>
+      <button data-tab="resumen" class="active">Resumen ejecutivo</button>
+      <div class="navgrp">Análisis</div>
+      <button data-tab="tend">Tendencia y proyección</button>
+      <button data-tab="vend">Vendedores</button>
+      <button data-tab="marca">Marcas y grupos</button>
+      <button data-tab="sector">🗺️ Sectores / Zonas</button>
+      <button data-tab="cli">Clientes</button>
+      <button data-tab="prod">Productos / SKU</button>
+      <div class="navgrp">Comparar</div>
+      <button data-tab="comp">⚖️ Comparar períodos</button>
+      <div class="navgrp">Informes</div>
+      <button data-tab="exec">📄 Informe ejecutivo</button>
+      <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo y recuperados</button>
+    </div>
+  </aside>
 
-  <div class="tabs" id="tabs">
-    <button data-tab="resumen" class="active">Resumen ejecutivo</button>
-    <button data-tab="tend">Tendencia y proyección</button>
-    <button data-tab="vend">Vendedores</button>
-    <button data-tab="marca">Marcas y grupos</button>
-    <button data-tab="sector">🗺️ Sectores / Zonas</button>
-    <button data-tab="cli">Clientes</button>
-    <button data-tab="prod">Productos / SKU</button>
-    <button data-tab="comp">⚖️ Comparar</button>
-    <button data-tab="exec">📄 Informe ejecutivo</button>
-    <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo y recuperados</button>
-  </div>
+  <div class="content" id="content">
+  <div class="kpis" id="kpis"></div>
 
   <div class="panel active" data-panel="resumen">
     <div class="grid"><div class="card"><h3>Calendario de ventas por día</h3><div class="hint">Cada celda es un día · color = venta neta de ese día · pasa el mouse para el detalle · respeta los filtros</div><div id="c-cal" class="chart" style="height:190px"></div><div id="cal-key" class="calkey"></div></div></div>
@@ -305,6 +335,7 @@ body.locked{overflow:hidden}
   <div id="exec-full" style="display:none"></div>
   <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Seguimiento de cartera unificado: riesgo y recuperados en un solo Excel · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
   <div class="foot" id="foot"></div>
+  </div>
 </div>
 
 <script>
@@ -583,7 +614,7 @@ class App{
     document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
     document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
     document.querySelector(`.panel[data-panel="${b.dataset.tab}"]`).classList.add('active');
-    this.tab=b.dataset.tab;this.renderTab();
+    this.tab=b.dataset.tab;this.renderTab();closeNavOnMobile();
     setTimeout(()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()},30)})}
   renderTab(){const t=this.tab,d=this.d,mo=this.mo;
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
@@ -836,6 +867,33 @@ function renderRList(){
   var body=rows.map(function(r){return '<tr>'+r.map(function(c){return '<td>'+c+'</td>';}).join('')+'</tr>';}).join('');
   document.getElementById('rl-table').innerHTML='<div class="rldesc">'+sh.title+'</div><div class="mini" style="margin:4px 0 8px">'+rows.length+' de '+sh.rows.length+' registros</div><table class="rt rtc"><thead><tr>'+th+'</tr></thead><tbody>'+body+'</tbody></table>';
 }
+/* ---- Panel lateral (B4) ----------------------------------------------------
+   ECharts NO se reajusta solo cuando cambia el ancho de su contenedor: hay que
+   llamar a resize() de cada instancia al terminar la transicion CSS (220 ms).  */
+function resizeCharts(){
+  if(!window.echarts)return;
+  document.querySelectorAll('.chart').forEach(function(el){
+    var inst=echarts.getInstanceByDom(el);
+    if(inst)inst.resize();
+  });
+}
+function navIsMob(){return window.innerWidth<=640;}
+function toggleNav(){
+  if(navIsMob()){
+    document.body.classList.toggle('nav-open');
+  }else{
+    document.body.classList.remove('nav-open');
+    var col=document.body.classList.toggle('nav-collapsed');
+    try{localStorage.setItem('ipNavCollapsed',col?'1':'0');}catch(e){}
+  }
+  setTimeout(resizeCharts,260);
+}
+function closeNavOnMobile(){
+  if(navIsMob()&&document.body.classList.contains('nav-open'))document.body.classList.remove('nav-open');
+}
+try{if(localStorage.getItem('ipNavCollapsed')==='1'&&!navIsMob())document.body.classList.add('nav-collapsed');}catch(e){}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeNavOnMobile();});
+
 document.body.classList.add('locked');
 document.getElementById('enter').onclick=()=>boot(document.getElementById('pin').value.trim());
 document.getElementById('pin').addEventListener('keydown',function(e){if(e.key==='Enter')boot(e.target.value.trim());});
