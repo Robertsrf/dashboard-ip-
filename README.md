@@ -8,8 +8,13 @@ Dashboard interactivo autogenerado a partir del Excel en Google Drive
 - `build_dashboard.py` -> generador: `python3 build_dashboard.py <xlsx> <version> index.html`
 - `vendor/echarts.min.js` -> respaldo local de ECharts 5.5.1 (solo se usa si el CDN no responde).
 - `publish.py` -> publica en GitHub (git add/commit/push) -> GitHub Pages despliega solo.
-- Actualizacion automatica cada 3 dias vía tarea programada de Cowork
-  (genera `index.html` y luego llama a `python publish.py`).
+
+## Corte nuevo
+
+**No hay actualizacion automatica.** El flujo es: subes los archivos a la carpeta de Drive
+"Informes IP" y pides la corrida en el chat. El procedimiento completo (9 pasos, con la
+validacion de que los archivos de Drive son Office de verdad y no una pagina HTML) esta en
+`CONTEXTO_CLAUDE.md`, seccion **10.2**; el comando del build, en la **10.3**.
 
 ## Informes del corte (carpeta `pipeline/`)
 

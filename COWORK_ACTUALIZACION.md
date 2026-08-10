@@ -1,6 +1,28 @@
 # Dashboard IP — Tarea automática (versión GitHub Pages)
 
-> **Para Claude Cowork.** Este documento **reemplaza** la tarea anterior `actualizar-dashboard-ip`.
+> # ⛔ RETIRADO — 2026-08-09
+>
+> **Las tareas programadas de Claude Cowork se eliminaron. Este documento es referencia
+> histórica: no describe el flujo vigente.**
+>
+> El procedimiento actual es **a petición**: se suben los archivos a la carpeta de Drive
+> "Informes IP" y se pide la corrida en el chat. Está en `CONTEXTO_CLAUDE.md` **§10.2**
+> (los 9 pasos) y **§10.3** (el comando del build).
+>
+> **Por qué se retiró:** la tarea publicaba cada 3 días sin nadie mirando y no distinguía un
+> archivo corrupto de uno bueno. El 9 de agosto de 2026 se subieron a Drive dos supuestos
+> archivos de Office que en realidad eran **la misma página HTML de 470 081 bytes**; la tarea
+> los habría incrustado sin avisar. Tampoco reaccionaba a un cambio de nombre: su patrón exigía
+> la palabra "Lista", y el Excel de riesgo pasó a llamarse `Seguimiento_Clientes_...`, con lo
+> que habría hecho desaparecer esa pestaña en silencio.
+>
+> **Si se vuelve a automatizar**, hay que incorporarle antes: (a) validar la firma `504b0304` y
+> la estructura interna de cada archivo de Drive, (b) el patrón corregido de la §3, y (c) quitar
+> el Word de Seguimiento, cuya pestaña ya no existe.
+
+---
+
+> **Para Claude Cowork.** Este documento **reemplazaba** la tarea anterior `actualizar-dashboard-ip`.
 > **Lo único que cambia respecto a la tarea vieja es el destino de publicación: antes Netlify, ahora GitHub Pages.**
 > El resto del proceso (huella de versión, detección de cambios, verificación de datos, reglas de seguridad y publicación por `git push`) **se mantiene idéntico**. De hecho, la publicación siempre fue un `git push` a `main`; ahora quien redespliega en ese push es **GitHub Pages** en vez de Netlify.
 

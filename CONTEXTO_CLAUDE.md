@@ -15,11 +15,11 @@
 - Los datos van **cifrados dentro del HTML** (AES-256-GCM). Se abren con un **PIN de 6 dígitos** por usuario; el descifrado ocurre en el navegador con WebCrypto.
 - Los gráficos son **ECharts 5.5.1** (desde CDN, con respaldo local en `vendor/echarts.min.js` si el CDN no responde). No hay backend, ni base de datos, ni API.
 - Se publica en **GitHub Pages** → https://robertsrf.github.io/dashboard-ip-/ (repo `Robertsrf/dashboard-ip-`, rama `main`).
-- Se actualiza **cada 3 días** con una tarea automática (Claude Cowork) que lee Google Drive, regenera y hace `git push`.
+- Se actualiza **a petición**, no en automático: se suben los archivos a Google Drive y se pide la corrida en el chat (§10.2). Las tareas programadas de Cowork se retiraron el 2026-08-09.
 - El HTML/CSS/JS vive en **`template.html`**, un único archivo que `build_dashboard.py` lee al arrancar. *(Antes estaba duplicado dentro del `.py` y había que editar dos sitios; eso se eliminó — ver §14.)*
 - Los datos son **cortes quincenales acumulativos**: el último mes casi siempre está incompleto, y el sistema lo compensa explícitamente.
 - Autor: **Ing. Roberts Flores**.
-- Documentación previa en el repo: `SYSTEM.md` (referencia técnica), `COWORK_ACTUALIZACION.md` (la tarea automática), `README.md` (mínimo). Este documento los engloba.
+- Documentación previa en el repo: `SYSTEM.md` (referencia técnica), `COWORK_ACTUALIZACION.md` (**la tarea automática, ya retirada** — referencia histórica), `README.md` (mínimo). Este documento los engloba.
 
 ---
 
@@ -382,8 +382,46 @@ python publish.py        # git add index.html history.json + commit + push origi
 GitHub Pages redespliega en **~1 min**. Configuración: Settings → Pages → *Deploy from a branch* → `main` / `/ (root)`. El `.nojekyll` evita el procesado Jekyll.
 Netlify está **pausado por créditos** y ya no es el hosting. La función serverless `log` (registro de ingresos) **se eliminó** al migrar (Pages es estático): el login funciona igual, solo que no se registra quién entra.
 
-### 10.2 Tarea automática (Claude Cowork, cada 3 días)
-Descrita a fondo en `COWORK_ACTUALIZACION.md`. Resumen:
+### 10.2 Corte nuevo, a petición (procedimiento vigente desde 2026-08-09)
+
+> **Ya no hay tarea automática.** Las dos tareas programadas de Claude Cowork se retiraron.
+> El flujo actual es: **subes los archivos a Drive → lo pides en el chat → se hace la corrida.**
+> Motivo: la tarea publicaba a ciegas cada 3 días y no detectaba archivos corruptos ni cambios
+> de nombre. En agosto de 2026 subieron a Drive dos "archivos Office" que eran en realidad una
+> página HTML de 470 081 bytes, y solo se detectó revisando a mano.
+
+**Los 9 pasos de una corrida.** Cada uno con su verificación; si alguno falla, **no se publica**.
+
+1. **Respaldo.** Copia completa del repo a `dashboard-ip-_backups\prod_<FECHA-HORA>\`.
+2. **Listar Drive** (carpeta "Informes IP", `parentId 1K1FPQkJBgwqjzSoVxEX6AbZFVzhQzscE`) y quedarse
+   con el Excel de datos, el Word Ejecutivo y el Excel de riesgo **más recientes**.
+3. **Validar que cada archivo es lo que dice ser** — el paso que ahora es obligatorio:
+   ```python
+   open(f,'rb').read(4).hex() == '504b0304'      # ZIP/Office; si sale 3c21444f es <!DOCTYPE, o sea HTML
+   zipfile.ZipFile(f).namelist()                  # 'xl/...' => Excel   ·   'word/...' => Word
+   ```
+   Dos archivos del mismo tamaño exacto = casi seguro el mismo archivo subido dos veces.
+4. **Poner los archivos en el repo** como `data_ip.xlsx`, `risk_list.xlsx` y `exec.docx`.
+   Los tres están gitignored. *(La descarga vía MCP de Drive devuelve base64 y un Excel de 5 MB no
+   cabe en contexto: los archivos se toman del disco, normalmente de `Downloads`.)*
+5. **Invariante I1 — comprobar la fecha real:**
+   ```python
+   pd.to_datetime(df['FECHADOC']).max()   # NUNCA fiarse del nombre del archivo
+   ```
+   Ya falló dos veces: `..._1507` traía datos hasta el 31-jul, y `..._30-07` también hasta el 31-jul.
+6. **Armar la huella de versión** y ejecutar el build (comando completo en §10.3):
+   `<dataFileId>|<modifiedTime ISO>|<size bytes>~E:<execId>~L:<listId>`
+   ⚠️ Si el Word o el Excel de Drive **no** están sanos, dejar su ID **vacío**: `downloadReport`
+   prefiere `driveLinks` sobre el archivo embebido, así que un ID hacia un archivo roto da una
+   descarga rota.
+7. **Verificar el artefacto**: descifrar con un PIN real y comprobar los 4 logins, nº de filas,
+   `dayCount`, `riskList`, `driveLinks`, que cada botón tenga panel, que no queden placeholders,
+   que el JS de `template.html` coincida con el del `index.html` y que pase `node --check`.
+8. **Cotejar** el neto, las filas, los clientes y el rango de fechas contra el corte anterior de
+   `history.json`. Caída de neto >25 % o menos filas que el corte anterior ⇒ **avisar, no publicar en silencio**.
+9. **Publicar**: `git add index.html history.json` + commit + `git push origin main`.
+
+**Referencia histórica de la tarea retirada** (`COWORK_ACTUALIZACION.md`), por si se vuelve a automatizar:
 
 1. Lista la carpeta de Drive "Informes IP" y toma, por **fecha de creación más reciente**, el Excel de datos (`Data_IP_Actualizada*`) y los opcionales (Word Ejecutivo, Word Seguimiento, Excel Lista).
 2. Arma la **huella de versión**:
@@ -403,17 +441,29 @@ Descrita a fondo en `COWORK_ACTUALIZACION.md`. Resumen:
 
 Requiere en el entorno: `pandas`, `openpyxl`, `cryptography` (y `python-docx` si hay Word), más **credenciales de push a GitHub** (PAT o SSH).
 
-### 10.3 Regeneración manual (en la PC del autor)
-Necesita `secrets.json` + `data_ip.xlsx` + `risk_list.xlsx` en la carpeta del repo (los tres están gitignored).
+### 10.3 El comando del build
+Necesita `secrets.json` + `data_ip.xlsx` + `risk_list.xlsx` + `exec.docx` en la carpeta del repo (todos gitignored).
 
 ```bash
-EXEC_ID=<execId> RISK_ID=<riskId> LIST_ID=<listId> \
-RISK_LIST_XLSX=./risk_list.xlsx SECRETS_PATH=./secrets.json \
+EXEC_ID=<execId> LIST_ID=<listId> \
+EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx SECRETS_PATH=./secrets.json \
 python build_dashboard.py ./data_ip.xlsx "<VERSION>" ./index.html
-# opcional: EXEC_DOCX=./exec.docx RISK_DOCX=./risk.docx
 ```
 
-Usar **la MISMA versión** que ya está publicada evita que `reports.py` duplique el corte en `history.json`.
+Ejemplo real de la corrida del 6.º corte (2026-08-09):
+
+```bash
+EXEC_ID=1y1cRarvQQkVuDkRXb-pCl1-mO297RAkF LIST_ID=1PJWN0jkzzZmfjZjDWW5f2Iav_ZWOMMcC \
+EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx \
+python build_dashboard.py data_ip.xlsx \
+  "1eWDRLFfBu3LbJjRN9PPSOsicF8khAypl|2026-08-08T19:33:46Z|5174792~E:1y1cRarvQQkVuDkRXb-pCl1-mO297RAkF~L:1PJWN0jkzzZmfjZjDWW5f2Iav_ZWOMMcC" \
+  index.html
+```
+
+`RISK_DOCX` / `RISK_ID` ya no se usan: la pestaña de Seguimiento se eliminó.
+
+Regenerar **el mismo corte** (mismo `dateMax`) ya no duplica nada: `reports.py` **reemplaza** la
+entrada de `history.json` en vez de añadirla, aunque cambie la cadena de versión.
 Validar después: descifrar con un PIN real y comprobar los 4 logins, `dayCount`, `riskList` y `driveLinks`.
 
 **Variables de entorno que lee `build_dashboard.py`:**
@@ -487,7 +537,9 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 ## 14. Historial de cambios del sistema
 
-- **2026-08-09** — Ejecución del documento *MEJORAS_SISTEMA_IP*: **B1** el `TEMPLATE` sale a `template.html` (fin de la duplicación); **B4** las secciones pasan a un **panel lateral colapsable** agrupado en cuatro bloques, con `resize()` de ECharts tras el toggle; **B3** respaldo local de ECharts en `vendor/`; **B2** `history.json` queda con una entrada por corte y `reports.py` deja de acumular duplicados; **A1/A2/A4** pipeline de informes versionado en `pipeline/` (`clean.py`, `analysis.py`, `rep_helpers.js`, `build_report.js`) con `REFERENCIA`, `SUBGRUPO` y `CODCLIENTE`; **A3** sección de **invariantes metodológicos** al inicio de este documento. Además se **elimina la pestaña "Riesgo y recuperados"**: el seguimiento de clientes se fusionó en el Excel de la lista de riesgo.
+- **2026-08-09 (c)** — **Se retiran las tareas automáticas de Cowork.** El corte pasa a ser **a petición** (§10.2, 9 pasos con validación obligatoria de que los archivos de Drive son Office de verdad). `COWORK_ACTUALIZACION.md` queda como referencia histórica.
+- **2026-08-09 (b)** — **Corte 6** publicado con datos al **31-07-2026** (62 169 filas · $2 964 385,29 · 1 333 clientes · 428 en riesgo · 38 recuperados). El invariante I1 volvió a saltar: el archivo se llamaba `30-07` pero los datos llegaban al 31. Julio queda completo, así que el riesgo deja de estar inflado y baja de 484 a 428. Se instaló `python-docx`, que faltaba y hacía que el resumen del Word nunca se usara (el fallo lo silenciaba un `except`). El botón de ocultar el panel se movió a la primera fila **dentro** del panel, con `#navopen` flotante para poder reabrirlo. `CORTE_OFFSET = 3` alinea la numeración con los archivos de Drive.
+- **2026-08-09 (a)** — Ejecución del documento *MEJORAS_SISTEMA_IP*: **B1** el `TEMPLATE` sale a `template.html` (fin de la duplicación); **B4** las secciones pasan a un **panel lateral colapsable** agrupado en cuatro bloques, con `resize()` de ECharts tras el toggle; **B3** respaldo local de ECharts en `vendor/`; **B2** `history.json` queda con una entrada por corte y `reports.py` deja de acumular duplicados; **A1/A2/A4** pipeline de informes versionado en `pipeline/` (`clean.py`, `analysis.py`, `rep_helpers.js`, `build_report.js`) con `REFERENCIA`, `SUBGRUPO` y `CODCLIENTE`; **A3** sección de **invariantes metodológicos** al inicio de este documento. Además se **elimina la pestaña "Riesgo y recuperados"**: el seguimiento de clientes se fusionó en el Excel de la lista de riesgo.
 - **2026-07-21 (j)** — Leyendas con valores en gráficos "solo color": escala numérica en el mapa + etiqueta de monto sobre cada estado; escala de color numérica visible en el calendario.
 - **2026-07-21 (i)** — Nueva sección **Sectores/Zonas** con ranking, ventas por estado, comparación mensual, tabla y **mapa choropleth interactivo** de Venezuela (`ve_states.geojson` embebido, clic filtra los sectores del estado).
 - **2026-07-21 (h)** — Descarga de gráfico en **HD**: `pixelRatio` automático (lado largo ≥ 2048 px) para que WhatsApp ofrezca el toggle "HD".
