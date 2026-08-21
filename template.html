@@ -259,6 +259,7 @@ body.locked{overflow:hidden}
       <div class="navgrp">Informes</div>
       <button data-tab="exec">📄 Informe ejecutivo</button>
       <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo y recuperados</button>
+      <button data-tab="cob" id="tab-cob" style="display:none">💵 Cobranza</button>
     </div>
   </aside>
 
@@ -348,6 +349,29 @@ body.locked{overflow:hidden}
   <div class="panel" data-panel="exec" id="p-exec"></div>
   <div id="exec-full" style="display:none"></div>
   <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Seguimiento de cartera unificado: riesgo y recuperados en un solo Excel · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
+  <div class="panel" data-panel="cob">
+    <div class="card"><h3>Cobranza · facturado vs. cobrado</h3>
+      <div class="hint">Conciliación de las 3 analistas · la <b>camada</b> es el mes de <b>despacho</b> de la factura, no el mes en que entró el dinero: una camada se sigue cobrando durante meses · las ANULADAS quedan fuera del universo cobrable</div>
+      <div class="rlnav" id="cob-fcam"></div>
+      <div class="rlnav" id="cob-fana"></div>
+      <button class="pdfbtn" id="cob-dl" style="display:none;margin-top:6px" onclick="downloadReport('cob','Conciliacion_Facturado_vs_Cobrado.xlsx')">⭳ Descargar Excel de conciliación (archivo de Drive)</button>
+    </div>
+    <div class="kpis" id="cob-kpis"></div>
+    <div class="grid"><div class="card"><h3>Descomposición del facturado por camada</h3><div class="hint">Cobrado + Diferencial + Pendiente = Facturado neto · el <b>Diferencial no es deuda ni pérdida</b>: es haber cobrado a otro precio o forma de pago</div><div id="c-cob-descomp" class="chart tall"></div></div></div>
+    <div class="grid g2">
+      <div class="card"><h3>% de cobro por camada</h3><div class="hint"><b>Verde</b>: cuánto de la camada ya entró en caja — la más reciente va en claro porque sigue <b>en maduración</b> y que esté baja es lo esperado · <b>Azul punteado</b>: de lo ya cerrado, cuánto entró como caja (es el «% Cobro» del Excel, ~95%)</div><div id="c-cob-pct" class="chart"></div></div>
+      <div class="card"><h3>Cobertura sobre la facturación del sistema</h3><div class="hint">Cuánto de todo lo facturado pasa por las 3 analistas · dato de la hoja COBERTURA: no responde a los filtros</div><div id="c-cob-cobertura" class="chart"></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>Cobrado por vendedor</h3><div class="hint">Caja realmente entrada por cada vendedor en la selección</div><div id="c-cob-vend" class="chart"></div></div>
+      <div class="card"><h3>Pendiente por vendedor</h3><div class="hint">Cartera viva por cobrar, sin anuladas</div><div id="c-cob-pend-vend" class="chart"></div></div>
+    </div>
+    <div class="grid g2">
+      <div class="card"><h3>Comisión por vendedor ($-equiv.)</h3><div class="hint">% confirmados por el Ing. Palomares (20/08) · cada comisión se cobra en su moneda; aquí todo va en $-equivalente para poder compararlas · no responde a los filtros</div><div id="c-cob-comis" class="chart"></div></div>
+      <div class="card"><h3>Cobrado por grupo</h3><div class="hint">El grupo REPOSTERÍA incluye desechables y confitería</div><div id="c-cob-grupo" class="chart"></div></div>
+    </div>
+    <div class="grid"><div class="card"><h3>Detalle por camada</h3><div class="hint"><b>% cobrado</b> = Cobrado ÷ Facturado neto (maduración de la camada) · <b>% efectiv.</b> = Cobrado ÷ (Cobrado + Diferencial), la columna «% Cobro» del Excel · las Anuladas van aparte: no son cartera</div><div class="tblwrap"><table id="t-cob"></table></div></div></div>
+  </div>
   <div class="foot" id="foot"></div>
   </div>
 </div>
@@ -357,6 +381,8 @@ const ENC = __ENC_JSON__;
 const VE_GEO=__VE_GEO__;
 let P=null;
 const R={MES:0,GRUPO:1,VEND:2,SECTOR:3,MARCA:4,CLI:5,PROD:6,DOC:7,CANT:8,DEV:9,NETO:10,DAY:11};
+let COB=null;   // payload Pcob (cobranza), null si el Excel no estaba en Drive
+const Rc={CAMADA:0,VEND:1,GRUPO:2,PRECIO:3,ANAL:4,EST:5,FACT:6,COB:7,PEND:8,DIF:9,ANUL:10};
 const PAL=['#ff4f20','#24205b','#17a39a','#f4a72c','#5b6aa0','#e0708a','#3aa0d1','#7c9a2b','#b0552c','#9488c9','#e8b64a','#2f8f86'];
 let DIMS={},nameIdx={};
 function initMeta(){DIMS={mes:{field:R.MES,names:P.dims.mesLabels,label:'Mes'},
@@ -394,7 +420,14 @@ const TIPS={'c-trend':'Venta neta real por mes (barras) y proyección lineal has
   'c-cal':'Cada celda es un día; el color indica la venta neta de ese día. Respeta los filtros activos.',
   'c-secrank':'Sectores/zonas ordenados por venta neta. Muestra ~10 y desliza para ver el resto. Clic para filtrar.',
   'c-secestado':'Venta neta agrupada por estado.',
-  'c-seccmp':'Trayectoria mensual de venta neta de las 6 zonas líderes.'};
+  'c-seccmp':'Trayectoria mensual de venta neta de las 6 zonas líderes.',
+  'c-cob-descomp':'Cada camada (mes de despacho) abierta en sus tres partes: lo Cobrado, el Diferencial y lo que sigue Pendiente. Las tres suman exactamente el Facturado neto. El Diferencial NO es deuda: es haber cobrado a otro precio o forma de pago.',
+  'c-cob-pct':'Dos tasas que NO son lo mismo. Verde = Cobrado ÷ Facturado neto: qué parte de la camada ya entró en caja; baja en la camada joven y sube con los meses, así que su caída es normal, no una alerta. Azul punteado = Cobrado ÷ (Cobrado + Diferencial): de lo que ya se cerró, cuánto entró como dinero y cuánto se fue en diferencial; es la columna «% Cobro» del Excel y se mantiene cerca del 95% en todas las camadas.',
+  'c-cob-cobertura':'Qué parte de la facturación total del sistema pasa por la cobranza de las 3 analistas (~43%). AMÉRICO (línea de café) y los clientes fuera de cartera son categorías legítimas, no errores.',
+  'c-cob-vend':'Dinero efectivamente entrado en caja por vendedor, dentro de la selección de camadas y analistas.',
+  'c-cob-pend-vend':'Cartera viva: facturas sin cancelar por vendedor. No incluye anuladas ni diferencial.',
+  'c-cob-comis':'Comisión total por vendedor expresada en $-equivalente. 5% para repostería (incluye desechables y confitería) en Precio 1 y 2, 3% el resto y víveres, más $0,40 por unidad de azúcar y $0,50 por unidad de harina.',
+  'c-cob-grupo':'Cobrado por grupo de producto, para cruzarlo con lo que muestra la venta.'};
 
 const PRINT_CSS=`*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 body{padding:28px;color:#24205b}.rephead{display:flex;justify-content:space-between;border-bottom:3px solid #ff4f20;padding-bottom:12px;margin-bottom:16px}
@@ -630,9 +663,169 @@ class App{
     document.querySelector(`.panel[data-panel="${b.dataset.tab}"]`).classList.add('active');
     this.tab=b.dataset.tab;this.renderTab();closeNavOnMobile();
     setTimeout(()=>{for(const k in this.ch)this.ch[k]&&this.ch[k].resize()},30)})}
+  /* ---- Cobranza -----------------------------------------------------------
+     Vive aparte de la venta: sus filtros propios (camada y analista) NO son los
+     segmentadores de ventas, porque el universo es otro (solo la cartera de las
+     3 analistas) y el eje es la camada de despacho, no la fecha de factura.   */
+  cobInit(){
+    if(this.cf)return;
+    this.cf={cam:new Set(),ana:new Set()};
+    const cams=COB.camadaOrder.map(l=>[l,COB.dims.camada.indexOf(l)]);
+    const anas=COB.dims.analista.map((l,i)=>[l,i]);
+    const draw=(hostId,label,pairs,set)=>{
+      const h=document.getElementById(hostId);
+      h.innerHTML='<span class="mini" style="align-self:center;margin-right:2px">'+label+'</span>'
+        +'<button class="rlbtn'+(set.size?'':' on')+'" data-i="-1">Todas</button>'
+        +pairs.map(p=>'<button class="rlbtn'+(set.has(p[1])?' on':'')+'" data-i="'+p[1]+'">'+p[0]+'</button>').join('');
+      h.querySelectorAll('.rlbtn').forEach(b=>b.onclick=()=>{
+        const i=+b.dataset.i;
+        if(i<0)set.clear();else{set.has(i)?set.delete(i):set.add(i)}
+        this.cobChips();this.tCob();});};
+    this.cobChips=()=>{draw('cob-fcam','Camada',cams,this.cf.cam);draw('cob-fana','Analista',anas,this.cf.ana)};
+    this.cobChips();
+    document.getElementById('cob-kpis').innerHTML=[
+      {id:'cobrado',lab:'Cobrado (caja real)',hero:true,tip:'Dinero efectivamente entrado: suma de lo cancelado por el cliente en las facturas cerradas. El ▲/▼ compara las dos últimas camadas YA CERRADAS — nunca contra la camada en maduración, que aún se está cobrando.'},
+      {id:'pct',lab:'% cobrado de la camada',tip:'Cobrado ÷ Facturado neto de la selección (el facturado neto ya excluye las anuladas): qué parte de lo despachado ya entró en caja. Baja mientras la camada madura. Debajo aparece la otra tasa, la del Excel: Cobrado ÷ (Cobrado + Diferencial), que mide cuánto de lo YA cerrado entró como dinero.'},
+      {id:'pend',lab:'Pendiente real',tip:'Cartera viva: facturas sin cancelar. No incluye anuladas (no son deuda) ni el diferencial (que ya se cobró, a otro precio).'}
+    ].map(k=>`<div class="kpi${k.hero?' hero':''}"><div class="lab">${k.lab} <span class="info" data-tip="${k.tip}">i</span></div>
+      <div class="val" id="kc-${k.id}">–</div><div class="sub" id="kcs-${k.id}"></div>
+      <div class="delta" id="kcd-${k.id}"></div><div class="spark" id="kcp-${k.id}"></div></div>`).join('');
+    if(window.__dl&&window.__dl.cob){const b=document.getElementById('cob-dl');if(b)b.style.display=''}
+  }
+  cobRows(){const f=this.cf;
+    return COB.rows.filter(r=>(!f.cam.size||f.cam.has(r[Rc.CAMADA]))&&(!f.ana.size||f.ana.has(r[Rc.ANAL])));}
+  /* Agrupa por la dimension `key`. Las ANULADAS solo suman en `anul` y en el
+     conteo de facturas: jamas entran al universo cobrable (invariante). */
+  cobSum(rows,key){const m=new Map();
+    rows.forEach(r=>{const k=r[key];let o=m.get(k);
+      if(!o){o={fact:0,cob:0,pend:0,dif:0,anul:0,fac:0};m.set(k,o)}
+      o.fac++;o.anul+=r[Rc.ANUL];
+      if(r[Rc.EST]===COB.anulIdx)return;
+      o.fact+=r[Rc.FACT];o.cob+=r[Rc.COB];o.pend+=r[Rc.PEND];o.dif+=r[Rc.DIF];});
+    return m;}
+  cobRank(map,names,field,color,id,n){
+    const p=[...map.entries()].map(([i,o])=>[names[i],o[field]]).filter(x=>x[1]>0.5).sort((a,b)=>b[1]-a[1]).slice(0,n||9999);
+    this.hbz(id,p,{color:color,left:120,leftMob:88,zoom:p.length>10,window:10});}
+  tCob(){
+    if(!COB)return;
+    this.cobInit();
+    const rows=this.cobRows(),mob=this.isMob();
+    /* eje de camadas: solo etiquetas YYYY-MM reales. Las pocas anuladas sin fecha
+       de despacho caen en "(Sin camada)" y no pintan barra (no son cobrables). */
+    const order=COB.camadaOrder.filter(l=>!this.cf.cam.size||this.cf.cam.has(COB.dims.camada.indexOf(l)));
+    const byCam=this.cobSum(rows,Rc.CAMADA);
+    const at=l=>byCam.get(COB.dims.camada.indexOf(l))||{fact:0,cob:0,pend:0,dif:0,anul:0,fac:0};
+    const serie=f=>order.map(l=>Math.round(at(l)[f]));
+    const last=COB.camadaMax;   // camada mas joven = en maduracion
+    const labs=order.map(l=>l===last?l+' (en maduración)':l);
+
+    // 1 - descomposicion apilada: la identidad del negocio, visualizada
+    const cd=this.chart('c-cob-descomp');
+    cd.setOption({grid:{top:26,bottom:mob?30:36,left:58,right:20,containLabel:true},
+      legend:{bottom:0,data:['Cobrado','Diferencial','Pendiente']},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},confine:true,
+        formatter:ps=>{const o=at(order[ps[0].dataIndex]);
+          return '<b>'+labs[ps[0].dataIndex]+'</b><br>'+ps.map(p=>p.marker+p.seriesName+': '+moneyFull(p.value)).join('<br>')
+            +'<hr style="margin:5px 0;border:none;border-top:1px solid #ddd">Facturado neto: <b>'+moneyFull(o.fact)+'</b>'
+            +'<br><span style="color:#6b7392">Anuladas (aparte): '+moneyFull(o.anul)+' · '+intf(o.fac)+' facturas</span>';}},
+      xAxis:{type:'category',data:labs,axisLabel:{fontSize:mob?9:11,interval:0,hideOverlap:true}},
+      yAxis:{type:'value',axisLabel:{formatter:money}},
+      series:[
+        {name:'Cobrado',type:'bar',stack:'x',data:serie('cob'),itemStyle:{color:'#16a34a'},barMaxWidth:56},
+        {name:'Diferencial',type:'bar',stack:'x',data:serie('dif'),itemStyle:{color:'#3aa0d1'}},
+        {name:'Pendiente',type:'bar',stack:'x',data:serie('pend'),itemStyle:{color:'#f4a72c'},
+         label:{show:!mob,position:'top',formatter:p=>money(at(order[p.dataIndex]).fact),fontSize:10,color:'#24205b',fontWeight:700}}]},true);
+
+    // 2 - % de cobro por camada (la ultima en claro: sigue madurando)
+    const pc=this.chart('c-cob-pct');
+    /* Dos tasas distintas, y hay que ver las dos:
+       pcv  = Cobrado / Facturado neto        -> cuanto de la camada ya entro (madura)
+       pef  = Cobrado / (Cobrado+Diferencial) -> es la columna '% Cobro' de la hoja
+              POR CAMADA: de lo YA cerrado, cuanto entro como caja y cuanto como
+              diferencial. Se mantiene ~95% en todas las camadas. */
+    const pcv=order.map(l=>{const o=at(l);return o.fact?+(o.cob/o.fact*100).toFixed(1):0});
+    const pef=order.map(l=>{const o=at(l),b=o.cob+o.dif;return b?+(o.cob/b*100).toFixed(1):0});
+    pc.setOption({grid:{top:30,bottom:mob?42:46,left:44,right:22,containLabel:true},
+      legend:{bottom:0,textStyle:{fontSize:mob?10:11},data:['% cobrado de la camada','% efectividad (ya cerrado)']},
+      tooltip:{trigger:'axis',valueFormatter:v=>v.toFixed(1)+'%',confine:true},
+      xAxis:{type:'category',data:labs,axisLabel:{fontSize:mob?9:11,interval:0,hideOverlap:true}},
+      yAxis:{type:'value',max:100,axisLabel:{formatter:v=>v+'%'}},
+      series:[{name:'% cobrado de la camada',type:'line',data:pcv,smooth:true,symbolSize:9,lineStyle:{color:'#16a34a',width:3},
+        itemStyle:{color:p=>order[p.dataIndex]===last?'#a7e0bb':'#16a34a'},
+        label:{show:true,position:'top',formatter:p=>p.value.toFixed(1)+'%',fontSize:11,color:'#24205b',fontWeight:700},
+        areaStyle:{color:'rgba(22,163,74,.10)'}},
+        {name:'% efectividad (ya cerrado)',type:'line',data:pef,smooth:true,symbolSize:7,
+        lineStyle:{color:'#24205b',width:2,type:'dashed'},itemStyle:{color:'#24205b'}}]},true);
+
+    // 3 - cobertura (hoja COBERTURA: universo del sistema, no depende de filtros)
+    const cov=(COB.cobertura||[]).filter(c=>!c.total);
+    const cc=this.chart('c-cob-cobertura');
+    cc.setOption({tooltip:{trigger:'item',confine:true,
+        formatter:p=>{const c=cov[p.dataIndex];return '<b>'+c.cat+'</b><br>'+moneyFull(c.monto)+'<br>'+intf(c.docs)+' documentos · '+c.pct.toFixed(2)+'% del sistema';}},
+      legend:{type:'scroll',bottom:0,textStyle:{fontSize:mob?10:11}},
+      series:[{type:'pie',radius:['45%','72%'],center:['50%','44%'],itemStyle:{borderColor:'#fff',borderWidth:2},
+        label:{formatter:'{d}%',fontSize:11,color:'#24205b'},
+        data:cov.map(c=>({name:c.cat,value:Math.round(c.monto)})),color:['#16a34a','#24205b','#f4a72c','#e0472c']}]},true);
+
+    // 4-7 - rankings
+    this.cobRank(this.cobSum(rows,Rc.VEND),COB.dims.vend,'cob','#16a34a','c-cob-vend');
+    this.cobRank(this.cobSum(rows,Rc.VEND),COB.dims.vend,'pend','#f4a72c','c-cob-pend-vend');
+    this.cobRank(this.cobSum(rows,Rc.GRUPO),COB.dims.grupo,'cob','#17a39a','c-cob-grupo');
+    const com=COB.comisiones||[];
+    this.hbz('c-cob-comis',com.map(c=>[c.vend,c.com]),{color:'#ff4f20',left:112,leftMob:86,zoom:com.length>10,window:10});
+    this.chart('c-cob-comis').setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},confine:true,
+      formatter:ps=>{const c=com[ps[0].dataIndex];if(!c)return '';
+        return '<b>'+c.vend+'</b><br>Comisión total: <b>'+c.com.toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})+' $-equiv.</b>'
+          +'<hr style="margin:5px 0;border:none;border-top:1px solid #ddd">'
+          +'Base 3%: '+intf(c.base3)+' Bs<br>Base 5%: '+intf(c.base5)+' Bs<br>Porción en divisa: $'+intf(c.porcion)
+          +'<br>Azúcar/Harina: '+intf(c.azhar)+' Bs<br><span style="color:#6b7392">'+intf(c.fac)+' facturas</span>';}}});
+
+    // KPIs de cobranza
+    /* El total se saca de TODAS las filas de la seleccion, no de sumar el eje:
+       unas pocas anuladas no traen fecha de despacho y no caen en ninguna camada.
+       La hoja POR CAMADA hace exactamente lo mismo (no las reparte, pero si las
+       totaliza), asi que sumando el eje el dashboard no cuadraria con el Excel. */
+    const T=[...this.cobSum(rows,Rc.EST).values()].reduce((a,o)=>{for(const k in a)a[k]+=o[k];return a},
+      {fact:0,cob:0,pend:0,dif:0,anul:0,fac:0});
+    const ejeFac=order.reduce((a,l)=>a+at(l).fac,0),ejeAnul=order.reduce((a,l)=>a+at(l).anul,0);
+    const closed=order.filter(l=>l!==last);   // nunca comparar contra la camada inmadura
+    const dv=f=>{if(closed.length<2)return null;
+      const a=at(closed[closed.length-2]),b=at(closed[closed.length-1]);
+      const va=f==='pct'?(a.fact?a.cob/a.fact*100:0):a[f],vb=f==='pct'?(b.fact?b.cob/b.fact*100:0):b[f];
+      return va?(vb-va)/Math.abs(va)*100:null};
+    const setK=(id,val,sub,delta,spark)=>{
+      document.getElementById('kc-'+id).textContent=val;
+      document.getElementById('kcs-'+id).textContent=sub||'';
+      const de=document.getElementById('kcd-'+id);
+      if(delta==null){de.textContent='';de.className='delta'}
+      else{de.textContent=(delta>=0?'▲ ':'▼ ')+pct(delta)+' vs. camada cerrada anterior';de.className='delta '+(delta>=0?'pos':'neg')}
+      this.spark('kcp-'+id,spark,id==='cobrado');};
+    setK('cobrado',moneyFull(T.cob),intf(T.fac)+' facturas · '+order.length+' camada'+(order.length===1?'':'s'),dv('cob'),serie('cob'));
+    const efT=(T.cob+T.dif)?T.cob/(T.cob+T.dif)*100:0;
+    setK('pct',(T.fact?(T.cob/T.fact*100):0).toFixed(1)+'%',
+      moneyFull(T.fact)+' facturado neto · efectividad '+efT.toFixed(1)+'%',dv('pct'),pcv);
+    setK('pend',moneyFull(T.pend),'anuladas aparte: '+moneyFull(T.anul),dv('pend'),serie('pend'));
+
+    // tabla
+    const tr=order.map((l,i)=>{const o=at(l);
+      return `<tr><td>${labs[i]}</td><td class=num>${moneyFull(o.fact)}</td><td class=num>${moneyFull(o.cob)}</td>
+        <td class=num>${moneyFull(o.dif)}</td><td class=num>${moneyFull(o.pend)}</td>
+        <td class=num>${(o.fact?o.cob/o.fact*100:0).toFixed(1)}%</td><td class=num>${((o.cob+o.dif)?o.cob/(o.cob+o.dif)*100:0).toFixed(1)}%</td>
+        <td class=num>${moneyFull(o.anul)}</td><td class=num>${intf(o.fac)}</td></tr>`}).join('');
+    document.getElementById('t-cob').innerHTML=`<thead><tr><th>Camada (despacho)</th><th class=num>Facturado neto</th><th class=num>Cobrado</th>
+      <th class=num>Diferencial</th><th class=num>Pendiente</th><th class=num>% cobrado</th><th class=num>% efectiv.</th><th class=num>Anuladas</th><th class=num>Facturas</th></tr></thead>
+      <tbody>${tr}</tbody><tfoot><tr style="font-weight:800;border-top:2px solid #24205b">
+      <td>TOTAL</td><td class=num>${moneyFull(T.fact)}</td><td class=num>${moneyFull(T.cob)}</td><td class=num>${moneyFull(T.dif)}</td>
+      <td class=num>${moneyFull(T.pend)}</td><td class=num>${(T.fact?T.cob/T.fact*100:0).toFixed(1)}%</td>
+      <td class=num>${efT.toFixed(1)}%</td><td class=num>${moneyFull(T.anul)}</td><td class=num>${intf(T.fac)}</td></tr>${
+      T.fac>ejeFac?`<tr><td colspan="9" style="padding:8px 10px;color:#6b7392;font-size:11.5px;font-weight:500;border:none">
+        El TOTAL incluye ${intf(T.fac-ejeFac)} factura(s) anulada(s) por ${moneyFull(T.anul-ejeAnul)} <b>sin fecha de despacho</b>:
+        no pertenecen a ninguna camada, por eso las filas de arriba no suman el total. La hoja POR CAMADA del Excel hace lo mismo.</td></tr>`:''}</tfoot>`;
+    this.injectInfo();this.injectDownloads();
+  }
   renderTab(){const t=this.tab,d=this.d,mo=this.mo;
     if(t==='resumen')this.tResumen(d,mo);else if(t==='tend')this.tTend(d,mo);else if(t==='vend')this.tVend(d,mo);
-    else if(t==='marca')this.tMarca(d,mo);else if(t==='sector')this.tSector(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='comp')this.tComp();else if(t==='rlist')renderRList();}
+    else if(t==='marca')this.tMarca(d,mo);else if(t==='sector')this.tSector(d,mo);else if(t==='cli')this.tCli(d,mo);else if(t==='prod')this.tProd(d,mo);else if(t==='comp')this.tComp();else if(t==='rlist')renderRList();else if(t==='cob')this.tCob();}
   projLine(mo){const idxData=P.dims.histMonthNums.map(m=>m-1);const yFull=Array(12).fill(null);
     mo.neto.forEach((v,i)=>yFull[idxData[i]]=v);
     const eo=this.effNeto(mo),pi=eo.pi;const xs=idxData,ys=eo.eff,nn=xs.length;
@@ -842,6 +1035,8 @@ async function boot(pin){const err=document.getElementById('gerr');
   window.__docx={exec:res.obj.execDocx||'',risk:res.obj.riskDocx||'',list:res.obj.listDocx||''};
   window.__dl=res.obj.driveLinks||{};
   RL=res.obj.riskList||null;
+  COB=res.obj.Pcob||null;
+  if(COB){var tcb=document.getElementById('tab-cob');if(tcb)tcb.style.display='';}
   if(RL){var trl=document.getElementById('tab-rlist');if(trl)trl.style.display='';var rse=document.getElementById('rl-search');if(rse)rse.oninput=renderRList;}
   var rdl=document.getElementById('rl-dl');if(rdl&&window.__docx.list)rdl.style.display='';
   document.getElementById('gate').style.display='none';document.body.classList.remove('locked');

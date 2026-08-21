@@ -9,6 +9,7 @@ import reports as REPORTS
 import secure as SECURE
 import wordrep as WORDREP
 import risklist as RLIST
+import cobranza as COB
 
 
 def _wrap_summary(title, body, full_id, fname):
@@ -109,11 +110,17 @@ def main():
             list_b64 = _b64x.b64encode(open(rlp, "rb").read()).decode()
     except Exception:
         risk_list = None
+    # Conciliacion de cobranza (Excel de Drive, opcional): si falta, la pestana
+    # se oculta sola en el front y el resto del dashboard funciona igual.
+    cbp = os.environ.get("COB_XLSX"); pcob = None
+    if cbp and os.path.exists(cbp):
+        pcob = COB.build(cbp)          # si la identidad no cuadra, revienta aqui a proposito
+        print(f"   cobranza: {len(pcob['rows'])} facturas, camadas {pcob['camadaMin']}..{pcob['camadaMax']}")
     def _dl(envk):
         i = os.environ.get(envk, "")
         return f"https://drive.google.com/uc?export=download&id={i}" if i else ""
-    drive_links = {"exec": _dl("EXEC_ID"), "risk": _dl("RISK_ID"), "list": _dl("LIST_ID")}
-    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list, "listDocx": list_b64, "driveLinks": drive_links}, ensure_ascii=False, separators=(",", ":"))
+    drive_links = {"exec": _dl("EXEC_ID"), "risk": _dl("RISK_ID"), "list": _dl("LIST_ID"), "cob": _dl("COB_ID")}
+    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list, "listDocx": list_b64, "driveLinks": drive_links, "Pcob": pcob}, ensure_ascii=False, separators=(",", ":"))
     sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
     enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
     enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))

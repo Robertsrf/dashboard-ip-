@@ -34,5 +34,17 @@
   "recuperados": 38,
   "top10_share": 34.3,
   "ticket": 193.14
+ },
+ {
+  "version": "11PUQfnn_rf2oKpXJozbcUnBks9zTg6Gk|2026-08-20T03:14:50Z|5544076~E:1-CYcxCKhjBeaRrxyx6C18MTL9rQU4ujT~L:1vIS2_zA9iVSNO5oNQI2zvfpk1riKB9Hh~C:1mZ8JqPM6LFpp9hu2asXM9eXoTuntHksI|2026-08-20T22:45:43Z|1913759",
+  "dateMax": "2026-08-15",
+  "total": 3207977.95,
+  "best_month": "2026-05",
+  "best_val": 553580.92,
+  "clientes": 1363,
+  "riesgo": 581,
+  "recuperados": 33,
+  "top10_share": 33.9,
+  "ticket": 193.89
  }
 ]

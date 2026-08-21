@@ -1,5 +1,7 @@
 secrets.json
 data_ip.xlsx
+risk_list.xlsx
+cobranza.xlsx
 *.xlsx
 *.docx
 patch.py

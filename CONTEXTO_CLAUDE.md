@@ -3,7 +3,7 @@
 > Documento único de contexto para cargar en un **Proyecto de Claude**.
 > Contiene: qué es el sistema, cómo está construido, cómo son los datos, cómo se despliega,
 > cómo se edita sin romperlo, y las trampas conocidas.
-> Verificado contra el código y los datos reales el **2026-08-08**.
+> Verificado contra el código y los datos reales el **2026-08-20**, sobre el **6.º corte** (`dateMax` 2026-07-31).
 > **No contiene PINs, tokens ni credenciales.**
 
 ---
@@ -11,7 +11,7 @@
 ## 1. Resumen en 10 líneas
 
 - Es un **dashboard de inteligencia de ventas** para *Distribuidora y Suministros IP* (distribuidora de víveres, desechables y repostería en el occidente de Venezuela).
-- Es **una sola página estática** (`index.html`, ~4.5 MB) que se genera con Python desde un Excel de ventas.
+- Es **una sola página estática** (`index.html`, ~4,8 MB) que se genera con Python desde un Excel de ventas.
 - Los datos van **cifrados dentro del HTML** (AES-256-GCM). Se abren con un **PIN de 6 dígitos** por usuario; el descifrado ocurre en el navegador con WebCrypto.
 - Los gráficos son **ECharts 5.5.1** (desde CDN, con respaldo local en `vendor/echarts.min.js` si el CDN no responde). No hay backend, ni base de datos, ni API.
 - Se publica en **GitHub Pages** → https://robertsrf.github.io/dashboard-ip-/ (repo `Robertsrf/dashboard-ip-`, rama `main`).
@@ -35,10 +35,10 @@ contenía datos hasta el **31 de julio**; fiarse del nombre habría producido el
 
 **I2 · SKU = `DISTINCTCOUNT(PRODUCTO)` con `SUMACANT > 0`.**
 Sin ese filtro el conteo se infla con productos que aparecen en la data pero no se vendieron.
-Sobre el 5.º corte: **1 757** con filtro frente a 1 782 sin él.
+Sobre el 6.º corte: **1 852** con filtro frente a 1 876 sin él (en el 5.º fueron 1 757 vs. 1 782).
 
 **I3 · Los informes excluyen AMÉRICO y REVIPLAST; el dashboard los incluye.**
-Por eso el total del dashboard (**$5,65 M**) nunca cuadra con el del informe ejecutivo (**$2,80 M**).
+Por eso el total del dashboard (**$5,86 M** en el corte 6) nunca cuadra con el del informe ejecutivo (**$2,96 M**).
 **No es un bug** — es la diferencia de universo. Si alguien reporta el descuadre, esta es la respuesta.
 
 **I4 · Con el mes en curso incompleto, el universo de "riesgo" está inflado.**
@@ -50,7 +50,7 @@ sin decirlo explícitamente en el informe.
 La venta es y solo es **`SUMANETO`**. No restar ni sumar `CNTDEVUELT` a los ingresos.
 
 **I6 · `CODCLIENTE` es la clave fiable de cliente, no `NOMBRECLI`.**
-Por nombre salen **1 491** clientes; por código, **1 480**. La diferencia son variantes de escritura del
+Por nombre salen **1 513** clientes; por código, **1 501** (corte 6). La diferencia son variantes de escritura del
 mismo cliente (p. ej. `COMERCIALIZADORA WENDYS, C.A` y `OMERCIALIZADORA WENDYS, C.A`, con la C perdida),
 que hoy se cuentan dos veces. Los KPIs históricos cuentan por nombre: al cambiarlo, la serie se rompe.
 
@@ -67,13 +67,14 @@ Comparar cortes = comparar totales. **Jamás sumarlos.**
 | Archivo | Tamaño aprox. | Rol | ¿En git? |
 |---|---|---|---|
 | `build_dashboard.py` | 6 KB | **Generador**. `main()` (líneas 21–131) lee el Excel y arma el payload; al final lee `template.html` en la variable `TEMPLATE`. | Sí |
-| `template.html` | 78 KB | **Toda la UI**: HTML + CSS + JS del dashboard, con los 4 placeholders. **Único sitio donde se edita la interfaz.** | Sí |
-| `index.html` | 4.5 MB | **Artefacto desplegado**. HTML + JS + `const ENC = {...}` con los datos cifrados. Generado, nunca editado a mano. | Sí |
+| `template.html` | 82 KB | **Toda la UI**: HTML + CSS + JS del dashboard, con los 4 placeholders. **Único sitio donde se edita la interfaz.** | Sí |
+| `index.html` | 4,8 MB | **Artefacto desplegado**. HTML + JS + `const ENC = {...}` con los datos cifrados. Generado, nunca editado a mano. | Sí |
 | `vendor/echarts.min.js` | 1.0 MB | Respaldo local de ECharts **5.5.1**. Solo se carga si `window.echarts` no existe tras el `<script>` del CDN. | Sí |
 | `pipeline/` | 30 KB | Pipeline de informes: `clean.py`, `analysis.py`, `rep_helpers.js`, `build_report.js`. **Herramienta paralela**: no la importa nadie en producción. | Sí (los intermedios `.json`/`.doc` no) |
-| `reports.py` | 30 KB | Genera los informes **Ejecutivo** y de **Riesgo/Recuperados** en HTML (resumen + versión completa). | Sí |
+| `reports.py` | 31 KB | Genera los informes **Ejecutivo** y de **Riesgo/Recuperados** en HTML (resumen + versión completa). | Sí |
 | `secure.py` | 1 KB | Cifrado del payload: PBKDF2-SHA256 + AES-256-GCM, una clave envuelta por PIN. | Sí |
 | `risklist.py` | 1.8 KB | Convierte el Excel "Lista de Clientes en Riesgo/Recuperados" (multi-hoja) a JSON. | Sí |
+| `cobranza.py` | 7 KB | Convierte el Excel de **conciliación Facturado vs. Cobrado** en el payload `Pcob` de la pestaña 💵 Cobranza. Detecta encabezados por nombre y **aborta el build si la identidad `Facturado = Cobrado + Diferencial + Pendiente` no cuadra**. | Sí |
 | `wordrep.py` | 0.9 KB | Extrae resumen HTML + base64 de los Word de informe (requiere `python-docx`). | Sí |
 | `publish.py` | 1.4 KB | `git add index.html history.json` + commit `Auto-update <fecha>` + `push origin main`. | Sí |
 | `history.json` | 1 KB | Histórico de cortes publicados: **una entrada por corte**, identificado por `dateMax`. | Sí |
@@ -83,7 +84,9 @@ Comparar cortes = comparar totales. **Jamás sumarlos.**
 | `package.json` | 48 B | Solo `{"name":"dashboard-ip","private":true}`. Sin dependencias. No hay build de Node. | Sí |
 | `.nojekyll` | 0 B | Evita que GitHub Pages procese el sitio con Jekyll. **No borrar.** | Sí |
 | `data_ip.xlsx` | 5.0 MB | Excel fuente de ventas (viene de Drive). | **No** (.gitignore) |
-| `risk_list.xlsx` | 91 KB | Excel de lista de riesgo (viene de Drive). | **No** |
+| `risk_list.xlsx` | 79 KB | Excel de lista de riesgo (viene de Drive). | **No** |
+| `exec.docx` | 57 KB | Word del informe ejecutivo del corte vigente (viene de Drive). | **No** |
+| `cobranza.xlsx` | 1.9 MB | Excel de conciliación de cobranza, 13 hojas (viene de Drive). **Insumo opcional**: si falta, la pestaña se oculta y el resto funciona igual. | **No** |
 | `secrets.json` | 334 B | PINs, nombres, roles de los 4 usuarios. | **No — NUNCA subir** |
 | `SYSTEM.md`, `COWORK_ACTUALIZACION.md`, `README.md` | — | Documentación. | Sí |
 
@@ -100,7 +103,6 @@ los finales de línea.
 Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZFVzhQzscE)
   ├─ Data_IP_Actualizada*.xlsx   (obligatorio)  ─┐
   ├─ *Ejecutivo*.docx            (opcional)      │
-  ├─ *Seguimiento/Riesgo*.docx   (opcional)      │
   └─ *Lista*Riesgo*.xlsx         (opcional)      │
                                                  v
                               build_dashboard.py  main()
@@ -113,14 +115,14 @@ Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZ
                                  └─ TEMPLATE (leído de template.html)
                                        .replace(__VERSION__, __ENC_JSON__, __VE_GEO__, __LOGO_SVG__)
                                                  v
-                                          index.html (4.5 MB)
+                                          index.html (4,8 MB)
                                                  v
                                   publish.py → git push → GitHub Pages (~1 min)
                                                  v
                        Navegador: PIN → PBKDF2 → AES-GCM → P → new App() → ECharts
 ```
 
-**No hay servidor.** Todo el cómputo (filtros, KPIs, regresiones, agregaciones) ocurre en el navegador sobre el array `P.rows` en memoria (~58.7 K filas).
+**No hay servidor.** Todo el cómputo (filtros, KPIs, regresiones, agregaciones) ocurre en el navegador sobre el array `P.rows` en memoria (**62 169 filas** en el corte 6).
 
 ### Los 4 placeholders del TEMPLATE
 `__VERSION__` · `__ENC_JSON__` · `__VE_GEO__` · `__LOGO_SVG__`. Si añades uno nuevo, hay que sustituirlo en `main()` (líneas ~124–127).
@@ -136,26 +138,29 @@ Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZ
 | `DOCUMENTO` | texto | Nº de factura. Formato `*0116727 `. **Es la unidad de "factura"** para KPIs. |
 | `PRODUCTO` | texto | Descripción del SKU. |
 | `GRUPO` | texto | Categoría mayor (6 valores). |
-| `SUBGRUPO` | float | Código numérico de subgrupo. **8 800 nulos. El dashboard NO lo usa.** |
+| `SUBGRUPO` | float | Código numérico de subgrupo. **9 106 nulos. El dashboard NO lo usa.** |
 | `CANTIDAD` | float | Unidades vendidas. |
 | `CNTDEVUELT` | float | Unidades devueltas. |
 | `PRECIOUNIT` | float | Precio unitario (USD). |
 | `FECHADOC` | fecha | Fecha del documento. Filas sin fecha se **descartan**. |
-| `CODCLIENTE` | texto | Código de cliente (1 480 únicos). **No se usa en el dashboard.** |
-| `NOMBRECLI` | texto | Nombre del cliente (1 491 únicos → hay clientes con mismo código y distinto nombre). |
+| `CODCLIENTE` | texto | Código de cliente (1 501 únicos). **No se usa en el dashboard.** |
+| `NOMBRECLI` | texto | Nombre del cliente (1 513 únicos → hay clientes con mismo código y distinto nombre). |
 | `VENDEDOR` | texto | 21 valores. |
 | `SECTOR` | texto | `CIUDAD,ESTADO,VE` — 39 valores. |
-| `REFERENCIA` | texto | Sub-familia de producto (260 valores). **127 nulos. No se usa.** |
-| `MARCA` | texto | 105 valores. 127 nulos. |
+| `REFERENCIA` | texto | Sub-familia de producto (263 valores). **136 nulos. No se usa.** |
+| `MARCA` | texto | 106 valores. 136 nulos. Desde el corte 6, 29 de ellos traen el sufijo `(N)` — ver §4.3.8. |
 | `SUMACANT` | float | = `CANTIDAD − CNTDEVUELT` (verificado: coincide en el 100 % de las filas). |
 | `SUMANETO` | float | = `SUMACANT × PRECIOUNIT` (verificado 100 %). **Es LA métrica de venta neta.** |
 
-### 4.2 Cifras del corte actual (5.º corte, `dateMax` 2026-07-15)
+### 4.2 Cifras del corte actual (6.º corte, `dateMax` 2026-07-31)
 
-- **58 762 filas** · **17 953 facturas** · **1 491 clientes** · **1 823 SKU** · **105 marcas** · **21 vendedores** · **39 sectores**
-- **Rango:** 2026-01-09 → 2026-07-15 (188 días, `dayCount`)
-- **Venta neta total:** **$5 654 878,14**
-- **% de devolución global:** 12,54 % de las unidades
+- **62 169 filas** · **18 917 facturas** · **1 513 clientes** · **1 876 SKU** (1 852 con `SUMACANT > 0`, ver I2) · **106 marcas** · **21 vendedores** · **39 sectores**
+- **Rango:** 2026-01-09 → 2026-07-31 (204 días, `dayCount`)
+- **Venta neta total:** **$5 861 787,17** (informe, sin AMERICO/REVIPLAST: **$2 964 385,29**)
+- **% de devolución global:** 11,98 % de las unidades
+- **Sin mes parcial.** El corte cierra justo el 31 de julio, así que julio está **completo**: `partialInfo()`
+  no marca nada como parcial y el riesgo deja de estar inflado (I4). Es la excepción, no la regla —
+  el próximo corte quincenal volverá a traer un mes a medias.
 
 Venta neta por mes:
 
@@ -165,25 +170,33 @@ Venta neta por mes:
 | 2026-02 | 952 419 | 2 655 | 910 |
 | 2026-03 | 1 091 181 | 3 319 | 989 |
 | 2026-04 | 843 932 | 2 594 | 889 |
-| 2026-05 | 1 110 243 | 3 453 | 984 |
+| 2026-05 | **1 110 243** | 3 453 | 984 | ← mejor mes del año
 | 2026-06 | 811 207 | 3 027 | 901 |
-| **2026-07** | **225 614** | 1 253 | 445 | ← **mes parcial (solo 15 días)** |
+| 2026-07 | 432 523 | 2 217 | 649 | ← mes completo, pero el más flojo desde enero
 
-Por grupo: VIVERES 2,67 M · DESECHABLES 1,51 M · REPOSTERIA 1,37 M · CONDIMENTOS 70 K · CONFITERIA 27 K.
-Por estado: TRUJILLO 3,01 M · MERIDA 1,38 M · ZULIA 1,17 M · PORTUGUESA 64 K · TACHIRA 24 K.
-Top vendedores: Televenta 1,14 M · David 679 K · Santiago 616 K · Jesús 597 K · José 589 K · Yuraima 578 K.
-Top marcas: **AMERICO 2,51 M** · MARPLAST 437 K · MAXIPLAST 315 K · MASTER TOP 286 K · MULTIPLAST 154 K.
+Por grupo: VIVERES 2,70 M · DESECHABLES 1,61 M · REPOSTERIA 1,44 M · CONDIMENTOS 74 K · CONFITERIA 31 K *(+ el grupo basura `"6"`, $335)*.
+Por estado: TRUJILLO 3,12 M · MERIDA 1,43 M · ZULIA 1,21 M · PORTUGUESA 69 K · TACHIRA 28 K.
+Top vendedores: Televenta 1,22 M · David 707 K · Santiago 640 K · José 605 K · Jesús 604 K · Yuraima 578 K.
+Top marcas: **AMERICO 2,51 M** · MARPLAST (N) 465 K · MAXIPLAST (N) 337 K · MASTER TOP (N) 292 K · MULTIPLAST(N) 164 K · INDELMA (N) 152 K.
+
+**Frente al 5.º corte** (`dateMax` 2026-07-15): +3 407 filas, +964 facturas, +22 clientes, +$206 909 de neto.
+Como los cortes son acumulativos (I7), la diferencia **es** lo vendido entre el 16 y el 31 de julio.
 
 ### 4.3 ⚠️ Peculiaridades y suciedad de datos (importantes)
 
-1. **AMERICO + REVIPLAST = 50,5 % del neto ($2,86 M en 8 107 filas).** El **dashboard los incluye**; los **informes automáticos los EXCLUYEN** (`build_dashboard.py` filtra `MARCA == "AMERICO"` o `NOMBRECLI` que contenga `REVIPLAST` antes de llamar a `reports.build`). **Por eso el total del dashboard ($5,65 M) NUNCA cuadra con el total del informe ejecutivo ($2,80 M).** No es un bug.
+1. **AMERICO + REVIPLAST = 49,4 % del neto ($2,90 M en 8 413 filas).** El **dashboard los incluye**; los **informes automáticos los EXCLUYEN** (`build_dashboard.py` filtra `MARCA == "AMERICO"` o `NOMBRECLI` que contenga `REVIPLAST` antes de llamar a `reports.build`). **Por eso el total del dashboard ($5,86 M) NUNCA cuadra con el total del informe ejecutivo ($2,96 M).** No es un bug.
 2. **Valores basura en dimensiones:** `VENDEDOR` tiene `"23"` (23 filas) y `"2"` (1 fila); `GRUPO` tiene `"6"` (56 filas, $335). Aparecen tal cual como opciones en los segmentadores. Nadie los ha limpiado.
 3. **Espacios sobrantes** en algunos valores (`"Jesús "`, `"Laura "`, `"Santiago "`). `build_dashboard.py` hace `.str.strip()`, así que en el dashboard aparecen unificados; en un análisis crudo del Excel hay que hacer strip.
 4. **Acentos:** los datos están correctos en UTF-8 (José, Jesús, Rosángela, Ángel, CAÑO ZANCUDO). Si ves `Jes�s` es **la consola de Windows** (cp1252), no los datos. En Windows usar `PYTHONIOENCODING=utf-8`.
-5. **`MARCA` nula (127 filas)** → `fillna("(Sin dato)")` la convierte en `"(Sin dato)"`, **no** en `"(Sin marca)"` (el `.replace` a `"(Sin marca)"` solo actúa sobre literales `"nan"` y `""`, que ya no existen tras el fillna). Detalle menor pero explica por qué nunca ves `(Sin marca)`.
+5. **`MARCA` nula (136 filas)** → `fillna("(Sin dato)")` la convierte en `"(Sin dato)"`, **no** en `"(Sin marca)"` (el `.replace` a `"(Sin marca)"` solo actúa sobre literales `"nan"` y `""`, que ya no existen tras el fillna). Detalle menor pero explica por qué nunca ves `(Sin marca)`.
 6. **Un sector tiene espacio tras la coma:** `"EL CHIVO, ZULIA,VE"`. Funciona igual porque `vnorm()` hace trim al extraer el estado.
-7. **`CODCLIENTE` (1 480) ≠ `NOMBRECLI` (1 491)**: hay nombres duplicados/variantes. Todos los KPIs de "clientes únicos" cuentan por **nombre**, no por código.
-8. **Los cortes son acumulativos**: cada Excel nuevo trae TODO el año, no solo lo nuevo. Comparar cortes = comparar totales, no sumarlos.
+7. **`CODCLIENTE` (1 501) ≠ `NOMBRECLI` (1 513)**: hay nombres duplicados/variantes. Todos los KPIs de "clientes únicos" cuentan por **nombre**, no por código.
+8. **Marcas con sufijo `(N)` — nuevo en el corte 6.** 29 de las 106 marcas llegan como `MARPLAST (N)`,
+   `MAXIPLAST (N)`, `MULTIPLAST(N)`… (con y sin espacio antes del paréntesis). Es un cambio del ERP de origen,
+   no del sistema. **`FULLCREAM` aparece en las dos formas** (`FULLCREAM` y `FULLCREAM (N)`) y por tanto se
+   cuenta **dos veces** en el segmentador de marca y en los rankings. Nadie normaliza el sufijo todavía;
+   si se decide hacerlo, hay que decirlo en el informe porque **rompe la comparación con los cortes previos**.
+9. **Los cortes son acumulativos**: cada Excel nuevo trae TODO el año, no solo lo nuevo. Comparar cortes = comparar totales, no sumarlos.
 
 ---
 
@@ -193,13 +206,13 @@ Tras el login, `P` es el payload descifrado:
 
 ```js
 P = {
-  version, generated,          // "2026-07-21 23:59"
-  dateMin, dateMax,            // "2026-01-09", "2026-07-15"
+  version, generated,          // "2026-08-09 15:26"
+  dateMin, dateMax,            // "2026-01-09", "2026-07-31"
   year,                        // "2026"
-  dayZero, dayCount,           // "2026-01-09", 188
+  dayZero, dayCount,           // "2026-01-09", 204
   dims: { mes, mesLabels, fullLabels, histMonthNums,
           grupo, vendedor, sector, marca, cliente, producto },
-  rows: [ [ ... 12 enteros/floats ... ], ... ]   // 58 762 filas
+  rows: [ [ ... 12 enteros/floats ... ], ... ]   // 62 169 filas
 }
 ```
 
@@ -232,7 +245,7 @@ Rango de fechas: `this.dayRange = [a, b]` en offsets de día.
 - **Semántica:** `Set` vacío = "todos". `filtered()` combina todos los filtros **y** el rango de días con AND.
 - `DIMS` (en `initMeta()`) define cada segmentador: `{field, names, label}`. `buildFilters()` los dibuja.
 - **Chips colapsados** (`syncFilterUI()`): 1 seleccionado → nombre; varios → `"N seleccionadas"`; la ✕ limpia ese filtro.
-- Las casillas de cada menú se sincronizan **solo al abrirlo** (rendimiento con 1 491 clientes).
+- Las casillas de cada menú se sincronizan **solo al abrirlo** (rendimiento: 1 513 clientes en el corte 6).
 - **Barra de fechas** (`buildDayBar()` sobre `#timebar`): inputs `Desde`/`Hasta` + atajos *Último día · 7 días · Este mes · Todo*. Si no hay `P.dayZero`, la barra se oculta y no se filtra por día.
 - Botón **"Limpiar todo"** → `APP.reset()`.
 
@@ -255,8 +268,9 @@ Cada KPI tiene: valor, **sparkline** (serie mensual), **delta ▲/▼** (último
 
 La navegación es un **panel lateral colapsable** (`<aside id="sidenav">`), agrupado en cuatro bloques:
 **Resumen** · **Análisis** (tend, vend, marca, sector, cli, prod) · **Comparar** · **Informes** (exec, rlist).
-El botón **☰** de la barra superior alterna `body.nav-collapsed` y el estado se recuerda en `localStorage`
-(`ipNavCollapsed`). Bajo 640 px el panel es un **cajón superpuesto** cerrado por defecto (`body.nav-open`),
+El botón **☰ Ocultar menú** vive en la **primera fila dentro del propio panel** (`#navtoggle`); al colapsar,
+aparece un botón flotante **☰** (`#navopen`, fijo arriba a la izquierda) para volver a abrirlo. Ambos llaman a
+`toggleNav()`, que alterna `body.nav-collapsed` y recuerda el estado en `localStorage` (`ipNavCollapsed`). Bajo 640 px el panel es un **cajón superpuesto** cerrado por defecto (`body.nav-open`),
 con scrim, que se cierra al elegir sección o con `Escape`.
 
 > **La trampa:** ECharts **no** se reajusta solo al cambiar el ancho de su contenedor. `toggleNav()` llama
@@ -291,7 +305,7 @@ con scrim, que se cierra al elegir sección o con `Escape`.
 - **Mapa de estados** (`tSector`): `echarts.registerMap('VE', VE_GEO)` una sola vez (`this._veReg`). El estado sale de `sector.split(',')[1]`, normalizado con `vnorm()` (mayúsculas, sin acentos, trim). Clic → `filterByState()` selecciona todos los sectores de ese estado. Tiene roam (zoom/pan) y etiqueta de monto sobre cada estado con datos.
 - **`printReport(sel, title)` / `printFull` / `downloadDoc`** — imprimir a PDF y bajar los informes como `.doc` usando `PRINT_CSS`.
 - **Paleta:** `PAL` (12 colores). Marca: `--brand:#ff4f20` (naranja) y `--navy:#24205b`. Positivo `#16a34a`, negativo `#e0472c`. Fuente **Inter** (Google Fonts).
-- **Dependencias externas (CDN):** `echarts@5.5.1` de jsDelivr y Google Fonts. **Si el CDN cae, el dashboard no dibuja.** No hay fallback local.
+- **Dependencias externas (CDN):** `echarts@5.5.1` de jsDelivr y Google Fonts. ECharts **sí tiene respaldo local**: si tras el `<script>` del CDN no existe `window.echarts`, un `document.write` carga `vendor/echarts.min.js` (ruta relativa, por eso `index.html` debe seguir en la raíz del repo). **Google Fonts no tiene respaldo**: sin internet la tipografía cae a `system-ui`, pero los gráficos dibujan igual.
 
 ---
 
@@ -327,7 +341,9 @@ Dos informes, cada uno con **resumen** (visible en la pestaña) e **informe comp
 **Recordatorio:** los informes se generan sobre `df_rep`, que **excluye AMERICO y REVIPLAST**. El dashboard no.
 
 ### `history.json`
-Una entrada **por corte**, con: `version, dateMax, total, best_month, best_val, clientes, riesgo, recuperados, top10_share, ticket`. El corte se identifica por **`dateMax`**: si regeneras el mismo corte con otra versión, `reports.py` **reemplaza** la entrada en vez de añadir una nueva (antes solo comparaba `version`, y por eso se acumularon 7 entradas del corte 2026-06-30). Hoy tiene **2 entradas**: 2026-06-30 y 2026-07-15 (total 2 799 090,11 · 1 309 clientes · 484 en riesgo · 17 recuperados · ticket 193,95 · top10 34,7 %).
+Una entrada **por corte**, con: `version, dateMax, total, best_month, best_val, clientes, riesgo, recuperados, top10_share, ticket`. El corte se identifica por **`dateMax`**: si regeneras el mismo corte con otra versión, `reports.py` **reemplaza** la entrada en vez de añadir una nueva (antes solo comparaba `version`, y por eso se acumularon 7 entradas del corte 2026-06-30). Hoy tiene **3 entradas**: 2026-06-30, 2026-07-15 y 2026-07-31. La vigente (corte 6) es:
+total **2 964 385,29** · mejor mes 2026-05 ($553 580,92) · **1 333 clientes** · **428 en riesgo** ·
+**38 recuperados** · ticket **193,14** · top10 **34,3 %**.
 
 **Numeración de cortes.** Los primeros informes se hicieron **a mano, antes de que existiera el sistema**, así que no están en `history.json`. Por eso `corte = len(hist) + CORTE_OFFSET`, con `CORTE_OFFSET = 3` en `reports.py` (pisable con la variable de entorno del mismo nombre). **La numeración es la de los archivos de Drive.**
 
@@ -335,12 +351,63 @@ Una entrada **por corte**, con: `version, dateMax, total, best_month, best_val, 
 |---|---|---|
 | `2026-06-30` | Corte 4 | `Informe_Ejecutivo_4toCorte_CierreSemestre_Junio2026…` |
 | `2026-07-15` | Corte 5 | `Informe_Ejecutivo_5toCorte_Julio2026…` |
-| *(próximo: `2026-07-30`)* | **Corte 6** | `Informe_Ejecutivo_6toCorte_Julio2026…` |
+| `2026-07-31` | **Corte 6** (vigente) | `Informe_Ejecutivo_6toCorte_Julio2026…` (`exec.docx`, 57 034 bytes) |
+| *(próximo)* | Corte 7 | — |
 
 Si algún día se recuperan los cortes 1–3 y se cargan en `history.json`, hay que **bajar el offset en la misma cantidad**.
 
 ### `risk_list.xlsx` (Drive, opcional)
-7 hojas: `Índice`, `🔴 En Riesgo (478)`, `🟢 Recuperados Julio (18)`, `🟢 Recuperados Junio (48)`, `🟢 Recuperados Mayo (139)`, `📊 Riesgo x Vendedor`, `📊 Riesgo x Sector`. `risklist.py` salta la hoja "Índice", detecta la fila de encabezados buscando `#`/`Cliente`/`Vendedor`/`Sector / Zona` en las primeras 4 filas, y devuelve `{order, sheets:{nombre:{title, headers, rows, count}}}`.
+El del corte 6 trae **8 hojas**: `Índice y Seguimiento`, `🔴 En Riesgo` (~428), `🟢 Recuperados Julio`,
+`🟢 Recuperados Junio`, `🟢 Recuperados Mayo`, `📊 Riesgo x Vendedor`, `📊 Riesgo x Sector` y **`Leyenda`** (nueva).
+`risklist.py` **solo salta las hojas cuyo nombre contiene "ÍNDICE"/"INDICE"**, detecta la fila de encabezados
+buscando `#`/`Cliente`/`Vendedor`/`Sector / Zona` en las primeras 4 filas, y devuelve
+`{order, sheets:{nombre:{title, headers, rows, count}}}`.
+
+> ⚠️ Consecuencia: **`Leyenda` se renderiza como una pestaña más** en la sección 🔴 Clientes en riesgo.
+> Si molesta, la corrección es una línea en `risklist.py` (ampliar el filtro de hojas a saltar), no tocar el front.
+> Los nombres de hoja ya no traen el conteo entre paréntesis, así que **no se puede deducir el número de
+> clientes del título**: se lee de `count`.
+
+---
+
+## 8 bis. Cobranza (`cobranza.py` + pestaña 💵)
+
+Insumo: `Conciliacion_Facturado_vs_Cobrado_*.xlsx` de la misma carpeta de Drive (13 hojas; el dashboard
+lee 6). Es **opcional**: sin `COB_XLSX` no se construye `Pcob`, la pestaña se queda oculta y no pasa nada más.
+`Pcob` viaja **dentro del mismo bloque cifrado** que `P` — no hay segundo PIN ni segundo `ENC`.
+
+**Por qué no se compara mes contra mes.** Una factura despachada en abril se puede terminar de cobrar en
+junio, así que el eje es la **camada** (mes de despacho) y cada camada **madura** con el tiempo. La camada
+más joven (`camadaMax`) se dibuja en claro y rotulada *(en maduración)*; los deltas de los KPI comparan
+**camadas ya cerradas**, nunca contra la inmadura. Es el equivalente en cobranza al `(proy.)` del mes parcial.
+
+### ⚠️ Las DOS tasas de cobro — no confundirlas
+La conciliación tiene una columna `% Cobro` que **no** es "cuánto se ha cobrado de la camada":
+
+| Tasa | Fórmula | Qué dice | Corte 7 |
+|---|---|---|---|
+| **% cobrado** (verde) | `Cobrado ÷ Facturado neto` | Cuánto de la camada ya entró en caja. **Es la curva de maduración.** | 94,8 · 93,9 · 89,8 · **61,9** |
+| **% efectividad** (azul punteado) | `Cobrado ÷ (Cobrado + Diferencial)` | De lo **ya cerrado**, cuánto entró como dinero y cuánto se fue en diferencial. **Es la columna `% Cobro` del Excel.** | 95,9 · 96,2 · 95,1 · 95,6 |
+
+La pestaña muestra **las dos**, nombradas: con una sola, o el dashboard contradice al Excel (61,9 % vs. 95,6 %)
+o desaparece la maduración (la efectividad es plana). El **Diferencial no es deuda ni pérdida** — es haber
+cobrado a otro precio o forma de pago — y así hay que rotularlo, o se lee como cartera perdida.
+
+### Otras reglas que el dashboard muestra pero NO recalcula
+- **ANULADA nunca entra al universo cobrable.** Va aparte, en su propia columna.
+- **5 facturas anuladas no traen fecha de despacho** y por tanto no pertenecen a ninguna camada
+  ($12 133 del corte 7). La hoja `POR CAMADA` tampoco las reparte pero **sí las totaliza**: por eso el
+  TOTAL de la tabla se calcula sobre todas las filas, no sumando el eje, y una nota al pie explica el hueco.
+- **Comisiones:** 5 % repostería (incluye desechables y confitería) en Precio 1 y 2; 3 % el resto y víveres;
+  azúcar $0,40 y harina $0,50 por unidad. Cada comisión queda en **su** moneda: para comparar se usa
+  **solo** `Comisión total ($-equiv.)`.
+- **Cobertura:** las 3 analistas cubren el **42,63 %** de la facturación del sistema. AMÉRICO (línea de café)
+  y los clientes fuera de cartera son categorías legítimas, no errores.
+
+### Filtros
+La pestaña tiene **filtros propios** (camada y analista, chips `.rlbtn`) que **no** son los segmentadores de
+ventas: el universo es otro (solo la cartera de las 3 analistas) y el eje es la camada, no la fecha de factura.
+Cobertura y comisiones vienen de sus hojas y **no responden a los filtros** (se avisa en su `.hint`).
 
 ---
 
@@ -410,7 +477,8 @@ Netlify está **pausado por créditos** y ya no es el hosting. La función serve
    ```
    Ya falló dos veces: `..._1507` traía datos hasta el 31-jul, y `..._30-07` también hasta el 31-jul.
 6. **Armar la huella de versión** y ejecutar el build (comando completo en §10.3):
-   `<dataFileId>|<modifiedTime ISO>|<size bytes>~E:<execId>~L:<listId>`
+   `<dataFileId>|<modifiedTime ISO>|<size bytes>~E:<execId>~L:<listId>~C:<cobId>|<modifiedTime>|<size>`
+   El tramo `~C:` es nuevo (corte 7): así, si **solo** cambia la conciliación de cobranza, el sistema igual detecta cambio.
    ⚠️ Si el Word o el Excel de Drive **no** están sanos, dejar su ID **vacío**: `downloadReport`
    prefiere `driveLinks` sobre el archivo embebido, así que un ID hacia un archivo roto da una
    descarga rota.
@@ -445,8 +513,9 @@ Requiere en el entorno: `pandas`, `openpyxl`, `cryptography` (y `python-docx` si
 Necesita `secrets.json` + `data_ip.xlsx` + `risk_list.xlsx` + `exec.docx` en la carpeta del repo (todos gitignored).
 
 ```bash
-EXEC_ID=<execId> LIST_ID=<listId> \
-EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx SECRETS_PATH=./secrets.json \
+EXEC_ID=<execId> LIST_ID=<listId> COB_ID=<cobId> \
+EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx COB_XLSX=./cobranza.xlsx \
+SECRETS_PATH=./secrets.json \
 python build_dashboard.py ./data_ip.xlsx "<VERSION>" ./index.html
 ```
 
@@ -467,7 +536,7 @@ entrada de `history.json` en vez de añadirla, aunque cambie la cadena de versi�
 Validar después: descifrar con un PIN real y comprobar los 4 logins, `dayCount`, `riskList` y `driveLinks`.
 
 **Variables de entorno que lee `build_dashboard.py`:**
-`SECRETS_PATH` (default: `secrets.json` junto al script) · `RISK_LIST_XLSX` · `EXEC_DOCX` · `RISK_DOCX` · `EXEC_ID` · `RISK_ID` · `LIST_ID` (los tres IDs generan links `https://drive.google.com/uc?export=download&id=<id>`).
+`SECRETS_PATH` (default: `secrets.json` junto al script) · `RISK_LIST_XLSX` · `EXEC_DOCX` · `RISK_DOCX` · **`COB_XLSX`** · `EXEC_ID` · `RISK_ID` · `LIST_ID` · **`COB_ID`** (los IDs generan links `https://drive.google.com/uc?export=download&id=<id>`).
 
 ### 10.4 Respaldos
 Cada vez que se sube un cambio se guarda una copia completa en:
@@ -508,11 +577,13 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 **Deuda / limitaciones conocidas:**
 - **Roles decorativos** — todos ven todo. Segmentar por rol exige payloads separados y cifrados por rol; es un proyecto, no un ajuste de UI.
 - **Google Fonts sigue viniendo de CDN**: sin internet la tipografía cae al `system-ui` del sistema (los gráficos ya no dependen del CDN gracias a `vendor/echarts.min.js`).
-- **`index.html` de 4,5 MB** en cada commit: el repo crece rápido (un blob nuevo completo por corte). Opciones sin decidir: Git LFS o publicar el artefacto fuera de git.
+- **`index.html` de 4,8 MB** en cada commit: el repo crece rápido (un blob nuevo completo por corte). Opciones sin decidir: Git LFS o publicar el artefacto fuera de git.
 - **Datos sucios sin limpiar en el dashboard** (`VENDEDOR` "23"/"2", `GRUPO` "6") aparecen como opciones reales en los filtros. El **pipeline de informes** sí los excluye (`pipeline/clean.py`), pero el dashboard no.
 - **Sin tests.** La validación es manual (`node --check`, `py_compile`, comparación de salida, revisión visual).
 - `netlify.toml` y la carpeta `netlify/functions` son residuales.
-- **`history.json` solo tiene 2 cortes registrados** (`2026-06-30` y `2026-07-15`); los cortes 1–3 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 3` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, dos).
+- **`history.json` solo tiene 3 cortes registrados** (`2026-06-30`, `2026-07-15`, `2026-07-31`); los cortes 1–3 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 3` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, tres).
+- **La hoja `Leyenda` del Excel de riesgo se cuela como pestaña** en la sección de riesgo (§8).
+- **El sufijo `(N)` de las marcas no está normalizado** (§4.3.8): `FULLCREAM` se cuenta dos veces.
 
 ---
 
@@ -520,7 +591,7 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 | Término | Significado en este sistema |
 |---|---|
-| **Corte** | Una publicación/actualización del dashboard con un Excel nuevo. Van 5 cortes reales. |
+| **Corte** | Una publicación/actualización del dashboard con un Excel nuevo. Van **6 cortes** reales (3 en `history.json`). |
 | **Neto / venta neta** | `SUMANETO` = (cantidad − devoluciones) × precio unitario, en USD. |
 | **Factura** | Un `DOCUMENTO` distinto. |
 | **Mes parcial** | El último mes del rango, incompleto porque el corte es quincenal. |
@@ -531,12 +602,21 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 | **DATA_VERSION** | Huella de versión en la línea 2 de `index.html`; decide si hay que reconstruir. |
 | **`P`** | El objeto de datos descifrado en el navegador. |
 | **`ENC`** | El bloque cifrado embebido en el HTML. |
-| **`TEMPLATE`** | El string con toda la app dentro de `build_dashboard.py`. |
+| **`TEMPLATE`** | La variable de `build_dashboard.py` con toda la app; **se lee de `template.html`**, ya no está incrustada en el `.py`. |
 
 ---
 
 ## 14. Historial de cambios del sistema
 
+- **2026-08-20 (b)** — **Corte 7** (`dateMax` 2026-08-15: 66 502 filas · $6 113 641,56 en el dashboard ·
+  $3 207 977,95 en el informe · 1 539 clientes por nombre) **y nuevo módulo de COBRANZA**. Se añade
+  `cobranza.py` y la pestaña **💵 Cobranza** (3 KPI, 7 gráficos, tabla por camada) alimentada por `Pcob`
+  dentro del mismo bloque cifrado; nuevas env vars `COB_XLSX` / `COB_ID` y tramo `~C:` en la huella de
+  versión. Ver **§8 bis**, en especial las **dos tasas de cobro**: la columna `% Cobro` del Excel es
+  `Cobrado ÷ (Cobrado + Diferencial)`, **no** `Cobrado ÷ Facturado`. Agosto vuelve a ser **mes parcial**,
+  así que el riesgo vuelve a estar inflado (I4): sube de 428 a 581 y **no debe leerse como deterioro**.
+
+- **2026-08-20** — *(sin cambios de código; el repo sigue en `47e7158`)* Revisión completa de este documento contra el **corte 6** ya publicado: cifras de §4.2, §5 y los invariantes recalculadas sobre `data_ip.xlsx` (62 169 filas, `dateMax` 2026-07-31); se corrige la afirmación de que ECharts no tenía respaldo local (§6.4, sí lo tiene desde el 09-08); se documenta el **sufijo `(N)` en 29 marcas** y el doble conteo de `FULLCREAM` (§4.3.8), la hoja **`Leyenda`** que se cuela como pestaña de riesgo (§8), y el botón de ocultar el menú tal como quedó (§6.3). Nueva §15 como punto de partida para instrucciones nuevas.
 - **2026-08-09 (c)** — **Se retiran las tareas automáticas de Cowork.** El corte pasa a ser **a petición** (§10.2, 9 pasos con validación obligatoria de que los archivos de Drive son Office de verdad). `COWORK_ACTUALIZACION.md` queda como referencia histórica.
 - **2026-08-09 (b)** — **Corte 6** publicado con datos al **31-07-2026** (62 169 filas · $2 964 385,29 · 1 333 clientes · 428 en riesgo · 38 recuperados). El invariante I1 volvió a saltar: el archivo se llamaba `30-07` pero los datos llegaban al 31. Julio queda completo, así que el riesgo deja de estar inflado y baja de 484 a 428. Se instaló `python-docx`, que faltaba y hacía que el resumen del Word nunca se usara (el fallo lo silenciaba un `except`). El botón de ocultar el panel se movió a la primera fila **dentro** del panel, con `#navopen` flotante para poder reabrirlo. `CORTE_OFFSET = 3` alinea la numeración con los archivos de Drive.
 - **2026-08-09 (a)** — Ejecución del documento *MEJORAS_SISTEMA_IP*: **B1** el `TEMPLATE` sale a `template.html` (fin de la duplicación); **B4** las secciones pasan a un **panel lateral colapsable** agrupado en cuatro bloques, con `resize()` de ECharts tras el toggle; **B3** respaldo local de ECharts en `vendor/`; **B2** `history.json` queda con una entrada por corte y `reports.py` deja de acumular duplicados; **A1/A2/A4** pipeline de informes versionado en `pipeline/` (`clean.py`, `analysis.py`, `rep_helpers.js`, `build_report.js`) con `REFERENCIA`, `SUBGRUPO` y `CODCLIENTE`; **A3** sección de **invariantes metodológicos** al inicio de este documento. Además se **elimina la pestaña "Riesgo y recuperados"**: el seguimiento de clientes se fusionó en el Excel de la lista de riesgo.
@@ -553,4 +633,41 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 ---
 
+## 15. Punto de partida para trabajo nuevo (al 2026-08-20)
+
+**Estado del repositorio:** rama `main`, árbol **limpio**, último commit `47e7158`. Lo publicado en
+GitHub Pages corresponde al **corte 6** (`DATA_VERSION` en la línea 2 de `index.html`, `dateMax` 2026-07-31).
+Los archivos de trabajo (`data_ip.xlsx`, `risk_list.xlsx`, `exec.docx`, `secrets.json`) están en la carpeta
+pero **fuera de git**, así que se puede regenerar el mismo corte sin bajar nada de Drive.
+
+**Antes de aceptar una instrucción nueva, ubícala en una de estas tres categorías** — cada una tiene un
+camino distinto y confundirlas es la forma más rápida de romper algo:
+
+| Tipo de tarea | Qué se toca | Qué NO se toca | Validación mínima |
+|---|---|---|---|
+| **A · Corte nuevo** (Excel nuevo de Drive) | `data_ip.xlsx`, `exec.docx`, `risk_list.xlsx`, `index.html`, `history.json` | Nada de código | Los 9 pasos de §10.2, con I1 (`FECHADOC.max()`) y el cotejo del §10.2-8 |
+| **B · Cambio de interfaz o de cálculo** | `template.html` (UI) · `reports.py` / `pipeline/` (informes) · `build_dashboard.py` (payload) | **`index.html` jamás a mano** | `node --check` del último `<script>`, `py_compile`, y regeneración comparando salida enmascarando `ENC` y `DATA_VERSION` (§11.5) |
+| **C · Análisis o informe puntual** (una pregunta sobre los datos) | Nada del repo: se lee `data_ip.xlsx` con pandas | Ni build ni push | Los **siete invariantes** de la cabecera, en especial I1, I2, I3 e I7 |
+
+**Cinco cosas que casi siempre hay que recordarle a quien llega nuevo al sistema:**
+
+1. El total del dashboard (**$5,86 M**) y el del informe (**$2,96 M**) **no cuadran a propósito** (I3).
+2. El nombre del archivo de Drive **miente sobre el período**; la verdad es `FECHADOC.max()` (I1).
+3. Los cortes **no se suman**, se comparan (I7).
+4. Cualquier cambio visible en producción **exige regenerar `index.html`**: los datos van cifrados dentro.
+5. Nada de `secrets.json`, `data_ip.xlsx`, `risk_list.xlsx` ni `*.docx` en un commit. Revisar `git status`
+   antes de cada push: solo deben cambiar `index.html` e `history.json`.
+
+**Si la instrucción nueva llega desde otro Claude (Desktop, Cowork, etc.):** pídele que diga explícitamente
+**a qué categoría (A/B/C) pertenece** y **qué debe quedar publicado al final**. Si es de tipo B, la salida
+esperada es un cambio en `template.html` (o en el `.py` que corresponda) **más** una regeneración validada;
+si es de tipo A, la salida es un `index.html` nuevo y una entrada nueva en `history.json`. En ambos casos,
+respaldo previo en `dashboard-ip-_backups\prod_<FECHA-HORA>\` (§10.4).
+
+> **Espacio reservado.** Las instrucciones nuevas pueden anexarse debajo de esta línea como §15.1, §15.2…
+> sin tocar el resto del documento.
+
+---
+
 *Elaborado a partir del código y los datos reales del repositorio. Autor del sistema: Ing. Roberts Flores.*
+*Última verificación contra código y datos: **2026-08-20** (corte 6).*
