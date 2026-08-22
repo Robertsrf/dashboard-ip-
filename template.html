@@ -367,10 +367,27 @@ body.locked{overflow:hidden}
       <div class="card"><h3>Pendiente por vendedor</h3><div class="hint">Cartera viva por cobrar, sin anuladas</div><div id="c-cob-pend-vend" class="chart"></div></div>
     </div>
     <div class="grid g2">
-      <div class="card"><h3>Comisión por vendedor ($-equiv.)</h3><div class="hint">% confirmados por el Ing. Palomares (20/08) · cada comisión se cobra en su moneda; aquí todo va en $-equivalente para poder compararlas · no responde a los filtros</div><div id="c-cob-comis" class="chart"></div></div>
+      <div class="card"><h3>Comisión por vendedor ($-equiv.)</h3><div class="hint">% confirmados por el Ing. Palomares (20/08) · cada comisión se cobra en su moneda; aquí todo va en $-equivalente para poder compararlas · incluye ya la comisión por bulto del <b>café</b> (la del supervisor va aparte, en la sección de café) · no responde a los filtros</div><div id="c-cob-comis" class="chart"></div></div>
       <div class="card"><h3>Cobrado por grupo</h3><div class="hint">El grupo REPOSTERÍA incluye desechables y confitería</div><div id="c-cob-grupo" class="chart"></div></div>
     </div>
+    <div class="grid"><div class="card"><h3>Cobrado por lista de precio</h3><div class="hint">Caja realmente entrada por cada precio de lista &middot; solo facturas <b>cerradas</b>, sin anuladas &middot; <b>no incluye el caf&eacute;</b>, que tiene su propia secci&oacute;n m&aacute;s abajo &middot; no responde a los filtros</div><div id="c-cob-precio" class="chart"></div></div></div>
     <div class="grid"><div class="card"><h3>Detalle por camada</h3><div class="hint"><b>% cobrado</b> = Cobrado ÷ Facturado neto (maduración de la camada) · <b>% efectiv.</b> = Cobrado ÷ (Cobrado + Diferencial), la columna «% Cobro» del Excel · las Anuladas van aparte: no son cartera</div><div class="tblwrap"><table id="t-cob"></table></div></div></div>
+
+    <div id="cob-cafe" style="display:none">
+      <div class="card" style="border-left:4px solid #8a5a2b">
+        <h3>&#9749; Caf&eacute; &middot; La Protectora</h3>
+        <div class="hint">Marca nueva de caf&eacute;, consolidada por <b>Jesiely</b> en un cuadro aparte aunque los vendedores sean de las 3 carteras &middot; los cuadros de caf&eacute; existen <b>desde julio</b> (no hay abril&ndash;junio de caf&eacute; en cobranza) &middot; <b>AM&Eacute;RICO</b>, el caf&eacute; viejo, <b>no se concilia</b>: no tiene cuadros de cobranza, s&oacute;lo aparece en la Cobertura como marca fuera de cartera &middot; estas cifras <b>ya est&aacute;n dentro</b> de los totales de arriba (grupo CAFE): esta secci&oacute;n es el detalle, no un a&ntilde;adido</div>
+        <div class="kpis" id="caf-kpis" style="margin-top:14px;margin-bottom:0"></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><h3>Caf&eacute; &middot; cobrado vs. facturado por mes</h3><div class="hint">Maduraci&oacute;n del caf&eacute;: julio ya casi cerrado, agosto <b>apenas empezando a cobrarse</b> &middot; el facturado es <b>neto</b> (las anuladas van aparte, en el tooltip)</div><div id="c-caf-mes" class="chart"></div></div>
+        <div class="card"><h3>Caf&eacute; &middot; estado de las facturas</h3><div class="hint">Cerradas, pendientes y anuladas sobre el facturado del caf&eacute; &middot; las anuladas no son cartera</div><div id="c-caf-estado" class="chart"></div></div>
+      </div>
+      <div class="grid g2">
+        <div class="card"><h3>Caf&eacute; &middot; cobrado por vendedor</h3><div class="hint">Caja entrada por vendedor en caf&eacute; &middot; <b>JOSE concentra casi todo</b> el caf&eacute; de la empresa</div><div id="c-caf-vend" class="chart"></div></div>
+        <div class="card"><h3>Caf&eacute; &middot; comisi&oacute;n vendedor vs. supervisor (Bs)</h3><div class="hint">Comisi&oacute;n <b>por bulto</b>: vendedor $0,50 en Precio 1 y 2 y $0,40 en el resto; supervisor $0,20 siempre &middot; se paga en <b>bol&iacute;vares</b> a la tasa del d&iacute;a del pago, por eso el eje va en <b>Bs</b> y no en $</div><div id="c-caf-com" class="chart"></div></div>
+      </div>
+    </div>
   </div>
   <div class="foot" id="foot"></div>
   </div>
@@ -396,6 +413,10 @@ const money=v=>'$'+(v>=1e6?(v/1e6).toFixed(2)+'M':v>=1e3?(v/1e3).toFixed(1)+'K':
 const moneyFull=v=>'$'+Math.round(v).toLocaleString('es');
 const vnorm=s=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 const intf=v=>Math.round(v).toLocaleString('es');
+/* Bs: separador de miles y sufijo. El cafe se comisiona en bolivares, y
+   rotularlo como $ seria un error de lectura de tres ordenes de magnitud. */
+const bsf=v=>Math.round(v).toLocaleString('es')+' Bs';
+const bsAx=v=>(v>=1e6?(v/1e6).toFixed(1)+'M':v>=1e3?Math.round(v/1e3)+'K':Math.round(v))+' Bs';
 const pct=v=>(v>=0?'+':'')+v.toFixed(1)+'%';
 const fmtDate=s=>{const p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0]};
 const TIPS={'c-trend':'Venta neta real por mes (barras) y proyección lineal hasta diciembre (línea punteada).',
@@ -423,11 +444,16 @@ const TIPS={'c-trend':'Venta neta real por mes (barras) y proyección lineal has
   'c-seccmp':'Trayectoria mensual de venta neta de las 6 zonas líderes.',
   'c-cob-descomp':'Cada camada (mes de despacho) abierta en sus tres partes: lo Cobrado, el Diferencial y lo que sigue Pendiente. Las tres suman exactamente el Facturado neto. El Diferencial NO es deuda: es haber cobrado a otro precio o forma de pago.',
   'c-cob-pct':'Dos tasas que NO son lo mismo. Verde = Cobrado ÷ Facturado neto: qué parte de la camada ya entró en caja; baja en la camada joven y sube con los meses, así que su caída es normal, no una alerta. Azul punteado = Cobrado ÷ (Cobrado + Diferencial): de lo que ya se cerró, cuánto entró como dinero y cuánto se fue en diferencial; es la columna «% Cobro» del Excel y se mantiene cerca del 95% en todas las camadas.',
-  'c-cob-cobertura':'Qué parte de la facturación total del sistema pasa por la cobranza de las 3 analistas (~43%). AMÉRICO (línea de café) y los clientes fuera de cartera son categorías legítimas, no errores.',
+  'c-cob-cobertura':'Qué parte de la facturación total del sistema pasa por la cobranza de las 3 analistas (~43%). AMÉRICO es el café viejo: no tiene cuadros de cobranza, así que no se concilia y solo aparece aquí. El café que sí se concilia es LA PROTECTORA, y va dentro del 43%. Los clientes fuera de cartera son categoría legítima, no un error.',
   'c-cob-vend':'Dinero efectivamente entrado en caja por vendedor, dentro de la selección de camadas y analistas.',
   'c-cob-pend-vend':'Cartera viva: facturas sin cancelar por vendedor. No incluye anuladas ni diferencial.',
-  'c-cob-comis':'Comisión total por vendedor expresada en $-equivalente. 5% para repostería (incluye desechables y confitería) en Precio 1 y 2, 3% el resto y víveres, más $0,40 por unidad de azúcar y $0,50 por unidad de harina.',
-  'c-cob-grupo':'Cobrado por grupo de producto, para cruzarlo con lo que muestra la venta.'};
+  'c-cob-comis':'Comisión total por vendedor expresada en $-equivalente. 5% para repostería (incluye desechables y confitería) en Precio 1 y 2, 3% el resto y víveres, más $0,40 por unidad de azúcar, $0,50 por unidad de harina y la comisión por bulto del café, que desde este corte ya viene incluida en el total. La del supervisor del café no entra aquí: va en su propia sección, en Bs.',
+  'c-cob-grupo':'Cobrado por grupo de producto, para cruzarlo con lo que muestra la venta.',
+  'c-cob-precio':'Cuánto dinero entró realmente por cada precio de lista, contando solo las facturas ya cerradas. No es lo facturado: es la caja. El café queda fuera a propósito (tiene su propia sección), así que este total es el de la línea regular.',
+  'c-caf-mes':'Café mes a mes. Julio ya está prácticamente cobrado; agosto sigue en maduración y su pendiente alto es lo esperado, no una alerta. El facturado mostrado es el neto: las anuladas van aparte.',
+  'c-caf-estado':'Reparto del facturado del café entre facturas cerradas (ya cobradas), pendientes (cartera viva) y anuladas (fuera del universo cobrable).',
+  'c-caf-vend':'Caja entrada por vendedor en la línea de café. JOSE concentra casi todo el volumen; el resto de la fuerza de venta apenas está arrancando con la marca.',
+  'c-caf-com':'Comisión del café, que se calcula por bulto y no por porcentaje: $0,50 por bulto en Precio 1 y 2, $0,40 en los demás precios, y $0,20 por bulto para el supervisor. Se paga en bolívares a la tasa del día del pago, por eso las cifras van en Bs.'};
 
 const PRINT_CSS=`*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',system-ui,sans-serif}
 body{padding:28px;color:#24205b}.rephead{display:flex;justify-content:space-between;border-bottom:3px solid #ff4f20;padding-bottom:12px;margin-bottom:16px}
@@ -706,6 +732,98 @@ class App{
   cobRank(map,names,field,color,id,n){
     const p=[...map.entries()].map(([i,o])=>[names[i],o[field]]).filter(x=>x[1]>0.5).sort((a,b)=>b[1]-a[1]).slice(0,n||9999);
     this.hbz(id,p,{color:color,left:120,leftMob:88,zoom:p.length>10,window:10});}
+  /* ---- Cafe (La Protectora) -----------------------------------------------
+     El cafe YA esta dentro del maestro general (Grupo=CAFE), asi que los KPIs
+     de arriba lo incluyen: esta seccion es el DETALLE que el maestro no lleva
+     (bultos y comision del supervisor), no una suma aparte. No responde a los
+     filtros de camada/analista: el cuadro de cafe es uno solo, lo consolida
+     Jesiely, y cubre vendedores de las 3 carteras desde julio.
+     AMERICO (el cafe viejo) no aparece aqui: no tiene cuadros de cobranza.   */
+  cafe(mob){
+    const host=document.getElementById('cob-cafe');if(!host)return;
+    const C=COB.cafe;
+    if(!C||!C.mes||!C.mes.length){host.style.display='none';return}
+    host.style.display='';               // visible ANTES de crear los graficos
+    const T=C.tot,pcob=T.neto?T.cob/T.neto*100:0;
+    document.getElementById('caf-kpis').innerHTML=[
+      {lab:'Facturado neto café',hero:true,val:moneyFull(T.neto),
+       sub:intf(T.fac)+' facturas · '+intf(T.enSistema)+' cruzan el sistema, '+intf(T.noEnSistema)+' aún no',
+       tip:'Facturado cobrable del café (ya sin las anuladas). Las facturas que «no cruzan el sistema» son las más recientes de agosto: se regularizan en el próximo corte, no son un error.'},
+      {lab:'Cobrado café',val:moneyFull(T.cob),
+       sub:pcob.toFixed(1)+'% del neto · '+intf(T.facCerr)+' facturas cerradas',
+       tip:'Caja realmente entrada por el café. Va desde julio: antes no había cuadros de café en cobranza.'},
+      {lab:'Pendiente café',val:moneyFull(T.pend),
+       sub:intf(T.facPend)+' facturas · anuladas aparte: '+moneyFull(T.anul),
+       tip:'Cartera viva del café. Casi todo es de agosto, que apenas empieza a cobrarse: es maduración normal, no morosidad.'},
+      {lab:'Comisiones café (Bs)',val:bsf(T.comVend+T.comSuper),
+       sub:'vendedor '+bsf(T.comVend)+' · supervisor '+bsf(T.comSuper),
+       tip:'Comisión por bulto, no por porcentaje: $0,50 por bulto en Precio 1 y 2, $0,40 en el resto, y $0,20 por bulto para el supervisor. Se paga en bolívares a la tasa del día del pago, por eso la cifra va en Bs y no en $.'}
+    ].map(k=>'<div class="kpi'+(k.hero?' hero':'')+'"><div class="lab">'+k.lab+' <span class="info" data-tip="'+k.tip+'">i</span></div>'
+      +'<div class="val">'+k.val+'</div><div class="sub">'+k.sub+'</div></div>').join('');
+
+    /* 1 - cobrado vs facturado por mes: la maduracion del cafe. El facturado
+       que se pinta es el NETO (sin anuladas), igual que en el resto de la
+       pestana; el bruto y las anuladas van en el tooltip.                   */
+    const M=C.mes,ult=M.length?M[M.length-1].k:'';
+    const cap=x=>x.charAt(0)+x.slice(1).toLowerCase();
+    const mlab=M.map(o=>o.k===ult?cap(o.k)+' (en maduración)':cap(o.k));
+    this.chart('c-caf-mes').setOption({grid:{top:26,bottom:mob?34:40,left:52,right:20,containLabel:true},
+      legend:{bottom:0,textStyle:{fontSize:mob?10:11},data:['Facturado neto','Cobrado','Pendiente']},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},confine:true,
+        formatter:ps=>{const o=M[ps[0].dataIndex];if(!o)return '';
+          return '<b>'+mlab[ps[0].dataIndex]+'</b><br>'+ps.map(p=>p.marker+p.seriesName+': '+moneyFull(p.value)).join('<br>')
+            +'<hr style="margin:5px 0;border:none;border-top:1px solid #ddd">Diferencial: '+moneyFull(o.dif)
+            +'<br><span style="color:#6b7392">Anuladas (aparte): '+moneyFull(o.anul)
+            +' · '+intf(o.bultos)+' bultos · '+intf(o.fac)+' facturas</span>';}},
+      xAxis:{type:'category',data:mlab,axisLabel:{fontSize:mob?9:11,interval:0,hideOverlap:true}},
+      yAxis:{type:'value',axisLabel:{formatter:money}},
+      series:[
+        {name:'Facturado neto',type:'bar',data:M.map(o=>Math.round(o.fact)),itemStyle:{color:'#24205b',borderRadius:[4,4,0,0]},barMaxWidth:44,
+         label:{show:!mob,position:'top',formatter:p=>money(p.value),fontSize:10,color:'#24205b',fontWeight:700}},
+        {name:'Cobrado',type:'bar',data:M.map(o=>Math.round(o.cob)),itemStyle:{color:'#16a34a',borderRadius:[4,4,0,0]},barMaxWidth:44,
+         label:{show:!mob,position:'top',formatter:p=>money(p.value),fontSize:10,color:'#16a34a',fontWeight:700}},
+        {name:'Pendiente',type:'bar',data:M.map(o=>Math.round(o.pend)),itemStyle:{color:'#f4a72c',borderRadius:[4,4,0,0]},barMaxWidth:44,
+         label:{show:!mob,position:'top',formatter:p=>money(p.value),fontSize:10,color:'#c07d10',fontWeight:700}}]},true);
+
+    // 2 - estado global del cafe (reparto del facturado bruto)
+    const est=[{n:'Cerrado (ya cobrado)',v:T.montoCerr,f:T.facCerr,c:'#16a34a'},
+               {n:'Pendiente',v:T.pend,f:T.facPend,c:'#f4a72c'},
+               {n:'Anulado (fuera del cobrable)',v:T.anul,f:T.facAnul,c:'#e0472c'}];
+    this.chart('c-caf-estado').setOption({
+      tooltip:{trigger:'item',confine:true,
+        formatter:p=>{const o=est[p.dataIndex];return '<b>'+o.n+'</b><br>'+moneyFull(o.v)+'<br>'+intf(o.f)+' facturas · '+p.percent+'% del facturado';}},
+      legend:{type:'scroll',bottom:0,textStyle:{fontSize:mob?10:11}},
+      series:[{type:'pie',radius:['45%','72%'],center:['50%','44%'],itemStyle:{borderColor:'#fff',borderWidth:2},
+        label:{formatter:'{d}%',fontSize:11,color:'#24205b'},
+        data:est.map(o=>({name:o.n,value:Math.round(o.v)})),color:est.map(o=>o.c)}]},true);
+
+    // 3 - cobrado por vendedor (ranking): JOSE concentra casi todo el cafe
+    const cv=(C.vend||[]).filter(o=>o.cob>0.5);
+    this.hbz('c-caf-vend',cv.map(o=>[o.k,o.cob]),{color:'#16a34a',left:120,leftMob:96,zoom:cv.length>10,window:10});
+    this.chart('c-caf-vend').setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},confine:true,
+      formatter:ps=>{const o=cv[ps[0].dataIndex];if(!o)return '';
+        return '<b>'+o.k+'</b><br>Cobrado: <b>'+moneyFull(o.cob)+'</b><br>Pendiente: '+moneyFull(o.pend)
+          +'<hr style="margin:5px 0;border:none;border-top:1px solid #ddd"><span style="color:#6b7392">'
+          +intf(o.bultos)+' bultos · '+intf(o.fac)+' facturas</span>';}}});
+
+    /* 4 - comision del cafe: vendedor vs supervisor. Nativa en Bs (se paga a la
+       tasa del dia del pago); el $-equivalente solo va en el tooltip.       */
+    const cm=C.com||[];
+    this.chart('c-caf-com').setOption({grid:{top:8,bottom:mob?44:48,left:mob?92:118,right:mob?48:60,containLabel:false},
+      legend:{bottom:0,textStyle:{fontSize:mob?10:11},data:['Comisión vendedor','Comisión supervisor']},
+      tooltip:{trigger:'axis',axisPointer:{type:'shadow'},confine:true,
+        formatter:ps=>{const o=cm[ps[0].dataIndex];if(!o)return '';
+          return '<b>'+o.vend+'</b><br>'+ps.map(p=>p.marker+p.seriesName+': <b>'+bsf(p.value)+'</b>').join('<br>')
+            +'<hr style="margin:5px 0;border:none;border-top:1px solid #ddd">'+intf(o.bultos)+' bultos · '+intf(o.fac)+' facturas'
+            +'<br><span style="color:#6b7392">$-equivalente: '+o.veq.toFixed(2)+' vendedor · '+o.seq.toFixed(2)+' supervisor</span>';}},
+      xAxis:{type:'value',splitNumber:mob?3:4,axisLabel:{formatter:bsAx,fontSize:mob?9:10,hideOverlap:true,margin:8},splitLine:{lineStyle:{color:'#f0f2f8'}}},
+      yAxis:{type:'category',data:cm.map(o=>o.vend),inverse:true,axisTick:{show:false},
+        axisLine:{lineStyle:{color:'#c9cfe0'}},axisLabel:{fontSize:mob?10:11,margin:8}},
+      series:[
+        {name:'Comisión vendedor',type:'bar',data:cm.map(o=>Math.round(o.vbs)),itemStyle:{color:'#ff4f20',borderRadius:[0,4,4,0]},barMaxWidth:mob?10:13,
+         label:{show:true,position:'right',formatter:p=>bsAx(p.value),fontSize:mob?8:9,color:'#6b7392'}},
+        {name:'Comisión supervisor',type:'bar',data:cm.map(o=>Math.round(o.sbs)),itemStyle:{color:'#17a39a',borderRadius:[0,4,4,0]},barMaxWidth:mob?10:13}]},true);
+  }
   tCob(){
     if(!COB)return;
     this.cobInit();
@@ -778,7 +896,25 @@ class App{
         return '<b>'+c.vend+'</b><br>Comisión total: <b>'+c.com.toLocaleString('es',{minimumFractionDigits:2,maximumFractionDigits:2})+' $-equiv.</b>'
           +'<hr style="margin:5px 0;border:none;border-top:1px solid #ddd">'
           +'Base 3%: '+intf(c.base3)+' Bs<br>Base 5%: '+intf(c.base5)+' Bs<br>Porción en divisa: $'+intf(c.porcion)
-          +'<br>Azúcar/Harina: '+intf(c.azhar)+' Bs<br><span style="color:#6b7392">'+intf(c.fac)+' facturas</span>';}}});
+          +'<br>Azúcar/Harina/Café: '+intf(c.azhar)+' Bs<br><span style="color:#6b7392">'+intf(c.fac)+' facturas</span>';}}});
+
+    // 8 - cobrado por lista de precio (lo pidio Palomares): la caja real que
+    //     entro por cada precio. Solo facturas CERRADAS y SIN cafe -> es una
+    //     foto del Excel completo, no responde a los filtros de camada.
+    const pl=COB.precioCob||[];
+    if(pl.length){
+      const totp=pl.reduce((a,o)=>a+o.cob,0);
+      this.hbz('c-cob-precio',pl.map(o=>[o.cat,o.cob]),{color:'#16a34a',left:120,leftMob:96});
+      this.chart('c-cob-precio').setOption({tooltip:{trigger:'axis',axisPointer:{type:'shadow'},confine:true,
+        formatter:ps=>{const o=pl[ps[0].dataIndex];if(!o)return '';
+          return '<b>'+o.cat+'</b><br>Cobrado: <b>'+moneyFull(o.cob)+'</b><br>'
+            +(totp?(o.cob/totp*100).toFixed(1):'0')+'% de la caja · '+intf(o.fac)+' facturas cerradas'
+            +'<hr style="margin:5px 0;border:none;border-top:1px solid #ddd"><span style="color:#6b7392">Total cobrado (sin café): '
+            +moneyFull(totp)+'</span>';}}});
+    }
+
+    // 9 - modulo de cafe (La Protectora)
+    this.cafe(mob);
 
     // KPIs de cobranza
     /* El total se saca de TODAS las filas de la seleccion, no de sumar el eje:
