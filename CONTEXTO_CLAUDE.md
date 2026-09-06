@@ -74,8 +74,8 @@ Comparar cortes = comparar totales. **Jamás sumarlos.**
 | `reports.py` | 31 KB | Genera los informes **Ejecutivo** y de **Riesgo/Recuperados** en HTML (resumen + versión completa). | Sí |
 | `secure.py` | 1 KB | Cifrado del payload: PBKDF2-SHA256 + AES-256-GCM, una clave envuelta por PIN. | Sí |
 | `risklist.py` | 1.8 KB | Convierte el Excel "Lista de Clientes en Riesgo/Recuperados" (multi-hoja) a JSON. | Sí |
-| `cobranza.py` | 7 KB | Convierte el Excel de **conciliación Facturado vs. Cobrado** en el payload `Pcob` de la pestaña 💵 Cobranza. Detecta encabezados por nombre y **aborta el build si la identidad `Facturado = Cobrado + Diferencial + Pendiente` no cuadra**. | Sí |
-| `wordrep.py` | 0.9 KB | Extrae resumen HTML + base64 de los Word de informe (requiere `python-docx`). | Sí |
+| `cobranza.py` | 16 KB | Convierte el Excel de **conciliación Facturado vs. Cobrado** en el payload `Pcob` de la pestaña 💵 Cobranza. Detecta encabezados por nombre y **aborta el build si la identidad `Facturado = Cobrado + Diferencial + Pendiente` no cuadra**. | Sí |
+| `wordrep.py` | 3.4 KB | Extrae el resumen HTML + base64 de los Word de informe (requiere `python-docx`). Recorre el documento **en orden real** (párrafos y tablas intercalados): desde el 8.º corte el informe pone sus hallazgos en tablas, y `d.paragraphs` no las ve. | Sí |
 | `publish.py` | 1.4 KB | `git add index.html history.json` + commit `Auto-update <fecha>` + `push origin main`. | Sí |
 | `history.json` | 1 KB | Histórico de cortes publicados: **una entrada por corte**, identificado por `dateMax`. | Sí |
 | `ve_states.geojson` | 34 KB | 25 estados de Venezuela simplificados, para el mapa choropleth. Se embebe en el HTML. | Sí |
@@ -292,7 +292,7 @@ con scrim, que se cierra al elegir sección o con `Escape`.
 | `cli` | Clientes | `c-cli`, Pareto `c-pareto`, `c-clicmp`, **clientes inactivos** `inact-box`, tabla `t-cli` |
 | `prod` | Productos / SKU | `c-prodneto`, `c-produ`, `c-prodcmp`, tabla `t-prod` |
 | `comp` | ⚖️ Comparar | Dos rangos de fecha A vs B → tabla de 6 indicadores con Δ + `c-cmp` |
-| `exec` | 📄 Informe ejecutivo | HTML generado por `reports.py` (o resumen del Word de Drive) |
+| `exec` | 📄 Informe ejecutivo | **En la práctica, siempre el resumen del Word de Drive**: si hay `EXEC_DOCX`, sustituye al HTML de `reports.py`. `execFull` (el informe completo generado) viaja en el payload pero **nadie lo renderiza** — `printFull()` y `downloadDoc()` están definidos y nunca se llaman. Lo que se ve es el resumen + el botón de descarga del Word real. |
 | `rlist` | 🔴 Clientes en riesgo y recuperados | Tabla navegable del Excel de Drive + descarga. **Oculta si no hay `riskList`.** |
 
 > **Eliminada:** la pestaña `risk` ("Riesgo y recuperados", resumen del Word de Seguimiento de Clientes).
@@ -443,7 +443,8 @@ anterior. La hoja `COMPARADOR` del Excel trae esa comparación camada a camada.
   (`Comisión (Bs)`, total 21 869 875 Bs) y sin el desglose de bases**; hasta el 7.º iban en
   `Comisión total ($-equiv.)`. El payload trae `comMoneda` y el front cambia eje, etiquetas y tooltip con
   él (`opt.bs` de `hbz`): con el formateador de dólares, 5 109 377 Bs se leía «$5.1M».
-  El desglose de bases sobrevive solo en `COMISIONES DETALLE`, por analista y camada (`comisDet`).
+  El desglose de bases sobrevive solo en la hoja `COMISIONES DETALLE` del Excel, por analista y camada;
+  **no viaja en el payload** porque el dashboard no lo muestra (el tooltip de comisiones es por vendedor).
 - **La comisión del café es aparte y por bulto** ($0,50/bulto en Precio 1 y 2, $0,40 el resto, $0,20 el
   supervisor). En el 8.º corte la hoja `COMISIONES CAFÉ` quedó como texto sin tabla: la tarjeta y el KPI
   correspondientes **se ocultan solos** en vez de pintar ceros.

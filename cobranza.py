@@ -207,32 +207,6 @@ def _comisiones(xls):
     return out, moneda
 
 
-def _comis_detalle(xls):
-    """Hoja COMISIONES DETALLE (corte 8): base 5% / base 3% y comision en Bs por
-    analista y camada. Es lo unico que queda del desglose de bases desde que
-    COMISIONES x VENDEDOR se redujo a una sola columna."""
-    sh = _find_sheet(xls, "COMISIONES DETALLE")
-    if sh is None:
-        return []
-    raw = _sheet(xls, sh)
-    hi, cells = _header_row(raw, ["Analista", "Camada", "Comision (Bs)"], limit=10)
-    if hi is None:
-        return []
-    ia, ic = _at(cells, "Analista"), _at(cells, "Camada")
-    i5, i3 = _at(cells, "Base 5% (Bs)"), _at(cells, "Base 3% (Bs)")
-    icom = _at(cells, "Comision (Bs)")
-    out = []
-    for _, r in raw.iloc[hi + 1:].iterrows():
-        a, c = _txt(r.iloc[ia]), _txt(r.iloc[ic])
-        if not a or a.upper().startswith("TOTAL") or not c:
-            continue
-        out.append({"anal": a, "camada": c,
-                    "base5": _num(r.iloc[i5]) if i5 is not None else 0.0,
-                    "base3": _num(r.iloc[i3]) if i3 is not None else 0.0,
-                    "com": _num(r.iloc[icom])})
-    return out
-
-
 def _resumen(xls):
     """Hoja RESUMEN (corte 8): pares etiqueta -> valor de la descomposicion.
     Se usa para cotejar contra lo que sale del MAESTRO; si el Excel se
@@ -520,7 +494,6 @@ def build(path):
         "cobertura": _cobertura(xls),
         "comisiones": comis,
         "comMoneda": com_moneda,
-        "comisDet": _comis_detalle(xls),
         "precioCob": precio_cob,
         "cafe": _cafe(xls, resumen),
         "rows": rows,
