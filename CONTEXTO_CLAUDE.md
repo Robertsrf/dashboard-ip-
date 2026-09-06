@@ -73,7 +73,7 @@ Comparar cortes = comparar totales. **Jamás sumarlos.**
 | `pipeline/` | 30 KB | Pipeline de informes: `clean.py`, `analysis.py`, `rep_helpers.js`, `build_report.js`. **Herramienta paralela**: no la importa nadie en producción. | Sí (los intermedios `.json`/`.doc` no) |
 | `reports.py` | 31 KB | Genera los informes **Ejecutivo** y de **Riesgo/Recuperados** en HTML (resumen + versión completa). | Sí |
 | `secure.py` | 1 KB | Cifrado del payload: PBKDF2-SHA256 + AES-256-GCM, una clave envuelta por PIN. | Sí |
-| `risklist.py` | 1.8 KB | Convierte el Excel "Lista de Clientes en Riesgo/Recuperados" (multi-hoja) a JSON. | Sí |
+| `risklist.py` | 4.3 KB | Convierte el Excel "Lista de Clientes en Riesgo/Recuperados" (multi-hoja) a JSON. Distingue **hojas lista** (una tabla) de **hojas narrativas** (KPIs + títulos + párrafos), que se emiten como bloques — ver §8. | Sí |
 | `cobranza.py` | 16 KB | Convierte el Excel de **conciliación Facturado vs. Cobrado** en el payload `Pcob` de la pestaña 💵 Cobranza. Detecta encabezados por nombre y **aborta el build si la identidad `Facturado = Cobrado + Diferencial + Pendiente` no cuadra**. | Sí |
 | `wordrep.py` | 3.4 KB | Extrae el resumen HTML + base64 de los Word de informe (requiere `python-docx`). Recorre el documento **en orden real** (párrafos y tablas intercalados): desde el 8.º corte el informe pone sus hallazgos en tablas, y `d.paragraphs` no las ve. | Sí |
 | `publish.py` | 1.4 KB | `git add index.html history.json` + commit `Auto-update <fecha>` + `push origin main`. | Sí |
@@ -84,7 +84,7 @@ Comparar cortes = comparar totales. **Jamás sumarlos.**
 | `package.json` | 48 B | Solo `{"name":"dashboard-ip","private":true}`. Sin dependencias. No hay build de Node. | Sí |
 | `.nojekyll` | 0 B | Evita que GitHub Pages procese el sitio con Jekyll. **No borrar.** | Sí |
 | `data_ip.xlsx` | 5.0 MB | Excel fuente de ventas (viene de Drive). | **No** (.gitignore) |
-| `risk_list.xlsx` | 79 KB | Excel de lista de riesgo (viene de Drive). | **No** |
+| `risk_list.xlsx` | 111 KB | Excel de lista de riesgo (viene de Drive). | **No** |
 | `exec.docx` | 57 KB | Word del informe ejecutivo del corte vigente (viene de Drive). | **No** |
 | `cobranza.xlsx` | 1.9 MB | Excel de conciliación de cobranza, 13 hojas (viene de Drive). **Insumo opcional**: si falta, la pestaña se oculta y el resto funciona igual. | **No** |
 | `secrets.json` | 334 B | PINs, nombres, roles de los 4 usuarios. | **No — NUNCA subir** |
@@ -362,16 +362,30 @@ total **2 964 385,29** · mejor mes 2026-05 ($553 580,92) · **1 333 clientes** 
 Si algún día se recuperan los cortes 1–3 y se cargan en `history.json`, hay que **bajar el offset en la misma cantidad**.
 
 ### `risk_list.xlsx` (Drive, opcional)
-El del corte 6 trae **8 hojas**: `Índice y Seguimiento`, `🔴 En Riesgo` (~428), `🟢 Recuperados Julio`,
-`🟢 Recuperados Junio`, `🟢 Recuperados Mayo`, `📊 Riesgo x Vendedor`, `📊 Riesgo x Sector` y **`Leyenda`** (nueva).
-`risklist.py` **solo salta las hojas cuyo nombre contiene "ÍNDICE"/"INDICE"**, detecta la fila de encabezados
-buscando `#`/`Cliente`/`Vendedor`/`Sector / Zona` en las primeras 4 filas, y devuelve
-`{order, sheets:{nombre:{title, headers, rows, count}}}`.
+El del corte 8 trae **9 hojas**: `Índice` (se salta), `📄 Seguimiento (Resumen)`, `🎯 Plan de Acción`,
+`🔴 En Riesgo (492)`, `🟢 Recuperados Agosto (130)` / `Julio (91)` / `Junio (117)`,
+`📊 Riesgo x Vendedor` y `📊 Riesgo x Sector`. `risklist.py` salta las hojas cuyo nombre contiene
+"ÍNDICE"/"INDICE" y devuelve `{order, sheets:{nombre: …}}`.
 
-> ⚠️ Consecuencia: **`Leyenda` se renderiza como una pestaña más** en la sección 🔴 Clientes en riesgo.
-> Si molesta, la corrección es una línea en `risklist.py` (ampliar el filtro de hojas a saltar), no tocar el front.
-> Los nombres de hoja ya no traen el conteo entre paréntesis, así que **no se puede deducir el número de
-> clientes del título**: se lee de `count`.
+**⚠️ Hay DOS formas de hoja y confundirlas deja la pestaña en blanco.**
+
+| | Hojas **lista** | Hojas **narrativas** |
+|---|---|---|
+| Cuáles | En Riesgo, los 3 Recuperados, Riesgo x Vendedor/Sector | Seguimiento (Resumen), Plan de Acción |
+| Forma | una sola tabla | KPIs + títulos + tablas pequeñas + párrafos |
+| Se detectan por | el encabezado trae `#`/`Cliente`/`Vendedor`/`Sector / Zona` | **no** trae ninguno |
+| Payload | `{title, headers, rows, count}` | `{title, sub, blocks:[…], count:0}` |
+| En el front | tabla + buscador | `rlBlock()`, bloque a bloque, **sin** buscador |
+
+Tipos de bloque: `head` (título de sección) · `text` (párrafo) · `kpis` (2 filas: etiquetas + valores,
+se pintan con `.repkpis`/`.rk`) · `pairs` (dos columnas etiqueta/valor) · `table` (1.ª fila = encabezado).
+
+**Las celdas de los bloques se compactan** (solo las no vacías, en orden). Eso arregla el desfase de las
+celdas combinadas: en `🎯 Plan de Acción` el encabezado ocupa las columnas 0-4 y los datos las 0,1,3,4,5,
+así que leerlas por posición corre cada valor una columna. Las hojas narrativas se pintan sin `.rtc`
+(que fuerza `nowrap`) para que el texto largo pueda partir línea.
+
+> Los nombres de hoja ya no traen el conteo entre paréntesis de forma fiable: se lee de `count`.
 
 ---
 
@@ -634,7 +648,6 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 - `netlify.toml` y la carpeta `netlify/functions` son residuales.
 - **`history.json` tiene 5 cortes registrados** (`2026-06-30`, `2026-07-15`, `2026-07-31`, `2026-08-15`, `2026-08-31`); los cortes 1–3 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 3` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, cinco).
 - **«Recuperados» significa dos cosas distintas y ambas se publican.** `reports.py` exige compra **anterior** a los dos meses dormidos (8.º corte: **71**); el Excel que arma Roberts a mano cuenta todo el que compró en el mes sin haber comprado en los dos anteriores, **incluidos los clientes nuevos** (8.º corte: **130**). Los 59 de diferencia son clientes cuya primera compra del año fue agosto. Los dos números conviven en el dashboard —el 71 en el informe generado, el 130 en la pestaña de la lista de Drive— y **no se han unificado**: cambiar el criterio de `reports.py` rompería la serie de `history.json` (54 · 17 · 38 · 33 · 71).
-- **La hoja `Leyenda` del Excel de riesgo se cuela como pestaña** en la sección de riesgo (§8).
 - **El sufijo `(N)` de las marcas no está normalizado** (§4.3.8): `FULLCREAM` se cuenta dos veces.
 
 ---
