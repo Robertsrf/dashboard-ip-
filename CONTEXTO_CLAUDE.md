@@ -3,7 +3,7 @@
 > Documento único de contexto para cargar en un **Proyecto de Claude**.
 > Contiene: qué es el sistema, cómo está construido, cómo son los datos, cómo se despliega,
 > cómo se edita sin romperlo, y las trampas conocidas.
-> Verificado contra el código y los datos reales el **2026-08-20**, sobre el **6.º corte** (`dateMax` 2026-07-31).
+> Verificado contra el código y los datos reales el **2026-09-06**, sobre el **8.º corte** (`dateMax` 2026-08-31).
 > **No contiene PINs, tokens ni credenciales.**
 
 ---
@@ -11,7 +11,7 @@
 ## 1. Resumen en 10 líneas
 
 - Es un **dashboard de inteligencia de ventas** para *Distribuidora y Suministros IP* (distribuidora de víveres, desechables y repostería en el occidente de Venezuela).
-- Es **una sola página estática** (`index.html`, ~4,8 MB) que se genera con Python desde un Excel de ventas.
+- Es **una sola página estática** (`index.html`, ~6,1 MB) que se genera con Python desde un Excel de ventas.
 - Los datos van **cifrados dentro del HTML** (AES-256-GCM). Se abren con un **PIN de 6 dígitos** por usuario; el descifrado ocurre en el navegador con WebCrypto.
 - Los gráficos son **ECharts 5.5.1** (desde CDN, con respaldo local en `vendor/echarts.min.js` si el CDN no responde). No hay backend, ni base de datos, ni API.
 - Se publica en **GitHub Pages** → https://robertsrf.github.io/dashboard-ip-/ (repo `Robertsrf/dashboard-ip-`, rama `main`).
@@ -35,10 +35,10 @@ contenía datos hasta el **31 de julio**; fiarse del nombre habría producido el
 
 **I2 · SKU = `DISTINCTCOUNT(PRODUCTO)` con `SUMACANT > 0`.**
 Sin ese filtro el conteo se infla con productos que aparecen en la data pero no se vendieron.
-Sobre el 6.º corte: **1 852** con filtro frente a 1 876 sin él (en el 5.º fueron 1 757 vs. 1 782).
+Sobre el 8.º corte: **1 964** con filtro frente a 1 990 sin él (en el 6.º fueron 1 852 vs. 1 876).
 
 **I3 · Los informes excluyen AMÉRICO y REVIPLAST; el dashboard los incluye.**
-Por eso el total del dashboard (**$5,86 M** en el corte 6) nunca cuadra con el del informe ejecutivo (**$2,96 M**).
+Por eso el total del dashboard (**$6,43 M** en el corte 8) nunca cuadra con el del informe ejecutivo (**$3,49 M**).
 **No es un bug** — es la diferencia de universo. Si alguien reporta el descuadre, esta es la respuesta.
 
 **I4 · Con el mes en curso incompleto, el universo de "riesgo" está inflado.**
@@ -50,7 +50,7 @@ sin decirlo explícitamente en el informe.
 La venta es y solo es **`SUMANETO`**. No restar ni sumar `CNTDEVUELT` a los ingresos.
 
 **I6 · `CODCLIENTE` es la clave fiable de cliente, no `NOMBRECLI`.**
-Por nombre salen **1 513** clientes; por código, **1 501** (corte 6). La diferencia son variantes de escritura del
+Por nombre salen **1 566** clientes; por código, **1 554** (corte 8). La diferencia son variantes de escritura del
 mismo cliente (p. ej. `COMERCIALIZADORA WENDYS, C.A` y `OMERCIALIZADORA WENDYS, C.A`, con la C perdida),
 que hoy se cuentan dos veces. Los KPIs históricos cuentan por nombre: al cambiarlo, la serie se rompe.
 
@@ -122,7 +122,7 @@ Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZ
                        Navegador: PIN → PBKDF2 → AES-GCM → P → new App() → ECharts
 ```
 
-**No hay servidor.** Todo el cómputo (filtros, KPIs, regresiones, agregaciones) ocurre en el navegador sobre el array `P.rows` en memoria (**62 169 filas** en el corte 6).
+**No hay servidor.** Todo el cómputo (filtros, KPIs, regresiones, agregaciones) ocurre en el navegador sobre el array `P.rows` en memoria (**72 259 filas** en el corte 8).
 
 ### Los 4 placeholders del TEMPLATE
 `__VERSION__` · `__ENC_JSON__` · `__VE_GEO__` · `__LOGO_SVG__`. Si añades uno nuevo, hay que sustituirlo en `main()` (líneas ~124–127).
@@ -143,8 +143,8 @@ Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZ
 | `CNTDEVUELT` | float | Unidades devueltas. |
 | `PRECIOUNIT` | float | Precio unitario (USD). |
 | `FECHADOC` | fecha | Fecha del documento. Filas sin fecha se **descartan**. |
-| `CODCLIENTE` | texto | Código de cliente (1 501 únicos). **No se usa en el dashboard.** |
-| `NOMBRECLI` | texto | Nombre del cliente (1 513 únicos → hay clientes con mismo código y distinto nombre). |
+| `CODCLIENTE` | texto | Código de cliente (1 554 únicos). **No se usa en el dashboard.** |
+| `NOMBRECLI` | texto | Nombre del cliente (1 566 únicos → hay clientes con mismo código y distinto nombre). |
 | `VENDEDOR` | texto | 21 valores. |
 | `SECTOR` | texto | `CIUDAD,ESTADO,VE` — 39 valores. |
 | `REFERENCIA` | texto | Sub-familia de producto (263 valores). **136 nulos. No se usa.** |
@@ -152,15 +152,15 @@ Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZ
 | `SUMACANT` | float | = `CANTIDAD − CNTDEVUELT` (verificado: coincide en el 100 % de las filas). |
 | `SUMANETO` | float | = `SUMACANT × PRECIOUNIT` (verificado 100 %). **Es LA métrica de venta neta.** |
 
-### 4.2 Cifras del corte actual (6.º corte, `dateMax` 2026-07-31)
+### 4.2 Cifras del corte actual (8.º corte, `dateMax` 2026-08-31)
 
-- **62 169 filas** · **18 917 facturas** · **1 513 clientes** · **1 876 SKU** (1 852 con `SUMACANT > 0`, ver I2) · **106 marcas** · **21 vendedores** · **39 sectores**
-- **Rango:** 2026-01-09 → 2026-07-31 (204 días, `dayCount`)
-- **Venta neta total:** **$5 861 787,17** (informe, sin AMERICO/REVIPLAST: **$2 964 385,29**)
-- **% de devolución global:** 11,98 % de las unidades
-- **Sin mes parcial.** El corte cierra justo el 31 de julio, así que julio está **completo**: `partialInfo()`
-  no marca nada como parcial y el riesgo deja de estar inflado (I4). Es la excepción, no la regla —
-  el próximo corte quincenal volverá a traer un mes a medias.
+- **72 259 filas** · **21 664 facturas** · **1 566 clientes** por nombre (1 554 por código, ver I6) · **1 990 SKU** (1 964 con `SUMACANT > 0`, ver I2) · **111 marcas** · **20 vendedores** · **39 sectores**
+- **Rango:** 2026-01-09 → 2026-08-31 (235 días, `dayCount`)
+- **Venta neta total:** **$6 432 655,30** (informe, sin AMERICO/REVIPLAST: **$3 485 916,93**)
+- **% de devolución global:** 13,47 % de las unidades
+- **Sin mes parcial.** El corte cierra el 31 de agosto, así que agosto está **completo**: `partialInfo()`
+  no marca nada como parcial y **el riesgo NO está inflado** (I4). Por eso el riesgo baja de 581 a 493:
+  es la corrección del corte anterior —que sí iba a mitad de mes—, no una mejora de la cartera.
 
 Venta neta por mes:
 
@@ -172,25 +172,30 @@ Venta neta por mes:
 | 2026-04 | 843 932 | 2 594 | 889 |
 | 2026-05 | **1 110 243** | 3 453 | 984 | ← mejor mes del año
 | 2026-06 | 811 207 | 3 027 | 901 |
-| 2026-07 | 432 523 | 2 217 | 649 | ← mes completo, pero el más flojo desde enero
+| 2026-07 | 432 523 | 2 217 | 649 | ← el más flojo del año
+| 2026-08 | 570 868 | 2 747 | 762 | ← rebote tras julio, mes completo
 
-Por grupo: VIVERES 2,70 M · DESECHABLES 1,61 M · REPOSTERIA 1,44 M · CONDIMENTOS 74 K · CONFITERIA 31 K *(+ el grupo basura `"6"`, $335)*.
-Por estado: TRUJILLO 3,12 M · MERIDA 1,43 M · ZULIA 1,21 M · PORTUGUESA 69 K · TACHIRA 28 K.
-Top vendedores: Televenta 1,22 M · David 707 K · Santiago 640 K · José 605 K · Jesús 604 K · Yuraima 578 K.
-Top marcas: **AMERICO 2,51 M** · MARPLAST (N) 465 K · MAXIPLAST (N) 337 K · MASTER TOP (N) 292 K · MULTIPLAST(N) 164 K · INDELMA (N) 152 K.
+Por grupo: VIVERES 2,76 M · DESECHABLES 1,89 M · REPOSTERIA 1,67 M · CONDIMENTOS 83 K · CONFITERIA 37 K *(+ el grupo basura `"6"`, $335)*.
+Por estado: TRUJILLO 3,35 M · MERIDA 1,60 M · ZULIA 1,37 M · PORTUGUESA 79 K · TACHIRA 28 K.
+Top vendedores: Televenta 1,36 M · David 790 K · José 716 K · Santiago 686 K · Jesús 659 K · Yuraima 578 K.
+Top marcas: **AMERICO 2,51 M** · MARPLAST (N) 538 K · MAXIPLAST (N) 395 K · MASTER TOP (N) 361 K · MULTIPLAST(N) 194 K · INDELMA (N) 176 K.
 
-**Frente al 5.º corte** (`dateMax` 2026-07-15): +3 407 filas, +964 facturas, +22 clientes, +$206 909 de neto.
-Como los cortes son acumulativos (I7), la diferencia **es** lo vendido entre el 16 y el 31 de julio.
+**Frente al 7.º corte** (`dateMax` 2026-08-15): +5 757 filas, +$319 014 de neto en el dashboard (+5,2 %),
++27 clientes. Como los cortes son acumulativos (I7), la diferencia **es** lo vendido entre el 16 y el 31 de agosto.
+
+> **AMERICO lleva dos cortes sin moverse** ($2,51 M en el 7.º y en el 8.º): todo el crecimiento del
+> período viene de la línea regular. Conviene decirlo cuando alguien lea el total del dashboard como
+> crecimiento general.
 
 ### 4.3 ⚠️ Peculiaridades y suciedad de datos (importantes)
 
-1. **AMERICO + REVIPLAST = 49,4 % del neto ($2,90 M en 8 413 filas).** El **dashboard los incluye**; los **informes automáticos los EXCLUYEN** (`build_dashboard.py` filtra `MARCA == "AMERICO"` o `NOMBRECLI` que contenga `REVIPLAST` antes de llamar a `reports.build`). **Por eso el total del dashboard ($5,86 M) NUNCA cuadra con el total del informe ejecutivo ($2,96 M).** No es un bug.
+1. **AMERICO + REVIPLAST = 45,8 % del neto ($2,95 M en 8 915 filas).** El **dashboard los incluye**; los **informes automáticos los EXCLUYEN** (`build_dashboard.py` filtra `MARCA == "AMERICO"` o `NOMBRECLI` que contenga `REVIPLAST` antes de llamar a `reports.build`). **Por eso el total del dashboard ($6,43 M) NUNCA cuadra con el total del informe ejecutivo ($3,49 M).** No es un bug.
 2. **Valores basura en dimensiones:** `VENDEDOR` tiene `"23"` (23 filas) y `"2"` (1 fila); `GRUPO` tiene `"6"` (56 filas, $335). Aparecen tal cual como opciones en los segmentadores. Nadie los ha limpiado.
 3. **Espacios sobrantes** en algunos valores (`"Jesús "`, `"Laura "`, `"Santiago "`). `build_dashboard.py` hace `.str.strip()`, así que en el dashboard aparecen unificados; en un análisis crudo del Excel hay que hacer strip.
 4. **Acentos:** los datos están correctos en UTF-8 (José, Jesús, Rosángela, Ángel, CAÑO ZANCUDO). Si ves `Jes�s` es **la consola de Windows** (cp1252), no los datos. En Windows usar `PYTHONIOENCODING=utf-8`.
 5. **`MARCA` nula (136 filas)** → `fillna("(Sin dato)")` la convierte en `"(Sin dato)"`, **no** en `"(Sin marca)"` (el `.replace` a `"(Sin marca)"` solo actúa sobre literales `"nan"` y `""`, que ya no existen tras el fillna). Detalle menor pero explica por qué nunca ves `(Sin marca)`.
 6. **Un sector tiene espacio tras la coma:** `"EL CHIVO, ZULIA,VE"`. Funciona igual porque `vnorm()` hace trim al extraer el estado.
-7. **`CODCLIENTE` (1 501) ≠ `NOMBRECLI` (1 513)**: hay nombres duplicados/variantes. Todos los KPIs de "clientes únicos" cuentan por **nombre**, no por código.
+7. **`CODCLIENTE` (1 554) ≠ `NOMBRECLI` (1 566)**: hay nombres duplicados/variantes. Todos los KPIs de "clientes únicos" cuentan por **nombre**, no por código. Los Word/Excel que arma Roberts a mano cuentan por **código** (el 8.º corte: 1 385 clientes activos en el universo de informes, frente a 1 392 por nombre) — de ahí las diferencias de una o dos unidades al cotejar.
 8. **Marcas con sufijo `(N)` — nuevo en el corte 6.** 29 de las 106 marcas llegan como `MARPLAST (N)`,
    `MAXIPLAST (N)`, `MULTIPLAST(N)`… (con y sin espacio antes del paréntesis). Es un cambio del ERP de origen,
    no del sistema. **`FULLCREAM` aparece en las dos formas** (`FULLCREAM` y `FULLCREAM (N)`) y por tanto se
@@ -209,10 +214,10 @@ P = {
   version, generated,          // "2026-08-09 15:26"
   dateMin, dateMax,            // "2026-01-09", "2026-07-31"
   year,                        // "2026"
-  dayZero, dayCount,           // "2026-01-09", 204
+  dayZero, dayCount,           // "2026-01-09", 235
   dims: { mes, mesLabels, fullLabels, histMonthNums,
           grupo, vendedor, sector, marca, cliente, producto },
-  rows: [ [ ... 12 enteros/floats ... ], ... ]   // 62 169 filas
+  rows: [ [ ... 12 enteros/floats ... ], ... ]   // 72 259 filas
 }
 ```
 
@@ -245,7 +250,7 @@ Rango de fechas: `this.dayRange = [a, b]` en offsets de día.
 - **Semántica:** `Set` vacío = "todos". `filtered()` combina todos los filtros **y** el rango de días con AND.
 - `DIMS` (en `initMeta()`) define cada segmentador: `{field, names, label}`. `buildFilters()` los dibuja.
 - **Chips colapsados** (`syncFilterUI()`): 1 seleccionado → nombre; varios → `"N seleccionadas"`; la ✕ limpia ese filtro.
-- Las casillas de cada menú se sincronizan **solo al abrirlo** (rendimiento: 1 513 clientes en el corte 6).
+- Las casillas de cada menú se sincronizan **solo al abrirlo** (rendimiento: 1 566 clientes en el corte 8).
 - **Barra de fechas** (`buildDayBar()` sobre `#timebar`): inputs `Desde`/`Hasta` + atajos *Último día · 7 días · Este mes · Todo*. Si no hay `P.dayZero`, la barra se oculta y no se filtra por día.
 - Botón **"Limpiar todo"** → `APP.reset()`.
 
@@ -372,9 +377,37 @@ buscando `#`/`Cliente`/`Vendedor`/`Sector / Zona` en las primeras 4 filas, y dev
 
 ## 8 bis. Cobranza (`cobranza.py` + pestaña 💵)
 
-Insumo: `Conciliacion_Facturado_vs_Cobrado_*.xlsx` de la misma carpeta de Drive (13 hojas; el dashboard
-lee 6). Es **opcional**: sin `COB_XLSX` no se construye `Pcob`, la pestaña se queda oculta y no pasa nada más.
-`Pcob` viaja **dentro del mismo bloque cifrado** que `P` — no hay segundo PIN ni segundo `ENC`.
+Insumo: `Conciliacion_Facturado_vs_Cobrado_*.xlsx` de la misma carpeta de Drive (16 hojas en el 8.º corte;
+el dashboard lee 9). Es **opcional**: sin `COB_XLSX` no se construye `Pcob`, la pestaña se queda oculta y no
+pasa nada más. `Pcob` viaja **dentro del mismo bloque cifrado** que `P` — no hay segundo PIN ni segundo `ENC`.
+
+### ⚠️ El Excel de conciliación cambia de formato entre cortes
+No es estable, y ya rompió el build una vez. Por eso `cobranza.py` **detecta los encabezados por nombre
+normalizado** (`_norm` borra acentos, espacios y puntuación) y acepta **alternativas explícitas** para los
+que cambiaron de nombre de verdad. Lo que cambió del corte 7 al 8:
+
+| | Corte 7 (Abr–Jul) | Corte 8 (Mar + May–Ago) |
+|---|---|---|
+| Fila de encabezados | 0 | **2** (dos filas de título encima) |
+| Camada | `Camada (despacho)`, valores `2026-04` | **`Camada`, valores `Marzo`, `Mayo`…** |
+| Columnas de dinero | `Facturado ($)`, `Anulado ($)` | `Facturado`, **`Anulada`**, + `Fact. Neto` |
+| Precio | `Precio (norm)` | **`Precio`** |
+| Categoría de las hojas `POR …` | `Categoria` | **el nombre de su dimensión** (`Analista`, `Grupo`…) |
+| `Facturas` en las hojas `POR …` | sí | **no** (el front las cuenta del MAESTRO) |
+| Comisión x vendedor | `Comisión total ($-equiv.)` + bases | **`Comisión (Bs)`, sin desglose** |
+| Café | **dentro** de MAESTRO, `Grupo=CAFE` | **maestro propio, fuera** de MAESTRO |
+| `MAESTRO CAFÉ` | `Mes`, `Cantidad`, `En Sistema`, `Diferencial` | solo `Camada`; el diferencial **se deduce** |
+| `COMISIONES CAFÉ` | tabla | **texto sin tabla** |
+| Hojas nuevas | — | `RESUMEN`, `COMPARADOR`, `COBERTURA OTROS` |
+
+**Dónde vive el café es lo más peligroso de leer mal.** El flag `cafeDentro` del payload lo resuelve: si el
+MAESTRO trae `Grupo=CAFE`, los totales de la pestaña **ya incluyen** el café y la sección es solo el detalle;
+si no lo trae, el café **se suma aparte**. El front cambia el texto de la tarjeta según ese flag (`cobAdapt()`).
+Leerlo al revés cuenta el café dos veces, o lo pierde.
+
+**Verificaciones que hace `cobranza.py` y que abortan el build:** la identidad camada a camada, el facturado
+neto del MAESTRO contra la hoja `RESUMEN`, y —cuando el diferencial del café hay que deducirlo— que no salga
+ningún diferencial negativo y que el total cuadre con el `RESUMEN`. Si el libro se contradice, revienta aquí.
 
 **Por qué no se compara mes contra mes.** Una factura despachada en abril se puede terminar de cobrar en
 junio, así que el eje es la **camada** (mes de despacho) y cada camada **madura** con el tiempo. La camada
@@ -384,25 +417,40 @@ más joven (`camadaMax`) se dibuja en claro y rotulada *(en maduración)*; los d
 ### ⚠️ Las DOS tasas de cobro — no confundirlas
 La conciliación tiene una columna `% Cobro` que **no** es "cuánto se ha cobrado de la camada":
 
-| Tasa | Fórmula | Qué dice | Corte 7 |
+| Tasa | Fórmula | Qué dice | Corte 8 (Mar · May · Jun · Jul · **Ago**) |
 |---|---|---|---|
-| **% cobrado** (verde) | `Cobrado ÷ Facturado neto` | Cuánto de la camada ya entró en caja. **Es la curva de maduración.** | 94,8 · 93,9 · 89,8 · **61,9** |
-| **% efectividad** (azul punteado) | `Cobrado ÷ (Cobrado + Diferencial)` | De lo **ya cerrado**, cuánto entró como dinero y cuánto se fue en diferencial. **Es la columna `% Cobro` del Excel.** | 95,9 · 96,2 · 95,1 · 95,6 |
+| **% cobrado** (verde) | `Cobrado ÷ Facturado neto` | Cuánto de la camada ya entró en caja. **Es la curva de maduración.** | 93,5 · 94,0 · 92,0 · 78,2 · **23,2** |
+| **% efectividad** (azul punteado) | `Cobrado ÷ (Cobrado + Diferencial)` | De lo **ya cerrado**, cuánto entró como dinero y cuánto se fue en diferencial. **Es la columna `% Cobro` del Excel.** | 95,6 · 96,1 · 95,2 · 95,3 · 96,3 |
 
-La pestaña muestra **las dos**, nombradas: con una sola, o el dashboard contradice al Excel (61,9 % vs. 95,6 %)
+La pestaña muestra **las dos**, nombradas: con una sola, o el dashboard contradice al Excel (23,2 % vs. 96,3 %)
 o desaparece la maduración (la efectividad es plana). El **Diferencial no es deuda ni pérdida** — es haber
 cobrado a otro precio o forma de pago — y así hay que rotularlo, o se lee como cartera perdida.
 
+**El 23,2 % de agosto no es un problema de cobranza**: es la camada recién abierta. El global del corte
+(75,0 %) baja frente al 86,9 % de la 1.ª conciliación **solo** porque agosto entra al mix con $259 789 aún
+por cobrar; las camadas compartidas (May+Jun+Jul) de hecho **subieron** $52 182 respecto a la conciliación
+anterior. La hoja `COMPARADOR` del Excel trae esa comparación camada a camada.
+
 ### Otras reglas que el dashboard muestra pero NO recalcula
-- **ANULADA nunca entra al universo cobrable.** Va aparte, en su propia columna.
-- **5 facturas anuladas no traen fecha de despacho** y por tanto no pertenecen a ninguna camada
-  ($12 133 del corte 7). La hoja `POR CAMADA` tampoco las reparte pero **sí las totaliza**: por eso el
+- **ANULADA nunca entra al universo cobrable.** Va aparte, en su propia columna. En el 8.º corte son
+  **1 281 facturas por $574 052** sobre un bruto de $2 116 408.
+- **Puede haber anuladas sin fecha de despacho**, que por tanto no pertenecen a ninguna camada (5 facturas,
+  $12 133, en el corte 7). La hoja `POR CAMADA` tampoco las reparte pero **sí las totaliza**: por eso el
   TOTAL de la tabla se calcula sobre todas las filas, no sumando el eje, y una nota al pie explica el hueco.
+  **En el 8.º corte no hay ninguna** — todas traen camada — así que la nota al pie no aparece.
 - **Comisiones:** 5 % repostería (incluye desechables y confitería) en Precio 1 y 2; 3 % el resto y víveres;
-  azúcar $0,40 y harina $0,50 por unidad. Cada comisión queda en **su** moneda: para comparar se usa
-  **solo** `Comisión total ($-equiv.)`.
-- **Cobertura:** las 3 analistas cubren el **42,63 %** de la facturación del sistema. AMÉRICO (línea de café)
-  y los clientes fuera de cartera son categorías legítimas, no errores.
+  azúcar $0,40 y harina $0,50 por unidad. **Desde el 8.º corte la hoja las publica en bolívares
+  (`Comisión (Bs)`, total 21 869 875 Bs) y sin el desglose de bases**; hasta el 7.º iban en
+  `Comisión total ($-equiv.)`. El payload trae `comMoneda` y el front cambia eje, etiquetas y tooltip con
+  él (`opt.bs` de `hbz`): con el formateador de dólares, 5 109 377 Bs se leía «$5.1M».
+  El desglose de bases sobrevive solo en `COMISIONES DETALLE`, por analista y camada (`comisDet`).
+- **La comisión del café es aparte y por bulto** ($0,50/bulto en Precio 1 y 2, $0,40 el resto, $0,20 el
+  supervisor). En el 8.º corte la hoja `COMISIONES CAFÉ` quedó como texto sin tabla: la tarjeta y el KPI
+  correspondientes **se ocultan solos** en vez de pintar ceros.
+- **Cobertura:** las 3 analistas cubren el **55,38 %** de la facturación del sistema en el período conciliado
+  (Mar, May–Ago), $2 224 189 de $4 016 023. AMÉRICO (el café viejo, 34,06 %), REVIPLAS (9,40 %) y el residual
+  de televenta/criterio (1,16 %) son categorías legítimas, no errores. La hoja dejó de publicar el conteo de
+  documentos y ahora trae una **nota** por categoría: el tooltip muestra la nota en su lugar.
 
 ### Filtros
 La pestaña tiene **filtros propios** (camada y analista, chips `.rlbtn`) que **no** son los segmentadores de
@@ -519,14 +567,16 @@ SECRETS_PATH=./secrets.json \
 python build_dashboard.py ./data_ip.xlsx "<VERSION>" ./index.html
 ```
 
-Ejemplo real de la corrida del 6.º corte (2026-08-09):
+Ejemplo real de la corrida del 8.º corte (2026-09-06):
 
 ```bash
-EXEC_ID=1y1cRarvQQkVuDkRXb-pCl1-mO297RAkF LIST_ID=1PJWN0jkzzZmfjZjDWW5f2Iav_ZWOMMcC \
-EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx \
-python build_dashboard.py data_ip.xlsx \
-  "1eWDRLFfBu3LbJjRN9PPSOsicF8khAypl|2026-08-08T19:33:46Z|5174792~E:1y1cRarvQQkVuDkRXb-pCl1-mO297RAkF~L:1PJWN0jkzzZmfjZjDWW5f2Iav_ZWOMMcC" \
-  index.html
+EXEC_ID=1JVSn9AfT1ypdDpD_bewCu4WLqzFHN5xx LIST_ID=1vqFh1hCurO-rmhugOMGHY5BuctUUgj8j \
+COB_ID=11BMPjFFgud7DTn-oEx5hlUHZiG044tSs \
+EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx COB_XLSX=./cobranza.xlsx \
+SECRETS_PATH=./secrets.json \
+python build_dashboard.py ./data_ip.xlsx \
+  "1-U7zh9wXpg93Ox2fDBu09R9PYOAtjilh|2026-09-04T03:02:06Z|6050608~E:1JVSn9AfT1ypdDpD_bewCu4WLqzFHN5xx~L:1vqFh1hCurO-rmhugOMGHY5BuctUUgj8j~C:11BMPjFFgud7DTn-oEx5hlUHZiG044tSs|2026-09-06T13:03:39Z|783418" \
+  ./index.html
 ```
 
 `RISK_DOCX` / `RISK_ID` ya no se usan: la pestaña de Seguimiento se eliminó.
@@ -577,11 +627,12 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 **Deuda / limitaciones conocidas:**
 - **Roles decorativos** — todos ven todo. Segmentar por rol exige payloads separados y cifrados por rol; es un proyecto, no un ajuste de UI.
 - **Google Fonts sigue viniendo de CDN**: sin internet la tipografía cae al `system-ui` del sistema (los gráficos ya no dependen del CDN gracias a `vendor/echarts.min.js`).
-- **`index.html` de 4,8 MB** en cada commit: el repo crece rápido (un blob nuevo completo por corte). Opciones sin decidir: Git LFS o publicar el artefacto fuera de git.
+- **`index.html` de 6,1 MB** en cada commit: el repo crece rápido (un blob nuevo completo por corte). Opciones sin decidir: Git LFS o publicar el artefacto fuera de git.
 - **Datos sucios sin limpiar en el dashboard** (`VENDEDOR` "23"/"2", `GRUPO` "6") aparecen como opciones reales en los filtros. El **pipeline de informes** sí los excluye (`pipeline/clean.py`), pero el dashboard no.
 - **Sin tests.** La validación es manual (`node --check`, `py_compile`, comparación de salida, revisión visual).
 - `netlify.toml` y la carpeta `netlify/functions` son residuales.
-- **`history.json` solo tiene 3 cortes registrados** (`2026-06-30`, `2026-07-15`, `2026-07-31`); los cortes 1–3 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 3` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, tres).
+- **`history.json` tiene 5 cortes registrados** (`2026-06-30`, `2026-07-15`, `2026-07-31`, `2026-08-15`, `2026-08-31`); los cortes 1–3 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 3` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, cinco).
+- **«Recuperados» significa dos cosas distintas y ambas se publican.** `reports.py` exige compra **anterior** a los dos meses dormidos (8.º corte: **71**); el Excel que arma Roberts a mano cuenta todo el que compró en el mes sin haber comprado en los dos anteriores, **incluidos los clientes nuevos** (8.º corte: **130**). Los 59 de diferencia son clientes cuya primera compra del año fue agosto. Los dos números conviven en el dashboard —el 71 en el informe generado, el 130 en la pestaña de la lista de Drive— y **no se han unificado**: cambiar el criterio de `reports.py` rompería la serie de `history.json` (54 · 17 · 38 · 33 · 71).
 - **La hoja `Leyenda` del Excel de riesgo se cuela como pestaña** en la sección de riesgo (§8).
 - **El sufijo `(N)` de las marcas no está normalizado** (§4.3.8): `FULLCREAM` se cuenta dos veces.
 
@@ -591,12 +642,12 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 | Término | Significado en este sistema |
 |---|---|
-| **Corte** | Una publicación/actualización del dashboard con un Excel nuevo. Van **6 cortes** reales (3 en `history.json`). |
+| **Corte** | Una publicación/actualización del dashboard con un Excel nuevo. Van **8 cortes** reales (5 en `history.json`). |
 | **Neto / venta neta** | `SUMANETO` = (cantidad − devoluciones) × precio unitario, en USD. |
 | **Factura** | Un `DOCUMENTO` distinto. |
 | **Mes parcial** | El último mes del rango, incompleto porque el corte es quincenal. |
 | **Cliente en riesgo** | Compró antes, pero no en los últimos 2 meses. |
-| **Cliente recuperado** | Volvió a comprar en el último mes tras 2 meses dormido. |
+| **Cliente recuperado** | Volvió a comprar en el último mes tras 2 meses dormido **y ya compraba antes**. El Excel de Drive usa un criterio más laxo que incluye clientes nuevos — ver §12. |
 | **Cliente inactivo** | Card del dashboard: sin compras hace >45 días (criterio distinto al de "riesgo" de los informes). |
 | **Sector / Zona** | Ciudad en formato `CIUDAD,ESTADO,VE`. |
 | **DATA_VERSION** | Huella de versión en la línea 2 de `index.html`; decide si hay que reconstruir. |
@@ -607,6 +658,23 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 ---
 
 ## 14. Historial de cambios del sistema
+
+- **2026-09-06** — **Corte 8** (`dateMax` 2026-08-31: 72 259 filas · $6 432 655,30 en el dashboard ·
+  $3 485 916,93 en el informe · 1 566 clientes por nombre · 493 en riesgo · 71 recuperados) **y adaptación
+  de `cobranza.py` al nuevo formato del Excel de conciliación**, que cambió en las 16 hojas: encabezados en
+  la fila 2, camadas por **nombre de mes** (`Marzo`, `Mayo`…) en vez de `2026-04`, columnas de dinero sin el
+  sufijo `($)`, `Anulado`→`Anulada`, `Camada (despacho)`→`Camada`, `Precio (norm)`→`Precio`, la categoría de
+  las hojas `POR …` con el nombre de su dimensión, y sin la columna `Facturas`. El parser ahora acepta
+  **alternativas de nombre** y sigue leyendo los cortes viejos. Tres cambios de fondo, en **§8 bis**:
+  **(1)** el **café salió del MAESTRO** y va en su propio maestro — el flag `cafeDentro` decide si los
+  totales de la pestaña ya lo incluyen o no, y el front cambia el texto en consecuencia (`cobAdapt()`);
+  **(2)** la **comisión pasó de `$-equivalente` a bolívares** sin desglose de bases — nuevo `comMoneda` y
+  `opt.bs` en `hbz`, porque con el formateador de dólares 5 109 377 Bs se leía «$5.1M»;
+  **(3)** `COMISIONES CAFÉ` quedó sin tabla y `COBERTURA` sin conteo de documentos — esas piezas **se ocultan
+  solas** en vez de pintar ceros, y la cobertura muestra la **nota** de cada categoría. Se añaden dos
+  verificaciones que abortan el build: MAESTRO contra la hoja `RESUMEN`, y el diferencial deducido del café
+  contra el `RESUMEN`. Agosto cierra completo, así que **el riesgo deja de estar inflado** (I4) y baja de 581
+  a 493: es la corrección del corte parcial anterior, no una mejora de la cartera.
 
 - **2026-08-20 (b)** — **Corte 7** (`dateMax` 2026-08-15: 66 502 filas · $6 113 641,56 en el dashboard ·
   $3 207 977,95 en el informe · 1 539 clientes por nombre) **y nuevo módulo de COBRANZA**. Se añade
@@ -633,12 +701,17 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 ---
 
-## 15. Punto de partida para trabajo nuevo (al 2026-08-20)
+## 15. Punto de partida para trabajo nuevo (al 2026-09-06)
 
-**Estado del repositorio:** rama `main`, árbol **limpio**, último commit `47e7158`. Lo publicado en
-GitHub Pages corresponde al **corte 6** (`DATA_VERSION` en la línea 2 de `index.html`, `dateMax` 2026-07-31).
-Los archivos de trabajo (`data_ip.xlsx`, `risk_list.xlsx`, `exec.docx`, `secrets.json`) están en la carpeta
+**Estado del repositorio:** rama `main`. Lo publicado en GitHub Pages corresponde al **corte 8**
+(`DATA_VERSION` en la línea 2 de `index.html`, `dateMax` 2026-08-31). Los archivos de trabajo
+(`data_ip.xlsx`, `risk_list.xlsx`, `exec.docx`, `cobranza.xlsx`, `secrets.json`) están en la carpeta
 pero **fuera de git**, así que se puede regenerar el mismo corte sin bajar nada de Drive.
+
+**Ojo con el corte 9:** el Excel de conciliación cambió de formato entre el 7.º y el 8.º corte, y no hay
+razón para pensar que se estabilizó. `cobranza.py` acepta los dos formatos por nombre de encabezado, pero un
+tercero volverá a romperlo. El primer paso al recibir un corte nuevo de cobranza es **volcar los encabezados
+de todas las hojas** y compararlos con la tabla de §8 bis antes de correr el build.
 
 **Antes de aceptar una instrucción nueva, ubícala en una de estas tres categorías** — cada una tiene un
 camino distinto y confundirlas es la forma más rápida de romper algo:
@@ -651,7 +724,7 @@ camino distinto y confundirlas es la forma más rápida de romper algo:
 
 **Cinco cosas que casi siempre hay que recordarle a quien llega nuevo al sistema:**
 
-1. El total del dashboard (**$5,86 M**) y el del informe (**$2,96 M**) **no cuadran a propósito** (I3).
+1. El total del dashboard (**$6,43 M**) y el del informe (**$3,49 M**) **no cuadran a propósito** (I3).
 2. El nombre del archivo de Drive **miente sobre el período**; la verdad es `FECHADOC.max()` (I1).
 3. Los cortes **no se suman**, se comparan (I7).
 4. Cualquier cambio visible en producción **exige regenerar `index.html`**: los datos van cifrados dentro.
