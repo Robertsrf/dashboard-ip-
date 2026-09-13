@@ -359,10 +359,10 @@ def render_risk_full(m):
     return "".join(p)
 
 
-def _sum(title, kick, kpis, paragraph, full_id, fname, dl_label):
+def _sum(title, kpis, paragraph, full_id, fname, dl_label):
     kind = full_id.replace("-full","")
     kh="".join(f'<div class="rk"><span>{k}</span><b>{v}</b></div>' for k,v in kpis)
-    return f'''<div class="rep"><div class="rephead"><div><div class="repkick">{kick}</div>
+    return f'''<div class="rep"><div class="rephead"><div>
       <h2>{title}</h2><div class="repsub">Resumen · el informe completo incluye todas las secciones, tablas, insights y recomendaciones</div></div>
       <div class="repbtns"><button class="pdfbtn" onclick="downloadReport('{kind}','{fname}')">⭳ {dl_label}</button></div></div>
       <div class="repkpis">{kh}</div>{paragraph}
@@ -373,12 +373,12 @@ def build(df, history_path, version):
     m=metrics(df, history_path, version)
     total=m["total"]; gr=m["gr"]; vend=m["vend"]; mm=m["mm"]
     exec_full=render_exec_full(m); risk_full=render_risk_full(m)
-    exec_sum=_sum("Panorama de Ventas — Informe Ejecutivo", f"CORTE {m['corte']} · CONFIDENCIAL",
+    exec_sum=_sum("Panorama de Ventas — Informe Ejecutivo",
         [("Ingresos acumulados",M(total)),("Mejor mes",f'{MES[int(m["best_m"].split("-")[1])]} · {M(m["best_v"])}'),
          ("Clientes únicos",f'{m["ncli"]:,}'),("Vendedores",str(m["nvend"]))],
         f'<p>Se acumulan <b>{M(total)}</b>. El motor son {gr.index[0]} + {gr.index[1]} ({(gr.iloc[0]+gr.iloc[1])/total*100:.0f}%). Líder de ventas: <b>{vend.index[0]}</b> ({M(vend.iloc[0]["neto"])}). Hay {len(m["risk"])} clientes en riesgo y {len(m["recov"])} recuperados este período. El informe completo detalla evolución mensual, productos/SKU, líderes por marca, ranking de vendedores, sectores, insights de BI y plan de acción.</p>',
         "exec-full","Informe_Ejecutivo_IP.doc","Descargar informe completo")
-    risk_sum=_sum("Clientes Recuperados y en Riesgo", f"SEGUIMIENTO DE CARTERA · CORTE {m['corte']}",
+    risk_sum=_sum("Clientes Recuperados y en Riesgo",
         [("En riesgo",str(len(m["risk"]))),("Valor en riesgo",M(m["risk_val"])),
          ("Recuperados",str(len(m["recov"]))),("Valor recuperado",M(m["recov_val"]))],
         f'<p>Universo de <b>{len(m["risk"])} clientes en riesgo</b> ({M(m["risk_val"])} históricos) sin compras en los últimos 2 meses, y <b>{len(m["recov"])} recuperados</b> en {MES[mm].lower()}. El informe completo incluye riesgo por vendedor y sector, Top 20 en riesgo con última compra, recuperaciones por vendedor y plan de reactivación con potencial económico.</p>',

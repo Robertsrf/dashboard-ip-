@@ -614,6 +614,11 @@ C:\Users\RJ\Desktop\Sitios web  pruebas\dashboard-ip-_backups\prod_<FECHA-HORA>\
 
 ## 11. ⚠️ Cómo editar sin romper nada
 
+> **Desde el 2026-09-13 las reglas de diseño, visualización, móvil, motion, copy y código viven en
+> [`NORMAS_SISTEMA.md`](NORMAS_SISTEMA.md)** y tienen precedencia sobre lo que diga esta sección y la §6.
+> Lo de abajo sigue valiendo como mecánica (dónde se edita, cómo se valida); los criterios de *qué* está
+> bien y *qué* no, están allí.
+
 Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de tocar código.
 
 1. **La UI se edita SOLO en `template.html`.** Ya no hay duplicación: `build_dashboard.py` lee ese archivo al arrancar. **Nunca edites `index.html` a mano** — es un artefacto generado y cualquier cambio se pierde en la siguiente regeneración.
@@ -673,6 +678,18 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 ## 14. Historial de cambios del sistema
 
+- **2026-09-13** — **Pasada completa con nueve skills y nuevo `NORMAS_SISTEMA.md`** (impeccable,
+  find-animation-opportunities, animate, mobile-app-ui-design, mobile-android-design, clean-code, copy-editing,
+  last30days, find-skills). Lo aplicado: **pirámide invertida** en Resumen (el calendario por día pasa del
+  primer lugar al último), Marcas (tabla al final, como el resto), Clientes (inactivos antes que la curva) y
+  Cobranza (comisiones y cobertura, las dos que no responden a filtros, juntas al final); **Proyección de año**
+  al 2.º KPI; **presupuesto de animación** de ECharts (260/180 ms, antes 1 000 ms por defecto en cada filtro),
+  pulsación de botones, entrada de sección y `prefers-reduced-motion`; **objetivos táctiles de 44 px** en
+  pantallas sin puntero fino; tokens `--brand-ink` y `--muted` más oscuro para pasar WCAG AA (el detector de
+  Impeccable bajó de 19 a 6 hallazgos, los 6 restantes son identidad); `h2` accesible por sección; emoji
+  fuera del menú y de los títulos; kicker "RESUMEN · INFORME CARGADO" fuera; hints de cobranza recortados y
+  bloque de café a UTF-8; `build_dashboard.py` deja de silenciar errores (`_warn` a stderr). Sin cambios de
+  datos: mismo corte 8, misma `DATA_VERSION`.
 - **2026-09-06** — **Corte 8** (`dateMax` 2026-08-31: 72 259 filas · $6 432 655,30 en el dashboard ·
   $3 485 916,93 en el informe · 1 566 clientes por nombre · 493 en riesgo · 71 recuperados) **y adaptación
   de `cobranza.py` al nuevo formato del Excel de conciliación**, que cambió en las 16 hojas: encabezados en

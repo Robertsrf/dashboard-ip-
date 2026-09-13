@@ -14,7 +14,7 @@
 <script>if(!window.echarts){document.write('<scr'+'ipt src="vendor/echarts.min.js"><\/scr'+'ipt>');}</script>
 <style>
 :root{
-  --brand:#ff4f20;--navy:#24205b;--panel:#ffffff;--panel2:#f5f6fa;--ink:#24205b;--muted:#6b7392;
+  --brand:#ff4f20;--brand-ink:#c93608;--navy:#24205b;--panel:#ffffff;--panel2:#f5f6fa;--ink:#24205b;--muted:#5f6788;
   --line:#e7e9f2;--accent:#ff4f20;--accent2:#17a39a;--amber:#f4a72c;--slate:#5b6aa0;
   --pos:#16a34a;--neg:#e0472c;--radius:16px;--shadow:0 2px 10px rgba(36,32,91,.06),0 1px 2px rgba(36,32,91,.08);
 }
@@ -26,19 +26,19 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .top h1{font-size:20px;font-weight:800;color:var(--navy);letter-spacing:-.3px}
 .top .meta{font-size:12px;color:var(--muted);margin-top:2px}
 .top .status{font-size:12px;text-align:right;color:var(--muted)}
-.top .status .mini{font-size:11px;color:var(--slate);margin-top:3px;font-weight:600}
+.top .status .mini{font-size:12px;color:var(--slate);margin-top:3px;font-weight:600}
 .top .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:6px;vertical-align:middle}
 .bar{position:sticky;top:0;z-index:40;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:12px 26px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .ms{position:relative}
 .ms>button{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;transition:.15s}
 .ms>button:hover{border-color:var(--brand);box-shadow:0 0 0 3px rgba(255,79,32,.1)}
-.ms>button .cnt{background:var(--brand);color:#fff;border-radius:20px;font-size:11px;font-weight:700;padding:1px 7px}
+.ms>button .cnt{background:var(--brand-ink);color:#fff;border-radius:20px;font-size:11px;font-weight:700;padding:1px 7px}
 .ms>button .cnt.off{background:#eceef5;color:var(--muted)}
 .ms .pop{position:absolute;top:110%;left:0;z-index:60;width:270px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(36,32,91,.18);padding:10px;display:none}
 .ms.open .pop{display:block}
 .ms .pop input.search{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;margin-bottom:8px}
 .ms .pop .acts{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
-.ms .pop .acts a{color:var(--brand);cursor:pointer;font-weight:700}
+.ms .pop .acts a{color:var(--brand-ink);cursor:pointer;font-weight:700}
 .ms .pop .list{max-height:230px;overflow:auto}
 .ms .pop label{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:7px;font-size:13px;cursor:pointer}
 .ms .pop label:hover{background:var(--panel2)}
@@ -46,7 +46,7 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .reset{margin-left:auto;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:9px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
 .reset:hover{opacity:.92}
 .chips{padding:8px 26px 0;display:flex;gap:8px;flex-wrap:wrap}
-.chip{background:#fff2ee;color:var(--brand);border:1px solid #ffd9cd;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
+.chip{background:#fff2ee;color:var(--brand-ink);border:1px solid #ffd9cd;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px}
 .chip b{font-weight:700;color:var(--navy)}.chip span{cursor:pointer;opacity:.7}.chip span:hover{opacity:1}
 .timebar{display:flex;align-items:center;gap:14px;padding:10px 26px;background:rgba(255,255,255,.94);border-bottom:1px solid var(--line);flex-wrap:wrap}
 .timebar .tlab{font-size:13px;font-weight:700;color:var(--navy);white-space:nowrap}
@@ -59,13 +59,13 @@ body{font-family:'Inter',system-ui,sans-serif;background:var(--panel2);color:var
 .trange::-webkit-slider-runnable-track{height:26px;background:none;border:none}
 .trange::-moz-range-track{height:26px;background:none;border:none}
 .trange:focus{outline:none}
-.tval{font-size:13px;font-weight:700;color:var(--brand);white-space:nowrap;font-variant-numeric:tabular-nums}
+.tval{font-size:13px;font-weight:700;color:var(--brand-ink);white-space:nowrap;font-variant-numeric:tabular-nums}
 .tclear{font-size:12px;color:var(--muted);cursor:pointer;font-weight:600;text-decoration:underline;white-space:nowrap}
-.tclear:hover{color:var(--brand)}
+.tclear:hover{color:var(--brand-ink)}
 .dlab{font-size:12px;font-weight:600;color:var(--navy);display:inline-flex;align-items:center;gap:5px}
 .dlab input[type=date]{font:inherit;font-size:12px;padding:5px 8px;border:1px solid var(--line);border-radius:8px;color:var(--navy);background:#fff}
 .dpre{display:flex;gap:5px;flex-wrap:wrap}
-.dpre a{font-size:11px;color:var(--brand);cursor:pointer;font-weight:700;border:1px solid #ffd9cd;border-radius:12px;padding:3px 9px}
+.dpre a{font-size:12px;color:var(--brand-ink);cursor:pointer;font-weight:700;border:1px solid #ffd9cd;border-radius:12px;padding:3px 9px}
 .dpre a:hover{background:#fff2ee}
 .calkey{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px;font-size:12px;color:var(--muted)}
 .calkey b{color:var(--navy)}
@@ -84,13 +84,13 @@ body.nav-collapsed #sidenav{flex-basis:0;width:0;opacity:0;padding-left:0;paddin
 /* Boton de ocultar: primera fila DENTRO del panel, sobre los grupos. */
 .navtoggle{display:flex;align-items:center;gap:9px;width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;margin-bottom:6px;transition:.15s}
 .navtoggle span{font-size:16px;line-height:1;color:var(--navy)}
-.navtoggle:hover{border-color:var(--brand);color:var(--brand);background:#fff2ee}
-.navtoggle:hover span{color:var(--brand)}
+.navtoggle:hover{border-color:var(--brand);color:var(--brand-ink);background:#fff2ee}
+.navtoggle:hover span{color:var(--brand-ink)}
 /* Reapertura: solo visible cuando el panel esta oculto. */
 #navopen{display:none;position:fixed;left:14px;top:96px;z-index:45;width:42px;height:42px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:18px;line-height:1;color:var(--navy);cursor:pointer;box-shadow:0 4px 16px rgba(36,32,91,.16);transition:.15s}
-#navopen:hover{border-color:var(--brand);color:var(--brand)}
+#navopen:hover{border-color:var(--brand);color:var(--brand-ink)}
 body.nav-collapsed #navopen{display:block}
-.navgrp{font-size:10.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);padding:12px 10px 5px}
+.navgrp{font-size:11px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--muted);padding:12px 10px 5px}
 .navgrp:first-child{padding-top:4px}
 #navscrim{display:none;position:fixed;inset:0;z-index:110;background:rgba(20,24,48,.42)}
 body.nav-open #navscrim{display:block}
@@ -100,7 +100,7 @@ body.nav-open #navscrim{display:block}
 .kpi .lab .info{margin-left:4px;width:15px;height:15px;font-size:10px;vertical-align:middle}
 .kpi.hero .info{background:#fff;color:var(--navy)}
 .kpi .lab{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.kpi .val{font-size:27px;font-weight:800;margin-top:5px;letter-spacing:-.5px;color:var(--navy)}
+.kpi .val{font-size:27px;font-weight:800;margin-top:5px;letter-spacing:-.5px;color:var(--navy);font-variant-numeric:tabular-nums}
 .kpi .sub{font-size:12px;color:var(--muted);margin-top:2px}
 .kpi .delta{font-size:12px;font-weight:700;margin-top:6px;display:inline-flex;align-items:center;gap:4px}
 .kpi .delta.pos{color:var(--pos)}.kpi .delta.neg{color:var(--neg)}
@@ -110,7 +110,7 @@ body.nav-open #navscrim{display:block}
 .tabs{display:flex;flex-direction:column;gap:2px}
 .tabs button{display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;border-radius:0 9px 9px 0;padding:9px 12px;font:inherit;font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer;line-height:1.3;transition:.15s}
 .tabs button:hover{background:var(--panel2);color:var(--navy)}
-.tabs button.active{color:var(--brand);background:#fff2ee;border-left-color:var(--brand)}
+.tabs button.active{color:var(--brand-ink);background:#fff2ee;border-left-color:var(--brand)}
 .panel{display:none}.panel.active{display:block}
 .grid{display:grid;gap:16px;margin-bottom:16px}
 .g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:2fr 1fr}
@@ -118,8 +118,11 @@ body.nav-open #navscrim{display:block}
 .card h3{font-size:15px;font-weight:700;letter-spacing:-.2px;color:var(--navy);display:flex;align-items:center;gap:8px}
 .card .hint{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:10px}
 .info{width:17px;height:17px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:800;font-style:italic;display:inline-flex;align-items:center;justify-content:center;cursor:help;position:relative;flex:0 0 auto}
-.info:hover::after{content:attr(data-tip);position:absolute;top:135%;left:0;z-index:80;width:240px;background:var(--navy);color:#fff;font-weight:500;font-size:11.5px;line-height:1.45;padding:9px 11px;border-radius:9px;box-shadow:0 10px 26px rgba(36,32,91,.28);white-space:normal}
-.info:hover::before{content:'';position:absolute;top:120%;left:5px;border:6px solid transparent;border-bottom-color:var(--navy);z-index:81}
+/* el tooltip existe siempre (oculto con visibility+opacity) para poder hacerle
+   fade: un pseudo-elemento que nace en :hover no transiciona nada. */
+.info::after{content:attr(data-tip);position:absolute;top:135%;left:0;z-index:80;width:240px;background:var(--navy);color:#fff;font-weight:500;font-size:11.5px;line-height:1.45;padding:9px 11px;border-radius:9px;box-shadow:0 10px 26px rgba(36,32,91,.28);white-space:normal;visibility:hidden}
+.info::before{content:'';position:absolute;top:120%;left:5px;border:6px solid transparent;border-bottom-color:var(--navy);z-index:81;visibility:hidden}
+.info:hover::after,.info:hover::before,.info:focus-visible::after,.info:focus-visible::before{visibility:visible}
 .chart{width:100%;height:330px}
 .chart.tall{height:430px}.chart.sm{height:280px}
 .tblwrap{overflow:auto;max-height:460px}
@@ -138,7 +141,7 @@ tbody tr:hover{background:var(--panel2)}
 .repkick{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--brand)}
 .rep h2{font-size:23px;color:var(--navy);margin:4px 0 2px;letter-spacing:-.4px}
 .repsub{font-size:12.5px;color:var(--muted)}
-.pdfbtn{background:var(--brand);color:#fff;border:none;border-radius:9px;padding:9px 15px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.pdfbtn{background:var(--brand-ink);color:#fff;border:none;border-radius:9px;padding:9px 15px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
 .pdfbtn:hover{opacity:.92}
 .repkpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
 .rk{background:var(--panel2);border:1px solid var(--line);border-left:4px solid var(--navy);border-radius:10px;padding:12px 14px}
@@ -160,7 +163,7 @@ table.rt tbody tr:nth-child(even){background:#f8f9fc}
 .gatecard>p{color:var(--muted);font-size:12.5px;margin-bottom:18px}
 #pin{width:100%;text-align:center;letter-spacing:8px;font-size:22px;font-weight:700;padding:12px;border:2px solid var(--line);border-radius:12px;color:var(--navy)}
 #pin:focus{outline:none;border-color:var(--brand)}
-#enter{width:100%;margin-top:12px;background:var(--brand);color:#fff;border:none;border-radius:12px;padding:13px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+#enter{width:100%;margin-top:12px;background:var(--brand-ink);color:#fff;border:none;border-radius:12px;padding:13px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
 #enter:hover{opacity:.93}
 .gerr{color:var(--neg);font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
 #greet{position:fixed;top:14px;right:14px;z-index:150;background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(36,32,91,.25);transition:opacity .6s}
@@ -178,8 +181,9 @@ body.locked{overflow:hidden}
 .rbox-w{background:#fff3ee;border-left:4px solid var(--brand)}
 .rlnav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 .rlbtn{background:#fff;border:1px solid var(--line);border-radius:8px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;color:var(--navy);cursor:pointer}
-.rlbtn.on{background:var(--brand);color:#fff;border-color:var(--brand)}
+.rlbtn.on{background:var(--brand-ink);color:#fff;border-color:var(--brand-ink)}
 .rldesc{font-size:12.5px;color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .rtc td,.rtc th{white-space:nowrap;font-size:12px}
 /* Hojas narrativas de la lista de riesgo (Resumen, Plan de Accion): no son
    tablas, asi que van sin .rtc para que el texto largo pueda partir linea. */
@@ -217,6 +221,39 @@ body.locked{overflow:hidden}
 @keyframes wpop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
 @media print{body{background:#fff}.top,.bar,.chips,.tabs,#sidenav,#navscrim,#navopen,.navtoggle,.kpis,.pdfbtn,.foot{display:none!important}.wrap{padding:0;display:block}.rep{border:none;box-shadow:none;max-width:none}}
 @media(max-width:1050px){.g2,.g3{grid-template-columns:1fr}}
+
+/* ---- Motion (NORMAS_SISTEMA.md §5) --------------------------------------
+   Un solo curve y tres duraciones. Solo transform y opacity. Nada dura mas
+   de 220 ms fuera del cajon lateral. Todo lo que se mueve tiene su version
+   reducida: menos y mas suave, no cero.                                     */
+:root{--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms}
+/* pulsacion: el clic se confirma aunque la respuesta tarde (filtrar 72k filas) */
+.pdfbtn,.rlbtn,.ms>button,.tabs button,.reset,#navopen,.navtoggle{transition:transform var(--t-press) var(--ease-out),background-color .15s ease,color .15s ease,border-color .15s ease,box-shadow .15s ease}
+.pdfbtn:active,.rlbtn:active,.ms>button:active,.tabs button:active,.reset:active,#navopen:active,.navtoggle:active{transform:scale(.97)}
+/* entrada de seccion: la pestana nueva no aparece de golpe con seis graficos a medio pintar */
+.panel.active{transition:opacity var(--t-enter) var(--ease-out),translate var(--t-enter) var(--ease-out)}
+@starting-style{.panel.active{opacity:0;translate:0 4px}}
+/* tooltip (i): aparece, no salta */
+.info::after,.info::before{opacity:0;transition:opacity var(--t-tip) var(--ease-out),translate var(--t-tip) var(--ease-out);translate:0 -2px;pointer-events:none}
+.info:hover::after,.info:hover::before,.info:focus-visible::after,.info:focus-visible::before{opacity:1;translate:0 0}
+/* foco de teclado con la paleta, no el azul del navegador */
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tabs button:focus-visible{outline-offset:-2px}
+::selection{background:#ffd9cd;color:var(--navy)}
+@media(prefers-reduced-motion:reduce){
+  .pdfbtn:active,.rlbtn:active,.ms>button:active,.tabs button:active,.reset:active,#navopen:active,.navtoggle:active{transform:none}
+  .panel.active{translate:0 0}
+  @starting-style{.panel.active{translate:0 0}}
+  .info::after,.info::before{translate:0 0}
+  #sidenav,.wcard,#welcome{transition:none;animation:none}
+}
+/* ---- Tacto: objetivos de 44 px en pantallas sin puntero fino (M3: 48) ---- */
+@media(pointer:coarse){
+  .rlbtn,.ms>button,.tabs button,.pdfbtn,.reset,.navtoggle{min-height:44px}
+  .chip span{padding:6px;margin:-6px}
+  .info{width:22px;height:22px;font-size:12px}
+  .dlimg{padding:8px;margin:-8px 0 -8px auto}
+}
 </style>
 </head>
 <body>
@@ -252,42 +289,47 @@ body.locked{overflow:hidden}
     <div class="tabs" id="tabs">
       <div class="navgrp">Resumen</div>
       <button data-tab="resumen" class="active">Resumen ejecutivo</button>
-      <button data-tab="cob" id="tab-cob" style="display:none">💵 Cobranza</button>
+      <button data-tab="cob" id="tab-cob" style="display:none">Cobranza</button>
       <div class="navgrp">Análisis</div>
       <button data-tab="tend">Tendencia y proyección</button>
       <button data-tab="vend">Vendedores</button>
       <button data-tab="marca">Marcas y grupos</button>
-      <button data-tab="sector">🗺️ Sectores / Zonas</button>
+      <button data-tab="sector">Sectores / Zonas</button>
       <button data-tab="cli">Clientes</button>
       <button data-tab="prod">Productos / SKU</button>
       <div class="navgrp">Comparar</div>
-      <button data-tab="comp">⚖️ Comparar períodos</button>
+      <button data-tab="comp">Comparar períodos</button>
       <div class="navgrp">Informes</div>
-      <button data-tab="exec">📄 Informe ejecutivo</button>
-      <button data-tab="rlist" id="tab-rlist" style="display:none">🔴 Clientes en riesgo y recuperados</button>
+      <button data-tab="exec">Informe ejecutivo</button>
+      <button data-tab="rlist" id="tab-rlist" style="display:none">Clientes en riesgo y recuperados</button>
     </div>
   </aside>
 
   <div class="content" id="content">
   <div class="kpis" id="kpis"></div>
 
+  <!-- Orden de cada seccion = piramide invertida: trayectoria y composicion
+       arriba, rankings en medio, detalle fino (dias, tablas) al final.
+       El DOM manda tambien en movil, donde todo se apila en una columna.    -->
   <div class="panel active" data-panel="resumen">
-    <div class="grid"><div class="card"><h3>Calendario de ventas por día</h3><div class="hint">Cada celda es un día · color = venta neta de ese día · pasa el mouse para el detalle · respeta los filtros</div><div id="c-cal" class="chart" style="height:190px"></div><div id="cal-key" class="calkey"></div></div></div>
+    <h2 class="sr-only">Resumen ejecutivo</h2>
     <div class="grid g3">
       <div class="card"><h3>Venta neta mensual y proyección</h3><div class="hint">Barras = real · línea punteada = proyección</div><div id="c-trend" class="chart tall"></div></div>
       <div class="card"><h3>Participación por grupo</h3><div class="hint">Clic para filtrar por grupo</div><div id="c-grupo" class="chart tall"></div></div>
     </div>
     <div class="grid g2">
+      <div class="card"><h3>Crecimiento intermensual</h3><div class="hint">Variación % de venta neta vs mes anterior</div><div id="c-mom" class="chart sm"></div></div>
+      <div class="card"><h3>Ventas acumuladas</h3><div class="hint">Trayectoria acumulada del período</div><div id="c-cum" class="chart sm"></div></div>
+    </div>
+    <div class="grid g2">
       <div class="card"><h3>Top 10 vendedores</h3><div class="hint">Clic en una barra para filtrar</div><div id="c-vend10" class="chart"></div></div>
       <div class="card"><h3>Top 10 marcas</h3><div class="hint">Clic en una barra para filtrar</div><div id="c-marca10" class="chart"></div></div>
     </div>
-    <div class="grid g2">
-      <div class="card"><h3>Crecimiento intermensual</h3><div class="hint">Variación % de venta neta vs mes anterior</div><div id="c-mom" class="chart sm"></div></div>
-      <div class="card"><h3>Ventas acumuladas (trayectoria)</h3><div class="hint">Acumulado del período</div><div id="c-cum" class="chart sm"></div></div>
-    </div>
+    <div class="grid"><div class="card"><h3>Calendario de ventas por día</h3><div class="hint">Cada celda es un día; el color es la venta neta de ese día · respeta los filtros</div><div id="c-cal" class="chart" style="height:190px"></div><div id="cal-key" class="calkey"></div></div></div>
   </div>
 
   <div class="panel" data-panel="tend">
+    <h2 class="sr-only">Tendencia y proyección</h2>
     <div class="grid"><div class="card"><h3>Proyección de venta neta</h3><div class="hint">Regresión lineal · zona sombreada = meses proyectados</div><div id="c-proj" class="chart tall"></div></div></div>
     <div class="grid g2">
       <div class="card"><h3>Detalle de proyección por mes</h3><div class="hint">Real vs proyectado y cierre estimado de año</div><div class="tblwrap"><table id="t-proj"></table></div></div>
@@ -296,54 +338,60 @@ body.locked{overflow:hidden}
   </div>
 
   <div class="panel" data-panel="vend">
+    <h2 class="sr-only">Vendedores</h2>
     <div class="grid g2">
       <div class="card"><h3>Ranking de vendedores</h3><div class="hint">Clic para filtrar · desliza para ver más</div><div id="c-vendrank" class="chart tall"></div></div>
-      <div class="card"><h3>Comparación mensual (top 6)</h3><div class="hint">Trayectoria de venta neta por vendedor</div><div id="c-vendcmp" class="chart tall"></div></div>
+      <div class="card"><h3>Comparación mensual de vendedores</h3><div class="hint">Trayectoria de venta neta de los 6 vendedores líderes</div><div id="c-vendcmp" class="chart tall"></div></div>
     </div>
     <div class="grid"><div class="card"><h3>Tabla de vendedores</h3><input class="tsearch" id="s-vend" placeholder="Buscar vendedor..."><div class="tblwrap"><table id="t-vend"></table></div></div></div>
   </div>
 
   <div class="panel" data-panel="marca">
+    <h2 class="sr-only">Marcas y grupos</h2>
     <div class="grid g2">
       <div class="card"><h3>Marcas por venta neta</h3><div class="hint">Desliza para ver más · clic para filtrar</div><div id="c-marca-bars" class="chart tall"></div></div>
-      <div class="card"><h3>Comparación mensual de marcas (top 6)</h3><div class="hint">Trayectoria de las 6 marcas líderes</div><div id="c-marcacmp" class="chart tall"></div></div>
+      <div class="card"><h3>Grupos por mes</h3><div class="hint">Venta neta apilada por grupo</div><div id="c-grupomes" class="chart tall"></div></div>
     </div>
-    <div class="grid g2">
-      <div class="card"><h3>Grupos por mes</h3><div class="hint">Venta neta apilada por grupo</div><div id="c-grupomes" class="chart"></div></div>
-      <div class="card"><h3>Tabla de marcas</h3><input class="tsearch" id="s-marca" placeholder="Buscar marca..."><div class="tblwrap"><table id="t-marca"></table></div></div>
-    </div>
+    <div class="grid"><div class="card"><h3>Comparación mensual de marcas</h3><div class="hint">Trayectoria de las 6 marcas líderes</div><div id="c-marcacmp" class="chart tall"></div></div></div>
+    <div class="grid"><div class="card"><h3>Tabla de marcas</h3><input class="tsearch" id="s-marca" placeholder="Buscar marca..."><div class="tblwrap"><table id="t-marca"></table></div></div></div>
   </div>
 
   <div class="panel" data-panel="sector">
+    <h2 class="sr-only">Sectores / Zonas</h2>
     <div class="grid g2">
       <div class="card"><h3>Ranking de sectores por venta neta</h3><div class="hint">Muestra ~10 · desliza para ver el resto · clic para filtrar</div><div id="c-secrank" class="chart tall"></div></div>
       <div class="card"><h3>Ventas por estado</h3><div class="hint">Agrupa los sectores por estado (Trujillo, Zulia, Mérida…)</div><div id="c-secestado" class="chart tall"></div></div>
     </div>
     <div class="grid"><div class="card"><h3>Mapa de ventas por estado</h3><div class="hint">Color = venta neta · mouse para el detalle · clic en un estado para filtrar sus sectores · rueda del mouse para zoom</div><div id="c-secmap" class="chart" style="height:520px"></div></div></div>
-    <div class="grid"><div class="card"><h3>Comparación mensual de sectores (top 6)</h3><div class="hint">Trayectoria de venta neta de las 6 zonas líderes</div><div id="c-seccmp" class="chart tall"></div></div></div>
+    <div class="grid"><div class="card"><h3>Comparación mensual de sectores</h3><div class="hint">Trayectoria de venta neta de las 6 zonas líderes</div><div id="c-seccmp" class="chart tall"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de sectores</h3><input class="tsearch" id="s-sector" placeholder="Buscar sector..."><div class="tblwrap"><table id="t-sector"></table></div></div></div>
   </div>
 
   <div class="panel" data-panel="cli">
+    <h2 class="sr-only">Clientes</h2>
     <div class="grid g2">
       <div class="card"><h3>Top clientes por venta neta</h3><div class="hint">Desliza para ver más</div><div id="c-cli" class="chart tall"></div></div>
       <div class="card"><h3>Concentración de clientes (Pareto)</h3><div class="hint">% acumulado de venta según ranking de clientes</div><div id="c-pareto" class="chart tall"></div></div>
     </div>
-    <div class="grid"><div class="card"><h3>Comparación mensual de clientes (top 6)</h3><div class="hint">Trayectoria de venta neta de los 6 clientes líderes</div><div id="c-clicmp" class="chart tall"></div></div></div>
-    <div class="grid"><div class="card"><h3>🔔 Clientes inactivos (posible fuga)</h3><div class="hint">Clientes sin compras en los últimos 45 días · ordenados por valor histórico · sobre toda la data</div><div id="inact-box"></div></div></div>
+    <!-- La alerta accionable (a quien llamar) va antes que la trayectoria: es lo
+         que un gerente hace con esta seccion, no lo que mira.               -->
+    <div class="grid"><div class="card"><h3>Clientes inactivos (posible fuga)</h3><div class="hint">Sin compras en los últimos 45 días, ordenados por valor histórico · sobre toda la data</div><div id="inact-box"></div></div></div>
+    <div class="grid"><div class="card"><h3>Comparación mensual de clientes</h3><div class="hint">Trayectoria de venta neta de los 6 clientes líderes</div><div id="c-clicmp" class="chart tall"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de clientes</h3><input class="tsearch" id="s-cli" placeholder="Buscar cliente..."><div class="tblwrap"><table id="t-cli"></table></div></div></div>
   </div>
 
   <div class="panel" data-panel="prod">
+    <h2 class="sr-only">Productos / SKU</h2>
     <div class="grid g2">
       <div class="card"><h3>Top productos por venta neta</h3><div class="hint">Desliza para ver más</div><div id="c-prodneto" class="chart tall"></div></div>
       <div class="card"><h3>Top productos por unidades</h3><div class="hint">Desliza para ver más</div><div id="c-produ" class="chart tall"></div></div>
     </div>
-    <div class="grid"><div class="card"><h3>Comparación mensual de productos (top 6)</h3><div class="hint">Trayectoria de venta neta de los 6 productos líderes</div><div id="c-prodcmp" class="chart tall"></div></div></div>
+    <div class="grid"><div class="card"><h3>Comparación mensual de productos</h3><div class="hint">Trayectoria de venta neta de los 6 productos líderes</div><div id="c-prodcmp" class="chart tall"></div></div></div>
     <div class="grid"><div class="card"><h3>Tabla de productos (SKU)</h3><input class="tsearch" id="s-prod" placeholder="Buscar producto..."><div class="tblwrap"><table id="t-prod"></table></div></div></div>
   </div>
 
   <div class="panel" data-panel="comp">
+    <h2 class="sr-only">Comparar períodos</h2>
     <div class="card"><h3>Comparar dos períodos</h3><div class="hint">Elige dos rangos de fechas y compara los indicadores clave (sobre toda la data)</div>
     <div class="cmpbar"><span class="cmpg"><b>Período A</b> <input type="date" id="cA0"> a <input type="date" id="cA1"></span>
       <span class="cmpg"><b>Período B</b> <input type="date" id="cB0"> a <input type="date" id="cB1"></span>
@@ -351,46 +399,53 @@ body.locked{overflow:hidden}
     <div id="cmp-res"></div><div id="c-cmp" class="chart" style="height:300px;margin-top:12px"></div></div>
   </div>
 
-  <div class="panel" data-panel="exec" id="p-exec"></div>
+  <div class="panel" data-panel="exec" id="p-exec">
+    <h2 class="sr-only">Informe ejecutivo</h2></div>
   <div id="exec-full" style="display:none"></div>
-  <div class="panel" data-panel="rlist"><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Seguimiento de cartera unificado: riesgo y recuperados en un solo Excel · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
+  <div class="panel" data-panel="rlist">
+    <h2 class="sr-only">Clientes en riesgo y recuperados</h2><div class="card"><h3>Clientes en riesgo y recuperados</h3><div class="hint">Seguimiento de cartera unificado: riesgo y recuperados en un solo Excel · elige la lista y usa el buscador</div><div id="rl-nav" class="rlnav"></div><button class="pdfbtn" id="rl-dl" style="display:none;margin-bottom:10px" onclick="downloadReport('list','Lista_Clientes_Riesgo_Recuperados.xlsx')">⭳ Descargar Excel de la lista (archivo de Drive)</button><input class="tsearch" id="rl-search" placeholder="Buscar cliente, vendedor, zona..." style="max-width:360px"><div class="tblwrap"><div id="rl-table"></div></div></div></div>
   <div class="panel" data-panel="cob">
+    <h2 class="sr-only">Cobranza</h2>
     <div class="card"><h3>Cobranza · facturado vs. cobrado</h3>
-      <div class="hint">Conciliación de las 3 analistas · la <b>camada</b> es el mes de <b>despacho</b> de la factura, no el mes en que entró el dinero: una camada se sigue cobrando durante meses · las ANULADAS quedan fuera del universo cobrable</div>
+      <div class="hint">Conciliación de las 3 analistas. La <b>camada</b> es el mes de <b>despacho</b> de la factura, no el del cobro: se sigue cobrando durante meses · las anuladas quedan fuera</div>
       <div class="rlnav" id="cob-fcam"></div>
       <div class="rlnav" id="cob-fana"></div>
       <button class="pdfbtn" id="cob-dl" style="display:none;margin-top:6px" onclick="downloadReport('cob','Conciliacion_Facturado_vs_Cobrado.xlsx')">⭳ Descargar Excel de conciliación (archivo de Drive)</button>
     </div>
     <div class="kpis" id="cob-kpis"></div>
+    <!-- Orden: identidad de la camada (descomposicion) -> las dos tasas junto a
+         quien cobra -> quien debe -> por que precio -> el detalle en tabla. Al
+         final, juntas, las dos tarjetas que NO responden a los filtros
+         (comisiones y cobertura): mezclarlas con las filtrables desorientaba.  -->
     <div class="grid"><div class="card"><h3>Descomposición del facturado por camada</h3><div class="hint">Cobrado + Diferencial + Pendiente = Facturado neto · el <b>Diferencial no es deuda ni pérdida</b>: es haber cobrado a otro precio o forma de pago</div><div id="c-cob-descomp" class="chart tall"></div></div></div>
     <div class="grid g2">
-      <div class="card"><h3>% de cobro por camada</h3><div class="hint"><b>Verde</b>: cuánto de la camada ya entró en caja — la más reciente va en claro porque sigue <b>en maduración</b> y que esté baja es lo esperado · <b>Azul punteado</b>: de lo ya cerrado, cuánto entró como caja (es el «% Cobro» del Excel, ~95%)</div><div id="c-cob-pct" class="chart"></div></div>
-      <div class="card"><h3>Cobertura sobre la facturación del sistema</h3><div class="hint">Cuánto de todo lo facturado pasa por las 3 analistas · dato de la hoja COBERTURA: no responde a los filtros</div><div id="c-cob-cobertura" class="chart"></div></div>
-    </div>
-    <div class="grid g2">
+      <div class="card"><h3>% de cobro por camada</h3><div class="hint"><b>Verde</b>: cuánto de la camada ya entró en caja; la más reciente sigue madurando y por eso va baja · <b>Azul punteado</b>: de lo ya cerrado, cuánto fue caja (el «% Cobro» del Excel)</div><div id="c-cob-pct" class="chart"></div></div>
       <div class="card"><h3>Cobrado por vendedor</h3><div class="hint">Caja realmente entrada por cada vendedor en la selección</div><div id="c-cob-vend" class="chart"></div></div>
-      <div class="card"><h3>Pendiente por vendedor</h3><div class="hint">Cartera viva por cobrar, sin anuladas</div><div id="c-cob-pend-vend" class="chart"></div></div>
     </div>
     <div class="grid g2">
-      <div class="card"><h3 id="h-cob-comis">Comisión por vendedor</h3><div class="hint" id="hint-cob-comis">% confirmados por el Ing. Palomares (20/08) · no responde a los filtros</div><div id="c-cob-comis" class="chart"></div></div>
+      <div class="card"><h3>Pendiente por vendedor</h3><div class="hint">Cartera viva por cobrar, sin anuladas</div><div id="c-cob-pend-vend" class="chart"></div></div>
       <div class="card"><h3>Cobrado por grupo</h3><div class="hint">El grupo REPOSTERÍA incluye desechables y confitería</div><div id="c-cob-grupo" class="chart"></div></div>
     </div>
     <div class="grid"><div class="card"><h3>Cobrado por lista de precio</h3><div class="hint">Caja realmente entrada por cada precio de lista &middot; solo facturas <b>cerradas</b>, sin anuladas &middot; <b>no incluye el caf&eacute;</b>, que tiene su propia secci&oacute;n m&aacute;s abajo &middot; no responde a los filtros</div><div id="c-cob-precio" class="chart"></div></div></div>
-    <div class="grid"><div class="card"><h3>Detalle por camada</h3><div class="hint"><b>% cobrado</b> = Cobrado ÷ Facturado neto (maduración de la camada) · <b>% efectiv.</b> = Cobrado ÷ (Cobrado + Diferencial), la columna «% Cobro» del Excel · las Anuladas van aparte: no son cartera</div><div class="tblwrap"><table id="t-cob"></table></div></div></div>
+    <div class="grid"><div class="card"><h3>Detalle por camada</h3><div class="hint"><b>% cobrado</b> = Cobrado ÷ Facturado neto · <b>% efectividad</b> = Cobrado ÷ (Cobrado + Diferencial), el «% Cobro» del Excel · las anuladas no son cartera</div><div class="tblwrap"><table id="t-cob"></table></div></div></div>
+    <div class="grid g2">
+      <div class="card"><h3 id="h-cob-comis">Comisión por vendedor</h3><div class="hint" id="hint-cob-comis">% confirmados por el Ing. Palomares (20/08) · no responde a los filtros</div><div id="c-cob-comis" class="chart"></div></div>
+      <div class="card"><h3>Cobertura sobre la facturación del sistema</h3><div class="hint">Cuánto de todo lo facturado pasa por las 3 analistas · dato de la hoja COBERTURA: no responde a los filtros</div><div id="c-cob-cobertura" class="chart"></div></div>
+    </div>
 
     <div id="cob-cafe" style="display:none">
       <div class="card" style="border-left:4px solid #8a5a2b">
-        <h3>&#9749; Caf&eacute; &middot; La Protectora</h3>
-        <div class="hint">Marca nueva de caf&eacute;, consolidada por <b>Jesiely</b> en un cuadro aparte aunque los vendedores sean de las 3 carteras &middot; los cuadros de caf&eacute; existen <b>desde julio</b> (no hay abril&ndash;junio de caf&eacute; en cobranza) &middot; <b>AM&Eacute;RICO</b>, el caf&eacute; viejo, <b>no se concilia</b>: no tiene cuadros de cobranza, s&oacute;lo aparece en la Cobertura como marca fuera de cartera &middot; <span id="caf-nota"></span></div>
+        <h3>Café · La Protectora</h3>
+        <div class="hint">Café La Protectora, consolidado por <b>Jesiely</b> desde julio con vendedores de las 3 carteras. <b>AMÉRICO</b>, el café viejo, no se concilia: solo aparece en la cobertura · <span id="caf-nota"></span></div>
         <div class="kpis" id="caf-kpis" style="margin-top:14px;margin-bottom:0"></div>
       </div>
       <div class="grid g2">
-        <div class="card"><h3>Caf&eacute; &middot; cobrado vs. facturado por mes</h3><div class="hint">Maduraci&oacute;n del caf&eacute;: julio ya casi cerrado, agosto <b>apenas empezando a cobrarse</b> &middot; el facturado es <b>neto</b> (las anuladas van aparte, en el tooltip)</div><div id="c-caf-mes" class="chart"></div></div>
-        <div class="card"><h3>Caf&eacute; &middot; estado de las facturas</h3><div class="hint">Cerradas, pendientes y anuladas sobre el facturado del caf&eacute; &middot; las anuladas no son cartera</div><div id="c-caf-estado" class="chart"></div></div>
+        <div class="card"><h3>Café · cobrado vs. facturado por mes</h3><div class="hint">Maduración del café: julio ya casi cerrado, agosto <b>apenas empezando a cobrarse</b> · el facturado es <b>neto</b> (las anuladas van aparte, en el tooltip)</div><div id="c-caf-mes" class="chart"></div></div>
+        <div class="card"><h3>Café · estado de las facturas</h3><div class="hint">Cerradas, pendientes y anuladas sobre el facturado del café · las anuladas no son cartera</div><div id="c-caf-estado" class="chart"></div></div>
       </div>
       <div class="grid g2">
-        <div class="card"><h3>Caf&eacute; &middot; cobrado por vendedor</h3><div class="hint">Caja entrada por vendedor en caf&eacute; &middot; <b>JOSE concentra casi todo</b> el caf&eacute; de la empresa</div><div id="c-caf-vend" class="chart"></div></div>
-        <div class="card" id="caf-com-card"><h3>Caf&eacute; &middot; comisi&oacute;n vendedor vs. supervisor (Bs)</h3><div class="hint">Comisi&oacute;n <b>por bulto</b>: vendedor $0,50 en Precio 1 y 2 y $0,40 en el resto; supervisor $0,20 siempre &middot; se paga en <b>bol&iacute;vares</b> a la tasa del d&iacute;a del pago, por eso el eje va en <b>Bs</b> y no en $</div><div id="c-caf-com" class="chart"></div></div>
+        <div class="card"><h3>Café · cobrado por vendedor</h3><div class="hint">Caja entrada por vendedor en café · <b>JOSE concentra casi todo</b> el café de la empresa</div><div id="c-caf-vend" class="chart"></div></div>
+        <div class="card" id="caf-com-card"><h3>Café · comisión vendedor vs. supervisor (Bs)</h3><div class="hint">Comisión <b>por bulto</b>: vendedor $0,50 en Precio 1 y 2 y $0,40 en el resto; supervisor $0,20 siempre · se paga en <b>bolívares</b> a la tasa del día del pago, por eso el eje va en <b>Bs</b> y no en $</div><div id="c-caf-com" class="chart"></div></div>
       </div>
     </div>
   </div>
@@ -403,6 +458,12 @@ const ENC = __ENC_JSON__;
 const VE_GEO=__VE_GEO__;
 let P=null;
 const R={MES:0,GRUPO:1,VEND:2,SECTOR:3,MARCA:4,CLI:5,PROD:6,DOC:7,CANT:8,DEV:9,NETO:10,DAY:11};
+/* Motion de los graficos (ver App.chart): entrada corta, actualizacion mas
+   corta, ease-out. Bajo prefers-reduced-motion no hay animacion. Un grafico
+   puede sobreescribirlo pasando sus propias claves animation* en la opcion.  */
+const REDUCED_MOTION=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const CHART_ANIM=REDUCED_MOTION?{animation:false}
+  :{animationDuration:260,animationDurationUpdate:180,animationEasing:'cubicOut',animationEasingUpdate:'cubicOut'};
 let COB=null;   // payload Pcob (cobranza), null si el Excel no estaba en Drive
 const Rc={CAMADA:0,VEND:1,GRUPO:2,PRECIO:3,ANAL:4,EST:5,FACT:6,COB:7,PEND:8,DIF:9,ANUL:10};
 const PAL=['#ff4f20','#24205b','#17a39a','#f4a72c','#5b6aa0','#e0708a','#3aa0d1','#7c9a2b','#b0552c','#9488c9','#e8b64a','#2f8f86'];
@@ -536,7 +597,7 @@ class App{
   }
   injectInfo(){for(const id in TIPS){const el=document.getElementById(id);if(!el)continue;
     const card=el.closest('.card');if(!card)continue;const h=card.querySelector('h3');
-    if(h&&!h.querySelector('.info')){const s=document.createElement('span');s.className='info';s.textContent='i';s.setAttribute('data-tip',TIPS[id]);h.appendChild(s)}}}
+    if(h&&!h.querySelector('.info')){const s=document.createElement('span');s.className='info';s.textContent='i';s.tabIndex=0;s.setAttribute('data-tip',TIPS[id]);h.appendChild(s)}}}
   injectDownloads(){document.querySelectorAll('.card').forEach(card=>{
     const cv=card.querySelector('.chart');if(!cv||!cv.id)return;
     const h=card.querySelector('h3');if(!h||h.querySelector('.dlimg'))return;
@@ -651,12 +712,17 @@ class App{
     const partial=day<dim&&!!mo&&mo.neto[idx]>0;return{partial,frac:day/dim,idx,day,dim};}
   effNeto(mo){const pi=this.partialInfo(mo);const eff=mo.neto.slice();if(pi.partial&&pi.frac>0)eff[pi.idx]=mo.neto[pi.idx]/pi.frac;return{eff,pi};}
   buildKPIs(){
-    this.kpiDefs=[{id:'neto',lab:'Venta neta',hero:true,fmt:moneyFull,tip:'Suma de la venta neta (ventas menos devoluciones) de todo lo que está filtrado ahora. El ▲/▼ compara el último mes contra el mes anterior; (proy.) = el último mes es un corte parcial y se estimó a cierre para comparar parejo.'},{id:'fac',lab:'Facturas',fmt:intf,tip:'Número de facturas (documentos) distintas en la selección actual.'},
-      {id:'tk',lab:'Ticket promedio',fmt:moneyFull,tip:'Ticket promedio = Venta neta ÷ Facturas: lo que factura en promedio cada documento.'},{id:'cli',lab:'Clientes únicos',fmt:intf,tip:'Clientes distintos que compraron en la selección actual.'},
-      {id:'sku',lab:'SKU únicos',fmt:intf,tip:'Productos (SKU) distintos vendidos en la selección actual.'},{id:'uni',lab:'Unidades',fmt:intf,tip:'Suma de unidades (cantidad) vendidas en la selección actual.'},
-      {id:'dev',lab:'% Devolución',fmt:v=>v.toFixed(1)+'%',tip:'Unidades devueltas ÷ unidades vendidas × 100. Mientras más bajo, mejor.'},{id:'proy',lab:'Proyección año',fmt:moneyFull,sub:'estimado a Dic',tip:'Estimación de la venta neta de TODO el año: suma los meses ya reales y proyecta los que faltan con una tendencia lineal (regresión). Si el último mes está incompleto, primero lo estima a cierre.'}];
+    this.kpiDefs=[
+      {id:'neto',lab:'Venta neta',hero:true,fmt:moneyFull,tip:'Suma de la venta neta (ventas menos devoluciones) de todo lo que está filtrado ahora. El ▲/▼ compara el último mes contra el mes anterior; (proy.) = el último mes es un corte parcial y se estimó a cierre para comparar parejo.'},
+      {id:'proy',lab:'Proyección año',fmt:moneyFull,sub:'estimado a Dic',tip:'Estimación de la venta neta de TODO el año: suma los meses ya reales y proyecta los que faltan con una tendencia lineal (regresión). Si el último mes está incompleto, primero lo estima a cierre.'},
+      {id:'tk',lab:'Ticket promedio',fmt:moneyFull,tip:'Ticket promedio = Venta neta ÷ Facturas: lo que factura en promedio cada documento.'},
+      {id:'cli',lab:'Clientes únicos',fmt:intf,tip:'Clientes distintos que compraron en la selección actual.'},
+      {id:'fac',lab:'Facturas',fmt:intf,tip:'Número de facturas (documentos) distintas en la selección actual.'},
+      {id:'uni',lab:'Unidades',fmt:intf,tip:'Suma de unidades (cantidad) vendidas en la selección actual.'},
+      {id:'sku',lab:'SKU únicos',fmt:intf,tip:'Productos (SKU) distintos vendidos en la selección actual.'},
+      {id:'dev',lab:'% Devolución',fmt:v=>v.toFixed(1)+'%',tip:'Unidades devueltas ÷ unidades vendidas × 100. Mientras más bajo, mejor.'}];
     document.getElementById('kpis').innerHTML=this.kpiDefs.map(k=>`<div class="kpi${k.hero?' hero':''}">
-      <div class="lab">${k.lab} <span class="info" data-tip="${k.tip}">i</span></div><div class="val" id="k-${k.id}">–</div><div class="sub" id="ks-${k.id}">${k.sub||''}</div>
+      <div class="lab">${k.lab} <span class="info" tabindex="0" data-tip="${k.tip}">i</span></div><div class="val" id="k-${k.id}">–</div><div class="sub" id="ks-${k.id}">${k.sub||''}</div>
       <div class="delta" id="kd-${k.id}"></div><div class="spark" id="kp-${k.id}"></div></div>`).join('');
   }
   renderKPIs(mo){
@@ -680,7 +746,19 @@ class App{
     const col=hero?'#fff':'#ff4f20';const area=hero?'rgba(255,255,255,.2)':'rgba(255,79,32,.14)';
     c.setOption({grid:{top:2,bottom:2,left:2,right:2},xAxis:{type:'category',show:false,data:data.map((_,i)=>i)},yAxis:{type:'value',show:false},
       series:[{type:'line',data,smooth:true,symbol:'none',lineStyle:{width:2,color:col},areaStyle:{color:area}}]},true)}
-  chart(id){if(!this.ch[id]){this.ch[id]=echarts.init(document.getElementById(id))}return this.ch[id]}
+  /* Presupuesto de animacion unico para los ~35 graficos. ECharts trae 1 000 ms
+     por defecto y los re-aplica en CADA setOption, es decir, en cada cambio de
+     filtro: las barras "bailaban" un segundo mientras el usuario intentaba
+     leerlas. Se envuelve setOption porque muchas llamadas usan notMerge=true y
+     una opcion base en init() se perderia. Con prefers-reduced-motion se
+     apaga del todo: el dato aparece, no se mueve.                            */
+  chart(id){
+    if(!this.ch[id]){
+      const inst=echarts.init(document.getElementById(id)),orig=inst.setOption;
+      inst.setOption=(opt,...rest)=>orig.call(inst,Object.assign({},CHART_ANIM,opt),...rest);
+      this.ch[id]=inst;
+    }
+    return this.ch[id]}
   topN(map,names,n){return [...map.entries()].map(([i,o])=>[names[i],o.neto,o]).sort((a,b)=>b[1]-a[1]).slice(0,n)}
   hbz(id,pairs,opt={}){const c=this.chart(id);const mob=this.isMob();
     const trunc=opt.trunc||(mob?13:22);
@@ -752,7 +830,7 @@ class App{
       {id:'cobrado',lab:'Cobrado (caja real)',hero:true,tip:'Dinero efectivamente entrado: suma de lo cancelado por el cliente en las facturas cerradas. El ▲/▼ compara las dos últimas camadas YA CERRADAS — nunca contra la camada en maduración, que aún se está cobrando.'},
       {id:'pct',lab:'% cobrado de la camada',tip:'Cobrado ÷ Facturado neto de la selección (el facturado neto ya excluye las anuladas): qué parte de lo despachado ya entró en caja. Baja mientras la camada madura. Debajo aparece la otra tasa, la del Excel: Cobrado ÷ (Cobrado + Diferencial), que mide cuánto de lo YA cerrado entró como dinero.'},
       {id:'pend',lab:'Pendiente real',tip:'Cartera viva: facturas sin cancelar. No incluye anuladas (no son deuda) ni el diferencial (que ya se cobró, a otro precio).'}
-    ].map(k=>`<div class="kpi${k.hero?' hero':''}"><div class="lab">${k.lab} <span class="info" data-tip="${k.tip}">i</span></div>
+    ].map(k=>`<div class="kpi${k.hero?' hero':''}"><div class="lab">${k.lab} <span class="info" tabindex="0" data-tip="${k.tip}">i</span></div>
       <div class="val" id="kc-${k.id}">–</div><div class="sub" id="kcs-${k.id}"></div>
       <div class="delta" id="kcd-${k.id}"></div><div class="spark" id="kcp-${k.id}"></div></div>`).join('');
     if(window.__dl&&window.__dl.cob){const b=document.getElementById('cob-dl');if(b)b.style.display=''}
@@ -802,7 +880,7 @@ class App{
        sub:'vendedor '+bsf(T.comVend)+' · supervisor '+bsf(T.comSuper),
        tip:'Comisión por bulto, no por porcentaje: $0,50 por bulto en Precio 1 y 2, $0,40 en el resto, y $0,20 por bulto para el supervisor. Se paga en bolívares a la tasa del día del pago, por eso la cifra va en Bs y no en $.'});
     document.getElementById('caf-kpis').innerHTML=kp
-      .map(k=>'<div class="kpi'+(k.hero?' hero':'')+'"><div class="lab">'+k.lab+' <span class="info" data-tip="'+k.tip+'">i</span></div>'
+      .map(k=>'<div class="kpi'+(k.hero?' hero':'')+'"><div class="lab">'+k.lab+' <span class="info" tabindex="0" data-tip="'+k.tip+'">i</span></div>'
       +'<div class="val">'+k.val+'</div><div class="sub">'+k.sub+'</div></div>').join('');
 
     /* 1 - cobrado vs facturado por mes: la maduracion del cafe. El facturado
@@ -1008,7 +1086,7 @@ class App{
         <td class=num>${(o.fact?o.cob/o.fact*100:0).toFixed(1)}%</td><td class=num>${((o.cob+o.dif)?o.cob/(o.cob+o.dif)*100:0).toFixed(1)}%</td>
         <td class=num>${moneyFull(o.anul)}</td><td class=num>${intf(o.fac)}</td></tr>`}).join('');
     document.getElementById('t-cob').innerHTML=`<thead><tr><th>Camada (despacho)</th><th class=num>Facturado neto</th><th class=num>Cobrado</th>
-      <th class=num>Diferencial</th><th class=num>Pendiente</th><th class=num>% cobrado</th><th class=num>% efectiv.</th><th class=num>Anuladas</th><th class=num>Facturas</th></tr></thead>
+      <th class=num>Diferencial</th><th class=num>Pendiente</th><th class=num>% cobrado</th><th class=num>% efectividad</th><th class=num>Anuladas</th><th class=num>Facturas</th></tr></thead>
       <tbody>${tr}</tbody><tfoot><tr style="font-weight:800;border-top:2px solid #24205b">
       <td>TOTAL</td><td class=num>${moneyFull(T.fact)}</td><td class=num>${moneyFull(T.cob)}</td><td class=num>${moneyFull(T.dif)}</td>
       <td class=num>${moneyFull(T.pend)}</td><td class=num>${(T.fact?T.cob/T.fact*100:0).toFixed(1)}%</td>

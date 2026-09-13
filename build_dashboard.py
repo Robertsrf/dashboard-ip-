@@ -12,8 +12,14 @@ import risklist as RLIST
 import cobranza as COB
 
 
+def _warn(msg):
+    """Aviso visible en la consola del build. Los insumos opcionales (Word, lista,
+    cobranza) pueden faltar sin romper el build, pero nunca fallar en silencio."""
+    print(f"   AVISO: {msg}", file=sys.stderr)
+
+
 def _wrap_summary(title, body, full_id, fname):
-    return ('<div class="rep"><div class="rephead"><div><div class="repkick">RESUMEN · INFORME CARGADO</div>'
+    return ('<div class="rep"><div class="rephead"><div>'
             f'<h2>{title}</h2><div class="repsub">Resumen tomado del Word cargado en Drive · descarga el documento completo</div></div>'
             f'<div class="repbtns"><button class="pdfbtn" onclick="downloadReport(\'{full_id.replace("-full","")}\',\'{fname}\')">⬓ Descargar informe (Word)</button></div></div>'
             f'{body}<div class="repnote">📄 Resumen del informe cargado en Drive. Usa <b>Descargar informe (Word)</b> para el documento completo.</div></div>')
@@ -90,6 +96,7 @@ def main():
         rep = REPORTS.build(df_rep, hist_path, version)
         exec_html, risk_html, exec_full, risk_full = rep["exec"], rep["risk"], rep["execFull"], rep["riskFull"]
     except Exception as e:
+        _warn(f"reports.build fallo: {e!r}")
         exec_html = risk_html = exec_full = risk_full = f'<div class="rep"><p>No se pudo generar el informe: {html.escape(str(e))}</p></div>'
     # Word cargados en Drive (opcional): resumen desde el Word + descarga del archivo real
     exec_b64 = risk_b64 = ""
@@ -99,8 +106,10 @@ def main():
             wbody, exec_b64 = WORDREP.extract(ep); exec_html = _wrap_summary("Informe Ejecutivo", wbody, "exec-full", "Informe_Ejecutivo_IP.docx")
         if rp and os.path.exists(rp):
             wbody, risk_b64 = WORDREP.extract(rp); risk_html = _wrap_summary("Seguimiento de Clientes", wbody, "risk-full", "Seguimiento_Clientes_IP.docx")
-    except Exception:
-        pass
+    except Exception as e:
+        # nunca en silencio: sin python-docx el resumen del Word se perdia semanas
+        # sin que nadie lo notara. El build sigue (el Word es opcional) pero avisa.
+        _warn(f"Word no procesado ({ep or rp}): {e!r}")
     # Lista de clientes en riesgo (Excel de Drive, opcional)
     rlp = os.environ.get("RISK_LIST_XLSX"); risk_list = None; list_b64 = ""
     try:
@@ -108,8 +117,9 @@ def main():
             risk_list = RLIST.load(rlp)
             import base64 as _b64x
             list_b64 = _b64x.b64encode(open(rlp, "rb").read()).decode()
-    except Exception:
+    except Exception as e:
         risk_list = None
+        _warn(f"Lista de riesgo no procesada ({rlp}): {e!r}")
     # Conciliacion de cobranza (Excel de Drive, opcional): si falta, la pestana
     # se oculta sola en el front y el resto del dashboard funciona igual.
     cbp = os.environ.get("COB_XLSX"); pcob = None
