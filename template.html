@@ -79,7 +79,11 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:var(--panel2);c
 /* min-width:0 es obligatorio: sin el, la columna flex no puede encogerse y los
    graficos de ECharts se desbordan al ocultar/mostrar el panel lateral. */
 .content{flex:1 1 auto;min-width:0}
-#sidenav{flex:0 0 234px;width:234px;position:sticky;top:66px;align-self:flex-start;max-height:calc(100vh - 84px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 10px;transition:flex-basis .22s ease,width .22s ease,opacity .18s ease,padding .22s ease}
+/* El menu se pega justo debajo de la barra de filtros. La barra crece a dos
+   filas en ventanas estrechas, asi que su alto real llega por --bar-h (lo
+   mide un ResizeObserver); el 66px fijo de antes dejaba el menu bajo la
+   segunda fila. z-index por debajo de la barra (40) por si se tocan.      */
+#sidenav{flex:0 0 234px;width:234px;position:sticky;top:calc(var(--bar-h,61px) + 6px);z-index:30;align-self:flex-start;max-height:calc(100vh - var(--bar-h,61px) - 24px);overflow-y:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 10px;transition:flex-basis .22s ease,width .22s ease,opacity .18s ease,padding .22s ease}
 body.nav-collapsed #sidenav{flex-basis:0;width:0;opacity:0;padding-left:0;padding-right:0;overflow:hidden;pointer-events:none;border-width:0}
 /* Boton de ocultar: primera fila DENTRO del panel, sobre los grupos. */
 .navtoggle{display:flex;align-items:center;gap:9px;width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;margin-bottom:6px;transition:.15s}
@@ -1382,6 +1386,11 @@ function rlBlock(b){
 /* ---- Panel lateral (B4) ----------------------------------------------------
    ECharts NO se reajusta solo cuando cambia el ancho de su contenedor: hay que
    llamar a resize() de cada instancia al terminar la transicion CSS (220 ms).  */
+/* Alto real de la barra de filtros -> --bar-h, para que el menu lateral se
+   pegue debajo de ella tenga una fila o dos.                              */
+(function(){var bar=document.getElementById('bar');if(!bar)return;
+  var set=function(){document.documentElement.style.setProperty('--bar-h',bar.offsetHeight+'px')};
+  set();if(window.ResizeObserver)new ResizeObserver(set).observe(bar);else window.addEventListener('resize',set);})();
 function resizeCharts(){
   if(!window.echarts)return;
   document.querySelectorAll('.chart').forEach(function(el){
