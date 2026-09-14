@@ -678,6 +678,15 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 ## 14. Historial de cambios del sistema
 
+- **2026-09-14** — **Los seis hallazgos restantes del detector de Impeccable, aplicados** (a petición de
+  Roberts: mantener naranja y azul, hacer el resto): fuera todo borde de color de más de 1 px (cabecera,
+  KPIs, títulos de informe, recuadros, tarjeta de café — el naranja y el azul quedan en botones, chips,
+  foco, KPI héroe, slider y gráficos; sólo el indicador del menú conserva 3 px por ser navegación);
+  borde-o-sombra: lo que flota (desplegables, tooltip, saludo, puerta, bienvenida) lleva sombra neutra
+  sin borde, lo que reposa lleva borde con sombra tenue neutra; **Inter → IBM Plex Sans** (400–700; los
+  `800` pasan a `700`). Detector: **0 hallazgos**. Y el bug del botón del menú: `#navopen` era `fixed` a
+  96 px y tapaba el filtro "Meses" al cerrar el menú; ahora es el **primer elemento de la barra de
+  filtros** (sticky), ocupa sitio real y sigue visible al hacer scroll, también en móvil.
 - **2026-09-13** — **Pasada completa con nueve skills y nuevo `NORMAS_SISTEMA.md`** (impeccable,
   find-animation-opportunities, animate, mobile-app-ui-design, mobile-android-design, clean-code, copy-editing,
   last30days, find-skills). Lo aplicado: **pirámide invertida** en Resumen (el calendario por día pasa del

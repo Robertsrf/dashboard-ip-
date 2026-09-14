@@ -105,10 +105,18 @@ Secciones que ya cumplían y no se tocaron: Tendencia, Vendedores, Sectores, Pro
 - **Iconos: o un sistema dibujado en un trazo, o ninguno.** Emoji como icono, fuera. (Se quitaron del menú
   lateral y de los títulos de tarjeta. Los nombres de hoja del Excel de riesgo que traen emoji son dato del
   usuario y se respetan.)
-- **Deuda reconocida, decisión pendiente**: el borde izquierdo de 4 px en `--brand` sobre KPIs, botones del
-  menú activos y títulos del informe es identidad del incumbente pero un "default de categoría" según el
-  suelo de calidad; los *sparklines* en las tarjetas KPI, lo mismo. Se mantienen hasta decidir un
-  reemplazo, no se extienden a bloques nuevos.
+- **Sin bordes gruesos de color** (aplicado el 2026-09-14). Ningún borde de más de 1 px lleva color de
+  marca en tarjetas, KPIs, cabecera, informes ni recuadros. El naranja y el azul viven en **botones, chips,
+  pestaña activa, anillo de foco, pulgar del slider, KPI héroe y series de gráfico**, no en filetes. Los
+  títulos de informe llevan un filete inferior de 1 px en `--line`; los recuadros de nota, borde de 1 px del
+  mismo tinte que su fondo. La única excepción es el indicador de 3 px del botón activo del menú, que es
+  una affordance de navegación, no decoración. Los *sparklines* de los KPIs se mantienen: son dato.
+- **Borde o sombra, no ambos.** Superficies en reposo (tarjetas, KPIs, menú): borde de 1 px + sombra de
+  reposo neutra muy tenue (`--shadow`). Superficies que flotan (menú desplegable, tooltip, saludo, puerta
+  de acceso, bienvenida): **sombra sin borde**, siempre `rgba(0,0,0,…)`, nunca teñida de azul.
+- **Tipografía: IBM Plex Sans** (400 / 500 / 600 / 700). Reemplaza a Inter (2026-09-14): numerales
+  tabulares de fábrica, diacríticos del español impecables y fuera de la lista de familias que el detector
+  considera sobreusadas. Su peso máximo es 700, así que no se declara `800` en ningún sitio.
 
 ---
 
@@ -133,8 +141,11 @@ Reglas:
 - **Gráficos en compacta**: etiquetas de eje a 9–10 px con `hideOverlap`, ventana de 8 barras con
   `dataZoom` deslizable, leyendas abajo y con scroll (`type:'scroll'`), tooltips `confine:true`. La
   responsividad de ECharts **no es automática**: cada gráfico nuevo se prueba en 375 px de ancho.
-- **Cajón lateral**: se cierra al elegir sección y con el scrim; el botón de abrir siempre visible salvo con
-  el cajón abierto. Lo primario en la pantalla es leer, no navegar: no se añade barra inferior.
+- **Cajón lateral**: se cierra al elegir sección y con el scrim. **El botón de abrirlo vive dentro de la
+  barra de filtros**, como primer elemento: ocupa sitio real y, como la barra es sticky, sigue a mano al
+  hacer scroll. (Flotante y fijo a 96 px, tapaba el filtro "Meses" al cerrar el menú.) Nada flota sobre
+  contenido salvo tooltips y menús desplegables. Lo primario en la pantalla es leer, no navegar: no se
+  añade barra inferior.
 - **Escena de uso real**: gerentes mirando el teléfono en la calle, con sol. Contraste de texto ≥ 4.5:1 y
   nada de información sólo por color (el ▲/▼ va siempre con signo y cifra).
 
@@ -268,11 +279,9 @@ pulido abiertos.
 3. **Escala tipográfica y de espaciado** (20 tamaños → 6; espaciados fuera de rejilla) → migrar por bloque.
 4. **`build_dashboard.main`** → partir en `cargar_datos / armar_payload / armar_informes / adjuntos /
    renderizar`.
-5. **Borde izquierdo de 4 px y sparklines en KPIs** → decidir si son identidad o default heredado.
-6. **`execFull` / `riskFull`** viajan cifrados en cada `index.html` y nadie los renderiza (`printFull` y
+5. **`execFull` / `riskFull`** viajan cifrados en cada `index.html` y nadie los renderiza (`printFull` y
    `downloadDoc` nunca se llaman) → o botón, o fuera del payload.
-7. **Iconos**: si algún día hacen falta, un set SVG de un trazo (Lucide), no emoji ni glifos.
-8. **Lo que el detector de Impeccable sigue marcando y se acepta a sabiendas** (6 hallazgos): borde
-   lateral de 4 px en `--brand` (identidad), tipografía Inter (cambiarla es un rediseño), borde de 1 px +
-   sombra en tarjetas y en la bienvenida, sombra del tooltip. Se revisan si se decide un rediseño; no se
-   parchean uno a uno.
+6. **Iconos**: si algún día hacen falta, un set SVG de un trazo (Lucide), no emoji ni glifos.
+
+El detector de Impeccable pasa limpio (**0 hallazgos** el 2026-09-14, desde 19 el día anterior). Es la
+línea base: cualquier edición de `template.html` que lo haga subir se corrige antes de subir.
