@@ -103,9 +103,14 @@ def limpiar(df):
     f['GRUPONOM'] = f['GRUPO'].map(GRUPOS)
     f['NETO'] = f['SUMACANT'] * f['PRECIOFIN']           # venta neta: descuenta lo devuelto
     f['DEVM'] = f['CNTDEVUELT'] * f['PRECIOFIN']         # devoluciones en dolares
-    f['COSTO'] = f['SUMACANT'] * f['COSTOUNIT']
-    f['MARGEN'] = f['NETO'] - f['COSTO']
+    # Margen bruto = (venta neta - costo de lo vendido) / venta neta, solo sobre ventas con precio y con costo
+    # registrado (CONTEXTO_CALEB.md C4 y C10). Las salidas a $0 no son venta ni costo de ventas.
     f['PRECIO0'] = f['PRECIOFIN'] <= 0                   # salidas sin cobro
+    base = (f['PRECIOFIN'] > 0) & (f['COSTOUNIT'] > 0)
+    f['VENTAMG'] = f['NETO'].where(base, 0.0)            # venta que entra al margen
+    f['COSTO'] = (f['SUMACANT'] * f['COSTOUNIT']).where(base, 0.0)   # costo de lo vendido
+    f['MARGEN'] = f['VENTAMG'] - f['COSTO']
+    f['SINCOSTO'] = f['NETO'].where((f['PRECIOFIN'] > 0) & (f['COSTOUNIT'] <= 0), 0.0)
     f['SERIE'] = f['DOCUMENTO'].str.startswith('*').map({True: 'Serie *', False: 'Numérica'})
     return f, saltos
 
@@ -130,8 +135,9 @@ def resumen(f):
     return {
         'filas': len(f), 'desde': f.FECHADOC.min().date(), 'hasta': f.FECHADOC.max().date(),
         'dias_venta': f.FECHADOC.nunique(), 'bruto': round(f.MONTONETO.sum(), 2),
-        'devoluciones': round(f.DEVM.sum(), 2), 'neto': round(neto, 2), 'costo': round(f.COSTO.sum(), 2),
-        'margen_pct': round(f.MARGEN.sum() / neto * 100, 2), 'facturas': int((docs > 0).sum()),
+        'devoluciones': round(f.DEVM.sum(), 2), 'neto': round(neto, 2), 'costo_ventas': round(f.COSTO.sum(), 2),
+        'margen_bruto': round(f.MARGEN.sum(), 2), 'margen_pct': round(f.MARGEN.sum() / f.VENTAMG.sum() * 100, 2),
+        'ventas_sin_costo': round(f.SINCOSTO.sum(), 2), 'facturas': int((docs > 0).sum()),
         'clientes': f.CLI.nunique(), 'sku_vendidos': f[f.SUMACANT > 0].CODIGO.astype(str).nunique(),
         'salidas_precio0_costo': round((f[f.PRECIO0].SUMACANT * f[f.PRECIO0].COSTOUNIT).sum(), 2),
     }

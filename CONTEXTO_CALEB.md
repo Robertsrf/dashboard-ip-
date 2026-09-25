@@ -136,8 +136,26 @@ un 9,9 % en el corte 1. La definición elegida coincide con la de IP (venta neta
 | Venta bruta | Σ `MONTONETO` | $188 668,54 |
 | Devoluciones | Σ `CNTDEVUELT × PRECIOFIN` | $16 957,61 (9,0 %) |
 | **Venta neta** | Σ `SUMACANT × PRECIOFIN` | **$171 710,84** |
-| Costo | Σ `SUMACANT × COSTOUNIT` | $129 892,10 |
-| **Margen bruto** | neto − costo | **$41 818,73 (24,4 %)** |
+| Venta que entra al margen | venta neta de líneas con `PRECIOFIN > 0` y `COSTOUNIT > 0` | $171 689,50 |
+| Costo de lo vendido | Σ `SUMACANT × COSTOUNIT` de esas mismas líneas | $126 300,81 |
+| **Margen bruto** | (venta − costo de lo vendido) ÷ venta | **$45 388,69 (26,44 %)** |
+
+**Cómo se calcula el margen bruto, y por qué así** (revisado el 2026-09-25 a pedido de Roberts). La
+definición contable es *(venta neta − costo de la mercancía vendida) ÷ venta neta*: la venta neta ya
+descuenta devoluciones y descuentos, y el costo es solo el de lo que efectivamente se vendió (lo devuelto
+vuelve al inventario). Se verificó en el archivo que esto es aplicable tal cual:
+- `PRECIOFIN = PRECIOUNIT − DSCTOUNIT` en el 100 % de las líneas: el descuento ya está en el precio.
+- `MONTOTOTAL = MONTONETO` en el 100 % y el mismo producto se vende al mismo precio en líneas con IVA 16 y
+  sin IVA: **los montos no traen IVA**, no hay impuesto que quitar.
+- `COSTOUNIT` cambia de fecha a fecha en 168 productos: es el **costo del momento de la venta**, el correcto
+  para el costo de ventas (no la foto del costo de hoy).
+- El margen es **ponderado** (Σ margen ÷ Σ venta), nunca el promedio de márgenes por línea.
+- Mediana del margen por línea 35,8 %; percentiles 5–95: 20 %–54 %. Solo 7 líneas ($32) quedan fuera de
+  −10 %…70 %: 3 bajo costo (reales, se quedan) y 4 con costo nulo o casi nulo (ver C10).
+
+Hasta el 2026-09-25 el dashboard metía el costo de las salidas a $0 en el costo de ventas y daba 24,35 %:
+2,09 puntos de menos. Con la regla correcta el margen es estable por mes (julio 26,04 % · agosto 26,65 % ·
+septiembre 26,46 %) y **Pinturas pasa de −18,2 % a 32,7 %**, porque casi todas sus salidas a $0 caían ahí.
 
 Bruto − devoluciones difiere del neto en céntimos ($0,09) por el redondeo que el ERP aplica a `MONTONETO`.
 
@@ -147,11 +165,14 @@ facturas anuladas completas**, 148 de ellas de V4.
 
 **C3 · El período lo dice `FECHADOC.max()`, nunca el nombre del archivo** (igual que el I1 de IP).
 
-**C4 · Salidas a precio $0 se muestran aparte.** Líneas con `PRECIOFIN = 0` y costo > 0: la mercancía sale sin
-cobro. Se cuentan en el margen (son costo real) pero se muestran en su propia tarjeta. Corte 1: 253 líneas
-con precio $0, de las cuales **241 sacaron mercancía** (las otras 12 se devolvieron o no tenían costo):
-**$3 591,29 a costo**; el 89 % a un mismo cliente y el 81 % registradas por V4. Sin ellas el margen sería
-26,4 %. Hay además 4 líneas con precio > 0 por debajo del costo; 3 sacaron mercancía ($10,61 de pérdida).
+**C4 · Las salidas a precio $0 NO son venta ni costo de ventas: van aparte.** Líneas con `PRECIOFIN = 0`: la
+mercancía sale sin cobro (autoconsumo, retiro del dueño, obsequio). Contablemente eso no es una venta, así que
+su costo **no entra en el margen bruto**; se registra como gasto o como retiro del socio, y en Venezuela el
+Reglamento de la Ley de ISLR (art. 177) exige llevar los retiros y el autoconsumo aparte de las ventas. El
+dashboard las controla en su propia tarjeta y tabla. Corte 1: 253 líneas con precio $0, de las cuales **241
+sacaron mercancía** (las otras 12 se devolvieron o no tenían costo): **$3 591,29 a costo**; el 89 % a un mismo
+cliente y el 81 % registradas por V4. Las 4 líneas con precio > 0 por debajo del costo **sí** son ventas y
+entran al margen (3 sacaron mercancía: $10,61 de pérdida).
 
 **C5 · La serie `*` es de facturas fiscales y cuenta como venta normal** (confirmado por Roberts el
 2026-09-24). Aparece el 14-ago-2026 en la caja 4, todas sus líneas con IVA 16 %, y 158 de sus 161 facturas
@@ -168,6 +189,11 @@ devolución. El dashboard permite filtrar por serie.
 existencia histórica. "Agotado que se vende" = producto con venta en el período y `EXISTENCIA ≤ 0`.
 Corte 1: 295 productos, que suman $20 322 de venta. El cemento gris (N.º 1) tenía 419 sacos y vende 39 por
 día de venta: unos 11 días.
+
+**C10 · Una venta sin costo registrado no entra al margen.** `PRECIOFIN > 0` con `COSTOUNIT = 0` daría 100 %
+de margen falso. Corte 1: 3 líneas del 24-jul, $21,34 (tirro amarillo y machete COVO, V4). Cuentan en la venta
+neta pero no en el cálculo del margen, y la tabla de Rentabilidad las muestra. Si en un corte pasan del 1 % de
+la venta, es un problema de costos cargados en el ERP: avisar.
 
 **C9 · Comparaciones entre meses por venta diaria.** Julio tiene 23 días de venta (arranca el 6), agosto 26 y
 el último mes casi siempre está a medias. Comparar totales mensuales engaña; se compara `neto ÷ días con
@@ -220,9 +246,9 @@ Cuando Roberts suba un archivo nuevo a `Informes IP / Tiendas caleb`:
 
 ## 7. Cifras de control por corte
 
-| Corte | `hasta` | Filas | Neto | Margen | Facturas | Clientes | Devol. | Salidas $0 (costo) |
+| Corte | `hasta` | Filas | Neto | Margen bruto | Facturas | Clientes | Devol. | Salidas $0 (costo) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | 2026-09-07 | 4 726 | 171 710,84 | 24,35 % | 2 216 | 1 244 | 9,0 % | 3 591,29 |
+| 1 | 2026-09-07 | 4 726 | 171 710,84 | 26,44 % ($45 388,69) | 2 216 | 1 244 | 9,0 % | 3 591,29 |
 
 Venta neta por mes (corte 1): julio 52 819 (23 días) · agosto 93 039 (26 días) · septiembre 25 853 (6 días).
 
@@ -280,7 +306,8 @@ $0 con las fórmulas de §4.
 ### 9.4 Lo que hace el front
 
 - **8 indicadores:** venta neta · venta por día de venta (con cierre proyectado del mes en curso: lo vendido
-  en el mes + ritmo × días de lunes a sábado que faltan) · margen bruto (y sin salidas a $0) · ticket ·
+  en el mes + ritmo × días de lunes a sábado que faltan) · margen bruto (C1, C4, C10; las salidas a $0 se
+  informan aparte) · ticket ·
   facturas (y anuladas) · clientes (y nuevos) · devoluciones · agotados que se venden.
 - **Comparador «Comparar con»**, en la barra de fechas: el mes anterior por día (por defecto) · el período
   anterior del mismo largo · el mismo tramo del mes pasado · sin comparar. Los flujos se comparan **por día
