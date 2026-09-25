@@ -138,7 +138,12 @@ def main():
     logo_svg = open(logo_path, encoding="utf-8").read() if os.path.exists(logo_path) else '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#24205b" stroke-width="5"/><text x="50" y="66" font-size="46" font-weight="700" fill="#ff4f20" text-anchor="middle" font-family="Georgia,serif">IP</text></svg>'
     ve_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ve_states.geojson")
     ve_geo = open(ve_path, encoding="utf-8").read() if os.path.exists(ve_path) else '{"type":"FeatureCollection","features":[]}'
-    out_html = (TEMPLATE.replace("__VERSION__", html.escape(version))
+    # Puerta del Grupo IP (compartida con Caleb): va primero porque trae su propio __LOGO_SVG__
+    puerta = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "puerta.html"), encoding="utf-8").read()
+    puerta = (puerta.replace("__PUERTA_AQUI__", "ip").replace("__PUERTA_ACENTO__", "#c93608")
+                    .replace("__PUERTA_LOGO__", "__LOGO_SVG__").replace("__PUERTA_NOMBRE__", "Distribuidora y Suministros IP"))
+    out_html = (TEMPLATE.replace("__PUERTA__", puerta)
+                        .replace("__VERSION__", html.escape(version))
                         .replace("__ENC_JSON__", enc_json)
                         .replace("__VE_GEO__", ve_geo)
                         .replace("__LOGO_SVG__", logo_svg))

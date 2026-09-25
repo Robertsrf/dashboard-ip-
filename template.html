@@ -160,16 +160,8 @@ table.rt th{background:var(--navy);color:#fff;text-align:left;padding:8px 10px;f
 table.rt th.num,table.rt td.num{text-align:right;font-variant-numeric:tabular-nums}
 table.rt td{padding:7px 10px;border-bottom:1px solid #eef1f7}
 table.rt tbody tr:nth-child(even){background:#f8f9fc}
-#gate{position:fixed;inset:0;z-index:200;background:linear-gradient(135deg,#f5f6fa,#e9ebf4);display:flex;align-items:center;justify-content:center;padding:20px}
-.gatecard{background:#fff;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.18);padding:34px 32px 26px;max-width:380px;width:100%;text-align:center}
-.gatelogo{width:112px;height:112px;margin:0 auto 8px}.gatelogo svg{width:112px;height:112px}
-.gatecard h2{color:var(--navy);font-size:19px;margin-bottom:4px}
-.gatecard>p{color:var(--muted);font-size:12.5px;margin-bottom:18px}
-#pin{width:100%;text-align:center;letter-spacing:8px;font-size:22px;font-weight:700;padding:12px;border:2px solid var(--line);border-radius:12px;color:var(--navy)}
-#pin:focus{outline:none;border-color:var(--brand)}
-#enter{width:100%;margin-top:12px;background:var(--brand-ink);color:#fff;border:none;border-radius:12px;padding:13px;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
-#enter:hover{opacity:.93}
-.gerr{color:var(--neg);font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
+/* La puerta (eleccion de empresa + PIN) vive en puerta.html, compartida con Caleb */
+.swco{font-size:12px;font-weight:600;color:var(--brand-ink);text-decoration:underline;text-underline-offset:3px}
 #greet{position:fixed;top:14px;right:14px;z-index:150;background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-size:13px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.24);transition:opacity .6s}
 body.locked{overflow:hidden}
 .rcover{border:2px solid var(--navy);border-radius:12px;padding:18px 20px;margin-bottom:18px;background:var(--panel2)}
@@ -217,7 +209,6 @@ body.locked{overflow:hidden}
   .tabs button{padding:11px 12px;font-size:14px}
   .rep{padding:16px 14px}.rcover h1,.rep h1{font-size:18px}.rep h2{font-size:15px}
   .repkpis{grid-template-columns:1fr 1fr}.rephead{flex-direction:column}.repbtns{width:100%}
-  .gatecard{padding:26px 20px}.gatelogo{width:92px;height:92px}.gatelogo svg{width:92px;height:92px}
   #greet{left:10px;right:10px;top:auto;bottom:10px;text-align:center}
 }
 #welcome{position:fixed;inset:0;z-index:300;background:rgba(15,20,40,.35);display:flex;align-items:center;justify-content:center;transition:opacity .6s}
@@ -262,14 +253,14 @@ body.locked{overflow:hidden}
 </style>
 </head>
 <body>
-<div id="gate"><div class="gatecard"><div class="gatelogo">__LOGO_SVG__</div><h2>Distribuidora y Suministros IP</h2><p>Inteligencia de Ventas · acceso restringido</p><input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off"><button id="enter">Entrar</button><div class="gerr" id="gerr"></div></div></div>
+__PUERTA__
 <div id="greet" style="display:none"></div>
 <div class="top">
   <div class="brand">
     <div class="logo">__LOGO_SVG__</div>
     <div><h1>Distribuidora y Suministros IP</h1><div class="meta" id="meta"></div></div>
   </div>
-  <div class="status"><div><span class="dot"></span>Datos en vivo · <span id="ver"></span></div><div class="mini">Autor: Ing. Roberts Flores</div></div>
+  <div class="status"><div><span class="dot"></span>Datos en vivo · <span id="ver"></span></div><div class="mini">Autor: Ing. Roberts Flores · <a class="swco" href="index.html">Cambiar de empresa</a></div></div>
 </div>
 
 <div class="bar" id="bar">
@@ -1418,7 +1409,6 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')closeNavOnMo
 document.body.classList.add('locked');
 document.getElementById('enter').onclick=()=>boot(document.getElementById('pin').value.trim());
 document.getElementById('pin').addEventListener('keydown',function(e){if(e.key==='Enter')boot(e.target.value.trim());});
-try{document.getElementById('pin').focus();}catch(e){}
 </script>
 </body>
 </html>

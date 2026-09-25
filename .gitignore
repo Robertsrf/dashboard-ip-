@@ -13,3 +13,6 @@ pipeline/*.doc
 pipeline/*.pkl
 __pycache__/
 *.pyc
+
+# Capturas de revision de impeccable: muestran cifras reales de venta
+.impeccable/review/

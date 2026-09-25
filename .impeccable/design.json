@@ -1,0 +1,742 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-25T04:48:37+00:00",
+  "title": "Design System: Tiendas Caleb · Inteligencia de Ventas",
+  "extensions": {
+    "colorMeta": {
+      "caleb-blue": {
+        "role": "primary",
+        "displayName": "Azul Caleb",
+        "canonical": "#0F4F9C",
+        "tonalRamp": [
+          "#000A20",
+          "#002350",
+          "#033F84",
+          "#2360AE",
+          "#4683D4",
+          "#69A7FB",
+          "#A9CCFC",
+          "#E5EFFE"
+        ]
+      },
+      "caleb-blue-soft": {
+        "role": "primary",
+        "displayName": "Azul Caleb suave",
+        "canonical": "#E8EFF9",
+        "tonalRamp": [
+          "#070B12",
+          "#20252D",
+          "#3D424A",
+          "#5C626A",
+          "#7D838C",
+          "#9FA6AF",
+          "#C3CAD3",
+          "#E8EFF9"
+        ]
+      },
+      "caleb-blue-line": {
+        "role": "primary",
+        "displayName": "Filete azul",
+        "canonical": "#C9D8EE",
+        "tonalRamp": [
+          "#030B19",
+          "#1A2636",
+          "#374355",
+          "#556275",
+          "#768397",
+          "#98A6BB",
+          "#BCCAE0",
+          "#E5EFFE"
+        ]
+      },
+      "caleb-blue-pale": {
+        "role": "primary",
+        "displayName": "Azul pálido (período en curso)",
+        "canonical": "#A9C0E3",
+        "tonalRamp": [
+          "#000A22",
+          "#132540",
+          "#2F4360",
+          "#4E6281",
+          "#6E84A4",
+          "#90A6C9",
+          "#B4CBEE",
+          "#E6EFFE"
+        ]
+      },
+      "ink-navy": {
+        "role": "neutral",
+        "displayName": "Tinta azul marino",
+        "canonical": "#0F1B33",
+        "tonalRamp": [
+          "#020920",
+          "#18243D",
+          "#34425D",
+          "#52617E",
+          "#7383A1",
+          "#95A6C5",
+          "#B8CAEB",
+          "#E6EFFF"
+        ]
+      },
+      "slate-muted": {
+        "role": "neutral",
+        "displayName": "Pizarra apagada",
+        "canonical": "#5E6A7E",
+        "tonalRamp": [
+          "#040B1A",
+          "#1B2536",
+          "#374255",
+          "#566276",
+          "#778398",
+          "#99A6BC",
+          "#BCCAE1",
+          "#E6EFFE"
+        ]
+      },
+      "panel-white": {
+        "role": "neutral",
+        "displayName": "Blanco panel",
+        "canonical": "#FFFFFF",
+        "tonalRamp": [
+          "#0B0B0B",
+          "#252525",
+          "#424242",
+          "#616161",
+          "#828282",
+          "#A5A5A5",
+          "#C9C9C9",
+          "#EEEEEE"
+        ]
+      },
+      "page-gray": {
+        "role": "neutral",
+        "displayName": "Gris de página",
+        "canonical": "#F3F5F8",
+        "tonalRamp": [
+          "#0A0B0D",
+          "#242527",
+          "#404244",
+          "#606164",
+          "#818285",
+          "#A3A5A8",
+          "#C7C9CC",
+          "#EDEFF1"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Filete",
+        "canonical": "#E2E6EC",
+        "tonalRamp": [
+          "#090B0F",
+          "#22252A",
+          "#3F4247",
+          "#5E6167",
+          "#7F8388",
+          "#A1A5AB",
+          "#C5C9CF",
+          "#EBEFF5"
+        ]
+      },
+      "row-rule": {
+        "role": "neutral",
+        "displayName": "Filete de fila",
+        "canonical": "#F0F2F6",
+        "tonalRamp": [
+          "#0A0B0E",
+          "#242528",
+          "#404245",
+          "#5F6165",
+          "#808286",
+          "#A3A5A9",
+          "#C7C9CD",
+          "#ECEEF2"
+        ]
+      },
+      "neutral-chip": {
+        "role": "neutral",
+        "displayName": "Gris de chip neutro",
+        "canonical": "#EDF0F4",
+        "tonalRamp": [
+          "#090B0E",
+          "#232528",
+          "#404245",
+          "#5F6165",
+          "#808286",
+          "#A2A5A9",
+          "#C6C9CD",
+          "#ECEFF3"
+        ]
+      },
+      "neutral-chip-ink": {
+        "role": "neutral",
+        "displayName": "Tinta de chip neutro",
+        "canonical": "#475569",
+        "tonalRamp": [
+          "#030B1B",
+          "#192637",
+          "#354356",
+          "#546277",
+          "#748499",
+          "#97A6BD",
+          "#BACBE2",
+          "#E5EFFE"
+        ]
+      },
+      "caleb-red": {
+        "role": "secondary",
+        "displayName": "Rojo Caleb",
+        "canonical": "#D7191F",
+        "tonalRamp": [
+          "#1F0000",
+          "#4B0305",
+          "#7D0E10",
+          "#B80111",
+          "#E8312F",
+          "#FD7468",
+          "#FDB4AB",
+          "#FEE9E6"
+        ]
+      },
+      "caleb-red-ink": {
+        "role": "secondary",
+        "displayName": "Rojo tinta",
+        "canonical": "#B3141C",
+        "tonalRamp": [
+          "#1E0001",
+          "#4C0105",
+          "#7E0910",
+          "#B4161D",
+          "#DD4540",
+          "#F9786E",
+          "#FEB3AB",
+          "#FEE9E6"
+        ]
+      },
+      "caleb-red-soft": {
+        "role": "secondary",
+        "displayName": "Rojo suave",
+        "canonical": "#FDECEC",
+        "tonalRamp": [
+          "#120808",
+          "#2E2222",
+          "#4B3E3E",
+          "#6B5D5D",
+          "#8D7E7E",
+          "#B0A1A1",
+          "#D5C5C5",
+          "#FBEAEA"
+        ]
+      },
+      "gain-green": {
+        "role": "tertiary",
+        "displayName": "Verde mejora",
+        "canonical": "#15803D",
+        "tonalRamp": [
+          "#011003",
+          "#022E11",
+          "#095024",
+          "#167438",
+          "#379954",
+          "#5EBD76",
+          "#83E299",
+          "#C7FFD1"
+        ]
+      },
+      "gain-green-soft": {
+        "role": "tertiary",
+        "displayName": "Verde suave",
+        "canonical": "#E3F4E8",
+        "tonalRamp": [
+          "#040E07",
+          "#1C2920",
+          "#38463C",
+          "#57655B",
+          "#78877C",
+          "#9AAA9F",
+          "#BECEC2",
+          "#E3F4E8"
+        ]
+      },
+      "review-amber": {
+        "role": "tertiary",
+        "displayName": "Ámbar revisar",
+        "canonical": "#9A5B00",
+        "tonalRamp": [
+          "#150800",
+          "#371E02",
+          "#5E380A",
+          "#8B5202",
+          "#B27227",
+          "#D8954E",
+          "#FFB972",
+          "#FEEBD9"
+        ]
+      },
+      "review-amber-soft": {
+        "role": "tertiary",
+        "displayName": "Ámbar suave",
+        "canonical": "#FFF3DC",
+        "tonalRamp": [
+          "#110A00",
+          "#2D2412",
+          "#4A412E",
+          "#6A604C",
+          "#8C816C",
+          "#AFA48E",
+          "#D3C8B2",
+          "#F9EDD6"
+        ]
+      },
+      "series-ochre": {
+        "role": "tertiary",
+        "displayName": "Ocre de serie (Acero)",
+        "canonical": "#B7800F",
+        "tonalRamp": [
+          "#120900",
+          "#332103",
+          "#593C00",
+          "#815805",
+          "#AA7818",
+          "#D29937",
+          "#F8BE5F",
+          "#FEECD1"
+        ]
+      },
+      "series-cyan": {
+        "role": "tertiary",
+        "displayName": "Cian de serie (Jardín)",
+        "canonical": "#0891B2",
+        "tonalRamp": [
+          "#000E13",
+          "#012A36",
+          "#064A5B",
+          "#106C84",
+          "#0690B1",
+          "#44B4D6",
+          "#6DDAFD",
+          "#D8F4FE"
+        ]
+      },
+      "series-violet": {
+        "role": "tertiary",
+        "displayName": "Violeta de serie (Pinturas)",
+        "canonical": "#7C3AED",
+        "tonalRamp": [
+          "#0F002A",
+          "#2C0660",
+          "#4E02A3",
+          "#6F25DC",
+          "#8D5AFA",
+          "#A991F9",
+          "#CBC0FB",
+          "#EFECFF"
+        ]
+      },
+      "series-rose": {
+        "role": "tertiary",
+        "displayName": "Rosa de serie",
+        "canonical": "#C2417A",
+        "tonalRamp": [
+          "#1C010C",
+          "#480226",
+          "#780B43",
+          "#A62563",
+          "#CE4C84",
+          "#F671A7",
+          "#FDAFCA",
+          "#FFE7EF"
+        ]
+      },
+      "series-slate": {
+        "role": "tertiary",
+        "displayName": "Pizarra de serie",
+        "canonical": "#5B6B7F",
+        "tonalRamp": [
+          "#020B1A",
+          "#182637",
+          "#344356",
+          "#536376",
+          "#738499",
+          "#95A7BC",
+          "#B9CBE2",
+          "#E4F0FE"
+        ]
+      },
+      "chart-grid": {
+        "role": "neutral",
+        "displayName": "Rejilla de gráfico",
+        "canonical": "#EEF1F5",
+        "tonalRamp": [
+          "#090B0E",
+          "#232528",
+          "#404245",
+          "#5F6165",
+          "#808286",
+          "#A2A5A9",
+          "#C6C9CD",
+          "#ECEFF3"
+        ]
+      },
+      "chart-axis": {
+        "role": "neutral",
+        "displayName": "Eje de gráfico",
+        "canonical": "#CBD2DC",
+        "tonalRamp": [
+          "#070B12",
+          "#20252D",
+          "#3D424B",
+          "#5C626A",
+          "#7C838C",
+          "#9FA6AF",
+          "#C3CAD4",
+          "#E8EFF9"
+        ]
+      },
+      "door-ground": {
+        "role": "neutral",
+        "displayName": "Suelo de la puerta",
+        "canonical": "#EEF0F4",
+        "tonalRamp": [
+          "#0A0B0E",
+          "#242528",
+          "#404245",
+          "#5F6165",
+          "#808286",
+          "#A3A5A9",
+          "#C7C9CD",
+          "#ECEEF2"
+        ]
+      },
+      "door-ink": {
+        "role": "neutral",
+        "displayName": "Tinta de la puerta",
+        "canonical": "#15181E",
+        "tonalRamp": [
+          "#080B11",
+          "#22252B",
+          "#3F4249",
+          "#5E6169",
+          "#7E828A",
+          "#A1A5AD",
+          "#C5C9D2",
+          "#EAEFF7"
+        ]
+      },
+      "door-muted": {
+        "role": "neutral",
+        "displayName": "Apagado de la puerta",
+        "canonical": "#5E6573",
+        "tonalRamp": [
+          "#060B15",
+          "#1F2531",
+          "#3C424F",
+          "#5A616F",
+          "#7B8291",
+          "#9EA5B5",
+          "#C1C9D9",
+          "#E7EFFE"
+        ]
+      },
+      "door-line": {
+        "role": "neutral",
+        "displayName": "Filete de la puerta",
+        "canonical": "#D9DCE2",
+        "tonalRamp": [
+          "#090B0F",
+          "#232529",
+          "#404247",
+          "#5F6166",
+          "#808288",
+          "#A2A5AB",
+          "#C6C9CF",
+          "#EBEEF5"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Título de la cabecera; 18 px en compacta."
+      },
+      "kpi-value": {
+        "displayName": "Valor de KPI",
+        "purpose": "Cifra de cada indicador; 20 px en compacta."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Título de tarjeta (h3); 14 px en compacta."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Texto de alertas y franja Qué atender; 13 px en tablas."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Botones, segmentadores y pestañas (13,5 px en el menú)."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Etiqueta de KPI, chips, meta; hints en 12 px 400."
+      },
+      "table-head": {
+        "displayName": "Cabecera de tabla",
+        "purpose": "Mayúsculas 11 px; los grupos del menú usan tracking 0,8 px."
+      },
+      "door-headline": {
+        "displayName": "Puerta",
+        "purpose": "Pregunta de cada paso de la puerta, text-wrap balance."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-rest",
+        "value": "0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.035)",
+        "purpose": "--shadow: tarjetas, KPIs, menú lateral, franja de alertas (con borde de 1 px)."
+      },
+      {
+        "name": "shadow-dropdown",
+        "value": "0 12px 32px rgba(0,0,0,.16)",
+        "purpose": "Panel del segmentador, sin borde."
+      },
+      {
+        "name": "shadow-tooltip",
+        "value": "0 8px 20px rgba(0,0,0,.22)",
+        "purpose": "Globo de ayuda .tipfloat."
+      },
+      {
+        "name": "shadow-welcome",
+        "value": "0 24px 70px rgba(0,0,0,.24)",
+        "purpose": "Tarjeta de bienvenida tras el PIN."
+      },
+      {
+        "name": "shadow-door",
+        "value": "0 18px 48px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.05)",
+        "purpose": "Tarjeta de cada paso de la puerta."
+      }
+    ],
+    "motion": [
+      {
+        "name": "--ease-out",
+        "value": "cubic-bezier(.23,1,.32,1)",
+        "purpose": "La única curva de la UI (NORMAS §4)."
+      },
+      {
+        "name": "--t-press",
+        "value": "120ms",
+        "purpose": "Pulsación scale(.97) de botones, chips y pestañas."
+      },
+      {
+        "name": "--t-enter",
+        "value": "140ms",
+        "purpose": "Entrada de sección con @starting-style (opacidad + 4 px), sin salida."
+      },
+      {
+        "name": "--t-tip",
+        "value": "140ms",
+        "purpose": "Aparición del globo de ayuda (opacidad + 2 px)."
+      },
+      {
+        "name": "chart-first-paint",
+        "value": "260ms cubicOut",
+        "purpose": "Primera pintura de ECharts (CHART_BASE)."
+      },
+      {
+        "name": "chart-update",
+        "value": "180ms cubicOut",
+        "purpose": "Actualización de ECharts por filtro."
+      },
+      {
+        "name": "drawer",
+        "value": "220ms",
+        "purpose": "Cajón lateral en compacta y colapso del menú."
+      },
+      {
+        "name": "welcome",
+        "value": "350ms pop + 600ms fade",
+        "purpose": "Bienvenida tras el PIN, el único momento de deleite."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compacta",
+        "value": "max-width: 640px"
+      },
+      {
+        "name": "media",
+        "value": "max-width: 1050px"
+      },
+      {
+        "name": "expandida",
+        "value": "min-width: 1051px"
+      },
+      {
+        "name": "puerta-compacta",
+        "value": "max-width: 600px"
+      },
+      {
+        "name": "tactil",
+        "value": "pointer: coarse (objetivos de 44 px)"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Acción principal de una zona (Aplicar, Comparar).",
+      "html": "<button class=\"ds-btn\" type=\"button\">Comparar</button>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-btn{background:var(--brand);color:#fff;border:none;border-radius:9px;padding:8px 15px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:transform var(--t-press) var(--ease-out),background-color .15s ease,color .15s ease,border-color .15s ease;} .ds-btn:active{transform:scale(.97)} .ds-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}"
+    },
+    {
+      "name": "Limpiar todo",
+      "kind": "button",
+      "refersTo": "button-clear",
+      "description": "Borra todos los filtros; cierra la barra de filtros.",
+      "html": "<button class=\"ds-reset\" type=\"button\">Limpiar todo</button>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-reset{background:var(--navy);color:#fff;border:none;border-radius:10px;padding:9px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;transition:transform var(--t-press) var(--ease-out),background-color .15s ease,color .15s ease,border-color .15s ease;} .ds-reset:active{transform:scale(.97)} .ds-reset:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}"
+    },
+    {
+      "name": "Segmentador",
+      "kind": "input",
+      "refersTo": "filter-trigger",
+      "description": "Botón de la barra de filtros que abre la lista de una dimensión; el contador dice cuántos valores hay elegidos.",
+      "html": "<button class=\"ds-ms\" type=\"button\">Grupo <span class=\"ds-cnt\">2</span></button> <button class=\"ds-ms\" type=\"button\">Vendedor <span class=\"ds-cnt off\">Todos</span></button>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-ms{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;color:var(--navy);cursor:pointer;transition:transform var(--t-press) var(--ease-out),border-color .15s ease,box-shadow .15s ease} .ds-ms:hover{border-color:var(--brand);box-shadow:0 0 0 3px rgba(15,79,156,.1)} .ds-ms:active{transform:scale(.97)} .ds-ms:focus-visible{outline:2px solid var(--brand);outline-offset:2px;} .ds-cnt{background:var(--brand);color:#fff;border-radius:20px;font-size:11px;font-weight:700;padding:1px 7px} .ds-cnt.off{background:#EDF0F4;color:var(--muted)}"
+    },
+    {
+      "name": "Chip de filtro y atajos de fecha",
+      "kind": "chip",
+      "refersTo": "filter-chip",
+      "description": "Chip del filtro activo con su × y píldoras de atajo de fecha (la activa en azul sólido).",
+      "html": "<span class=\"ds-chip\">Grupo: <b>Pinturas</b><span class=\"ds-x\" role=\"button\" tabindex=\"0\" aria-label=\"Quitar\">×</span></span> <button class=\"ds-pill\" type=\"button\">Este mes</button> <button class=\"ds-pill on\" type=\"button\">Últimos 30 días</button>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-chip{display:inline-flex;align-items:center;gap:6px;background:var(--brand-soft);color:var(--brand-ink);border:1px solid var(--brand-line);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:600} .ds-chip b{font-weight:700;color:var(--navy)} .ds-x{cursor:pointer;opacity:.75} .ds-x:hover{opacity:1} .ds-pill{font:inherit;font-size:12px;font-weight:600;color:var(--brand-ink);background:#fff;border:1px solid var(--brand-line);border-radius:14px;padding:3px 10px;cursor:pointer;transition:transform var(--t-press) var(--ease-out),background-color .15s ease,color .15s ease,border-color .15s ease;} .ds-pill:hover{background:var(--brand-soft)} .ds-pill.on{background:var(--brand);color:#fff;border-color:var(--brand)} .ds-pill:active{transform:scale(.97)} .ds-pill:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}"
+    },
+    {
+      "name": "Indicador KPI y KPI héroe",
+      "kind": "card",
+      "refersTo": "kpi-card",
+      "description": "Etiqueta con (i), valor tabular, línea secundaria, delta con signo y flecha + comparación. Solo Venta neta es héroe.",
+      "html": "<div class=\"ds-kpis\"><div class=\"ds-kpi hero\"><div class=\"lab\">Venta neta <span class=\"info\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v6M12 7.6v.2\"/></svg></span></div><div class=\"val\">$48.215</div><div class=\"sub\">312 facturas</div><div class=\"delta\"><b><svg viewBox=\"0 0 24 24\" width=\"11\" height=\"11\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 15l6-6 6 6\"/></svg>+6,4 %</b><span>vs. mes anterior</span></div></div><div class=\"ds-kpi\"><div class=\"lab\">Margen bruto <span class=\"info\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.7\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v6M12 7.6v.2\"/></svg></span></div><div class=\"val\">27,9 %</div><div class=\"sub\">$13.452 de margen</div><div class=\"delta\"><b class=\"pos\"><svg viewBox=\"0 0 24 24\" width=\"11\" height=\"11\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M6 15l6-6 6 6\"/></svg>+1,2 pts</b><span>vs. mes anterior</span></div></div></div>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;background:var(--panel2);padding:12px} .ds-kpi{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px 12px;box-shadow:var(--shadow)} .ds-kpi .lab{font-size:12px;font-weight:600;color:var(--muted);display:flex;align-items:center;gap:6px} .ds-kpi .info{display:inline-flex;color:var(--muted);cursor:help} .ds-kpi .info:hover{color:var(--brand)} .ds-kpi .val{font-size:26px;font-weight:700;margin-top:4px;letter-spacing:-.4px;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.15} .ds-kpi .sub{font-size:12px;color:var(--muted);margin-top:2px} .ds-kpi .delta{font-size:12px;margin-top:6px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px} .ds-kpi .delta b{border-radius:20px;padding:1px 8px;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums} .ds-kpi .delta b.pos{background:var(--pos-soft);color:var(--pos)} .ds-kpi .delta span{color:var(--muted)} .ds-kpi.hero{background:var(--brand);border-color:var(--brand)} .ds-kpi.hero .lab,.ds-kpi.hero .sub,.ds-kpi.hero .delta span{color:rgba(255,255,255,.86)} .ds-kpi.hero .val,.ds-kpi.hero .info{color:#fff} .ds-kpi.hero .delta b{background:rgba(255,255,255,.18);color:#fff}"
+    },
+    {
+      "name": "Tarjeta de gráfico",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Una idea por tarjeta: título h3, hint de una línea y el gráfico o la tabla; el período en curso va rayado.",
+      "html": "<div class=\"ds-card\"><h3>Venta neta por semana</h3><div class=\"hint\">De lunes a sábado · la barra rayada es la semana en curso</div><div class=\"ds-bars\"><i style=\"height:60%\"></i><i style=\"height:78%\"></i><i style=\"height:70%\"></i><i class=\"part\" style=\"height:40%\"></i></div></div>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow)} .ds-card h3{font-size:15px;font-weight:700;letter-spacing:-.1px;color:var(--navy);margin:0} .ds-card .hint{font-size:12px;color:var(--muted);margin:2px 0 10px} .ds-bars{display:flex;align-items:flex-end;gap:14px;height:120px;border-bottom:1px solid #CBD2DC;padding:0 8px} .ds-bars i{flex:1;max-width:44px;background:var(--brand);border-radius:4px 4px 0 0} .ds-bars i.part{background:repeating-linear-gradient(45deg,rgba(15,79,156,.45) 0 1px,#A9C0E3 1px 6px)}"
+    },
+    {
+      "name": "Menú lateral",
+      "kind": "nav",
+      "refersTo": "nav-tab-active",
+      "description": "Navegación agrupada; la pestaña activa lleva el indicador de 3 px, la única línea gruesa del sistema.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Secciones\"><div class=\"grp\">General</div><button type=\"button\" class=\"on\">Resumen</button><button type=\"button\">Ventas en el tiempo</button><div class=\"grp\">Análisis</div><button type=\"button\">Rentabilidad</button></nav>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-nav{width:226px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:10px;display:flex;flex-direction:column;gap:2px} .ds-nav .grp{font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);padding:12px 10px 5px} .ds-nav .grp:first-child{padding-top:4px} .ds-nav button{display:block;width:100%;text-align:left;background:none;border:none;border-left:3px solid transparent;border-radius:0 9px 9px 0;padding:9px 12px;font:inherit;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer;transition:transform var(--t-press) var(--ease-out),background-color .15s ease,color .15s ease,border-color .15s ease;} .ds-nav button:hover{background:var(--panel2);color:var(--navy)} .ds-nav button.on{color:var(--brand-ink);background:var(--brand-soft);border-left-color:var(--brand)} .ds-nav button:active{transform:scale(.97)} .ds-nav button:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}"
+    },
+    {
+      "name": "Fila de Qué atender",
+      "kind": "custom",
+      "refersTo": "severity-urgente",
+      "description": "Severidad en palabra y color, la frase con el dato y el salto a la sección con el detalle.",
+      "html": "<div class=\"ds-al\"><span class=\"sev r\">Urgente</span><p>14 productos se venden y están hoy en existencia cero<small>$3.120 de venta en ellos.</small></p><button class=\"go\" type=\"button\">Ver detalle</button></div><div class=\"ds-al\"><span class=\"sev a\">Revisar</span><p>V3 deja 18,2 % de margen; la tienda, 27,9 %<small>$6.410 de venta.</small></p><button class=\"go\" type=\"button\">Ver detalle</button></div><div class=\"ds-al\"><span class=\"sev b\">Seguimiento</span><p>9 clientes frecuentes llevan más de 21 días sin comprar<small>Conviene llamarlos.</small></p><button class=\"go\" type=\"button\">Ver detalle</button></div>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-al{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 2px;border-bottom:1px solid #F0F2F6} .ds-al .sev{justify-self:start;border-radius:20px;padding:2px 10px;font-size:11.5px;font-weight:700;letter-spacing:.2px} .sev.r{background:var(--red-soft);color:var(--red-ink)} .sev.a{background:var(--amber-soft);color:var(--amber)} .sev.b{background:var(--brand-soft);color:var(--brand-ink)} .ds-al p{margin:0;font-size:13.5px;color:var(--ink);line-height:1.45} .ds-al small{display:block;font-size:12px;color:var(--muted);margin-top:1px} .ds-al .go{font:inherit;font-size:12.5px;font-weight:600;color:var(--brand-ink);background:none;border:1px solid var(--brand-line);border-radius:8px;padding:5px 10px;cursor:pointer;white-space:nowrap;transition:transform var(--t-press) var(--ease-out),background-color .15s ease,color .15s ease,border-color .15s ease;} .ds-al .go:hover{background:var(--brand-soft)} .ds-al .go:active{transform:scale(.97)} .ds-al .go:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}"
+    },
+    {
+      "name": "Globo de ayuda",
+      "kind": "custom",
+      "refersTo": "tooltip",
+      "description": "Único globo flotante, acotado a la pantalla; lo abre el (i) dibujado por hover o foco.",
+      "html": "<div class=\"ds-tip\">Venta menos devoluciones de todo lo filtrado. La diferencia compara la venta por día de venta con el período elegido en «Comparar con».</div>",
+      "css": ":host{--brand:#0F4F9C;--brand-ink:#0F4F9C;--brand-soft:#E8EFF9;--brand-line:#C9D8EE;--navy:#0F1B33;--ink:#0F1B33;--muted:#5E6A7E;--panel:#ffffff;--panel2:#F3F5F8;--line:#E2E6EC;--red:#D7191F;--red-ink:#B3141C;--red-soft:#FDECEC;--pos:#15803D;--pos-soft:#E3F4E8;--amber:#9A5B00;--amber-soft:#FFF3DC;--radius:12px;--shadow:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.035);--ease-out:cubic-bezier(.23,1,.32,1);--t-press:120ms;--t-enter:140ms;--t-tip:140ms;font-family:'IBM Plex Sans',system-ui,sans-serif} .ds-tip{max-width:280px;background:var(--navy);color:#fff;font-size:12px;font-weight:500;line-height:1.45;padding:9px 11px;border-radius:9px;box-shadow:0 8px 20px rgba(0,0,0,.22)}"
+    },
+    {
+      "name": "Paso del PIN (puerta)",
+      "kind": "input",
+      "refersTo": "door-pin-input",
+      "description": "Paso 2 de la puerta neutral del grupo; el acento es el de la empresa elegida.",
+      "html": "<div class=\"ds-gate\"><div class=\"ds-dcard\"><p class=\"dstep\">Grupo IP · Paso 2 de 2</p><h2>Tiendas Caleb</h2><p class=\"msg\">Escribe tu PIN de 6 dígitos</p><input class=\"ds-pin\" type=\"password\" inputmode=\"numeric\" maxlength=\"6\" placeholder=\"••••••\" aria-label=\"PIN de 6 dígitos\"><button class=\"ds-enter\" type=\"button\">Entrar</button></div></div>",
+      "css": ".ds-gate{--door-accent:#0F4F9C;background:#EEF0F4;padding:24px;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#15181E} .ds-dcard{background:#fff;border-radius:20px;box-shadow:0 18px 48px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.05);padding:26px 28px 24px;max-width:400px;margin:auto;text-align:center} .dstep{font-size:13px;color:#5E6573;margin:0 0 6px} .ds-dcard h2{font-size:21px;font-weight:700;letter-spacing:-.01em;line-height:1.25;margin:0} .msg{color:#5E6573;font-size:13px;margin:4px 0 16px} .ds-pin{width:100%;box-sizing:border-box;text-align:center;letter-spacing:8px;font:inherit;font-size:22px;font-weight:700;padding:12px;border:2px solid #D9DCE2;border-radius:12px;color:#15181E;background:#fff} .ds-pin:focus{outline:none;border-color:var(--door-accent)} .ds-enter{width:100%;margin-top:12px;background:var(--door-accent);color:#fff;border:none;border-radius:12px;padding:13px;font:inherit;font-size:15px;font-weight:700;cursor:pointer;transition:transform 120ms cubic-bezier(.23,1,.32,1),opacity .15s ease} .ds-enter:hover{opacity:.92} .ds-enter:active{transform:scale(.97)} .ds-enter:focus-visible{outline:2px solid var(--door-accent);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "El Panel Ejecutivo del Grupo",
+    "overview": "Una sola gramática de panel para todas las empresas del Grupo IP: menú lateral agrupado, barra de filtros pegajosa, barra de fechas con comparador, ocho indicadores en rejilla 4×2 y tarjetas blancas con una idea cada una. Un gerente que pasa de IP a Caleb no reaprende nada; lo único que cambia es el color de la empresa. La identidad de Caleb no está en un layout propio sino en su azul y su rojo aplicados con disciplina de roles.\n\nLa densidad es de herramienta de trabajo: tarjetas de 1 px de borde sobre un gris de página frío, tinta azul marino casi negra, números tabulares grandes y una sola familia tipográfica. La calma es deliberada: el color se reserva para lo que significa algo (dato, acción, alerta, mejora), de modo que un rojo en pantalla siempre es una alerta de verdad. Se lee sobre todo en el teléfono, con sol, así que el contraste y los objetivos táctiles son parte del mundo y no un ajuste posterior.\n\nLa puerta del grupo es neutral a propósito: gris, sin colores de ninguna empresa salvo el acento del botón Entrar y del foco, que toma el color de la empresa elegida.",
+    "keyCharacteristics": [
+      "Gramática compartida con IP; color por empresa, estructura común.",
+      "Roles de color estrictos: azul para datos y acciones, rojo solo para alertas y negativos, verde solo para mejoras.",
+      "Tarjetas blancas planas con filete de 1 px y sombra de reposo apenas perceptible.",
+      "IBM Plex Sans en todo, con numerales tabulares en cada cifra.",
+      "El período en curso se dibuja rayado: incompleto también sin color.",
+      "Iconos dibujados en SVG de un trazo; nunca glifos de texto ni emoji."
+    ],
+    "rules": [
+      {
+        "name": "La Regla de los Roles",
+        "body": "Azul es dato, acción, selección y foco. Rojo es alerta o negativo, nada más. Verde es mejora, nada más. Ninguna categoría de datos usa verde ni rojo.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Color que Sigue a la Entidad",
+        "body": "Un grupo, tipo de cliente o vendedor conserva su color en todos los gráficos, con o sin filtros; el color nunca sigue al puesto en el ranking.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Rayado",
+        "body": "El período incompleto (semana o mes en curso) se pinta en azul pálido con el rayado `HATCH`; se entiende como incompleto también en gris o impreso.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla de la Puerta Neutral",
+        "body": "La puerta del grupo no lleva colores de ninguna empresa en su suelo ni en sus tarjetas; solo el botón Entrar, el enlace de volver y el foco toman `--door-accent`.",
+        "section": "colors"
+      },
+      {
+        "name": "La Regla del Número Primero",
+        "body": "En un KPI o tarjeta la cifra es el elemento más grande, y toda cifra lleva `font-variant-numeric: tabular-nums`.",
+        "section": "typography"
+      },
+      {
+        "name": "La Regla de la Familia Única",
+        "body": "IBM Plex Sans de 400 a 700 en todo, gráficos incluidos (`CHART_BASE`). No se declara 800.",
+        "section": "typography"
+      },
+      {
+        "name": "La Regla de Borde o Sombra",
+        "body": "En reposo, filete de 1 px + `--shadow`; flotando, sombra sin borde. Nunca una sombra de color.",
+        "section": "elevation"
+      },
+      {
+        "name": "La Regla del Filete Fino",
+        "body": "Todo borde es de 1 px en `--line` o del tinte de su fondo. La única excepción es el indicador de 3 px en azul Caleb de la pestaña activa, que es navegación, no decoración.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do sacar todo color de los tokens de `:root` y de las constantes `C`, `GCOL`, `TCOL`, `PAL`.",
+      "Do usar azul Caleb para datos, acciones, selección y foco; rojo solo para alertas y negativos; verde solo para mejoras.",
+      "Do mantener el color de cada entidad (grupo, tipo de cliente, vendedor) igual en todos los gráficos.",
+      "Do dibujar el período en curso en azul pálido con el rayado `HATCH`.",
+      "Do acompañar cada delta de signo, flecha SVG y cifra, y cada severidad de su palabra.",
+      "Do usar 1 px de borde + `--shadow` en reposo y sombra sin borde en lo que flota.",
+      "Do llevar toda cifra en numerales tabulares y hacerla el elemento más grande de su bloque.",
+      "Do dar 44 px de objetivo táctil en `pointer:coarse` y respetar `prefers-reduced-motion` (NORMAS §3–§4).",
+      "Do usar iconos SVG de un solo trazo con `currentColor`."
+    ],
+    "donts": [
+      "Don't usar verde ni rojo como color de una categoría de datos.",
+      "Don't introducir un hex suelto en el CSS o en una opción de ECharts.",
+      "Don't poner bordes de más de 1 px con color de marca; la única excepción es el indicador de 3 px de la pestaña activa.",
+      "Don't teñir de azul las sombras de las superficies flotantes.",
+      "Don't poner kickers ni eyebrows sobre un título; el `h2`/`h3` se sostiene solo (NORMAS §2).",
+      "Don't usar glifos de texto ni emoji como iconos.",
+      "Don't dar a una empresa un layout propio: la gramática del panel es la misma en todo el grupo.",
+      "Don't poner colores de empresa en el suelo o las tarjetas de la puerta.",
+      "Don't declarar peso 800 ni otra familia tipográfica."
+    ]
+  }
+}

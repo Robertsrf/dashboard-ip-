@@ -6,6 +6,7 @@ Publica el dashboard en GitHub -> GitHub Pages lo despliega solo.
 Reemplaza el antiguo paso de "deploy a Netlify". La tarea automatica debe:
   1) descargar el Excel de Drive
   2) generar el dashboard:   python build_dashboard.py <xlsx> <version> index.html
+                             python build_caleb.py <xlsx> <version> caleb.html
   3) publicar:               python publish.py
 
 Requisitos del entorno donde corre la tarea:
@@ -23,8 +24,10 @@ def git(*args, check=True, capture=False):
     return subprocess.run(["git", *args], check=check,
                           capture_output=capture, text=True)
 
-# Solo publicamos los artefactos que cambian en cada corte.
-git("add", "index.html", "history.json")
+# Solo publicamos los artefactos que cambian en cada corte: IP (index.html) y Caleb (caleb.html).
+# Un archivo que no exista (p. ej. Caleb antes de su primer build) se salta, no rompe la publicacion.
+ARTEFACTOS = ["index.html", "history.json", "caleb.html", "history_caleb.json"]
+git("add", *[a for a in ARTEFACTOS if os.path.exists(a)])
 
 # ¿Hay algo que commitear?
 if git("diff", "--cached", "--quiet", check=False).returncode == 0:

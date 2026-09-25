@@ -1,0 +1,98 @@
+<!-- Puerta del Grupo IP: la comparten todas las empresas. build_dashboard.py (IP) y
+     build_caleb.py la insertan en el marcador PUERTA de su plantilla y rellenan cuatro
+     marcadores: la clave de la empresa de esta pagina (ip | caleb), el color del boton
+     Entrar, el logo del paso 2 y el nombre del paso 2. Ver los .replace de cada build.
+     Paso 1 elige la empresa; si es otra, se navega a su pagina con #entrar, que salta
+     directo al paso 2. Los ids pin / enter / gerr los usa boot() de cada plantilla:
+     no renombrarlos.                                                                  -->
+<style>
+#gate{--door-accent:__PUERTA_ACENTO__;position:fixed;inset:0;z-index:200;background:#EEF0F4;display:flex;align-items:center;
+  justify-content:center;padding:20px 16px;overflow-y:auto;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#15181E}
+.dcard{background:#fff;border-radius:20px;box-shadow:0 18px 48px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.05);padding:26px 28px 24px;
+  width:100%;max-width:600px;margin:auto}
+.dstep{font-size:13px;color:#5E6573;margin-bottom:6px;font-variant-numeric:tabular-nums}
+.dcard h2{font-size:21px;font-weight:700;letter-spacing:-.01em;line-height:1.25;text-wrap:balance}
+.cos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.co{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px;min-height:160px;
+  padding:16px 12px 14px;background:#fff;border:1px solid #D9DCE2;border-radius:14px;font:inherit;color:#15181E;text-align:center;
+  cursor:pointer;transition:transform 120ms cubic-bezier(.23,1,.32,1),border-color .15s ease,box-shadow .15s ease}
+.co img{width:100%;height:74px;object-fit:contain}
+.co b{font-size:13.5px;font-weight:600;line-height:1.3}
+.co .last{position:absolute;top:8px;right:8px;font-size:11px;font-weight:600;color:#3F4552;background:#EEF0F4;border-radius:20px;padding:1px 8px}
+@media(hover:hover){.co:not([disabled]):hover{border-color:#9AA3B2;box-shadow:0 6px 18px rgba(0,0,0,.08)}}
+.co:not([disabled]):active{transform:scale(.97)}
+.co:focus-visible,.dback:focus-visible,#enter:focus-visible{outline:2px solid var(--door-accent);outline-offset:2px}
+.co[disabled]{background:#F5F6F8;cursor:not-allowed}
+.co[disabled] b{color:#5E6573}
+.co .rv{height:74px;display:grid;place-items:center;font-size:19px;font-weight:700;letter-spacing:.08em;color:#8A919E}
+.co .soon{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5E6573}
+.gatecard{max-width:400px;text-align:center}
+.gatelogo{width:112px;height:112px;margin:4px auto 10px;display:grid;place-items:center}
+.gatelogo svg{width:112px;height:112px}
+.gatelogo img{width:200px;max-width:100%;height:auto}
+.gatelogo:has(img){width:auto;height:auto}
+.gatecard>p{color:#5E6573;font-size:13px;margin:4px 0 16px}
+#pin{width:100%;text-align:center;letter-spacing:8px;font:inherit;font-size:22px;font-weight:700;padding:12px;border:2px solid #D9DCE2;
+  border-radius:12px;color:#15181E;background:#fff}
+#pin:focus{outline:none;border-color:var(--door-accent)}
+#enter{width:100%;margin-top:12px;background:var(--door-accent);color:#fff;border:none;border-radius:12px;padding:13px;font:inherit;
+  font-size:15px;font-weight:700;cursor:pointer;transition:transform 120ms cubic-bezier(.23,1,.32,1),opacity .15s ease}
+#enter:active{transform:scale(.97)}
+@media(hover:hover){#enter:hover{opacity:.92}}
+.gerr{color:#B3141C;font-size:13px;font-weight:600;margin-top:10px;min-height:18px}
+.dback{margin-top:6px;background:none;border:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--door-accent);cursor:pointer;
+  padding:8px 10px;border-radius:8px;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:600px){
+  .dcard{padding:22px 18px 20px}
+  .cos{grid-template-columns:minmax(0,1fr)}
+  .co{flex-direction:row;justify-content:flex-start;min-height:0;text-align:left;padding:12px 14px}
+  .co img,.co .rv{width:104px;height:48px;flex:none}
+  .co .rv{font-size:14px}
+  .co .last{position:static;margin-left:auto}
+}
+@media(pointer:coarse){.co{min-height:64px}.dback,#enter{min-height:44px}}
+@media(prefers-reduced-motion:reduce){.co,#enter{transition:none}.co:active,#enter:active{transform:none}}
+</style>
+<div id="gate" data-here="__PUERTA_AQUI__">
+  <section class="dcard" id="paso-empresa" aria-labelledby="pe-h">
+    <p class="dstep">Grupo IP · Paso 1 de 2</p>
+    <h2 id="pe-h">¿A qué empresa vas a entrar?</h2>
+    <div class="cos">
+      <button class="co" type="button" data-co="ip" data-href="index.html"><img src="assets/logo-ip.png" alt=""><b>Distribuidora y Suministros IP</b></button>
+      <button class="co" type="button" data-co="caleb" data-href="caleb.html"><img src="assets/logo-caleb.png" alt=""><b>Tiendas Caleb</b></button>
+      <button class="co" type="button" disabled><span class="rv" aria-hidden="true">REVIPLAS</span><span><b>Reviplas</b><br><span class="soon">Próximamente</span></span></button>
+    </div>
+  </section>
+  <section class="dcard gatecard" id="paso-pin" aria-labelledby="pp-h" hidden>
+    <p class="dstep">Grupo IP · Paso 2 de 2</p>
+    <div class="gatelogo">__PUERTA_LOGO__</div>
+    <h2 id="pp-h">__PUERTA_NOMBRE__</h2>
+    <p>Escribe tu PIN de 6 dígitos</p>
+    <input id="pin" type="password" inputmode="numeric" maxlength="6" placeholder="••••••" autocomplete="off" aria-label="PIN de 6 dígitos">
+    <button id="enter" type="button">Entrar</button>
+    <div class="gerr" id="gerr" role="alert"></div>
+    <button class="dback" id="dback" type="button">Cambiar de empresa</button>
+  </section>
+</div>
+<script>
+(function(){
+  var gate=document.getElementById('gate'),here=gate.getAttribute('data-here');
+  var s1=document.getElementById('paso-empresa'),s2=document.getElementById('paso-pin');
+  var KEY='grupoipEmpresa';
+  function paso(n){s1.hidden=n!==1;s2.hidden=n!==2;
+    if(n===2){try{document.getElementById('pin').focus();}catch(e){}}
+    else{var b=s1.querySelector('.co[data-co="'+here+'"]');try{b&&b.focus({preventScroll:true});}catch(e){}}}
+  var ultima=null;try{ultima=localStorage.getItem(KEY);}catch(e){}
+  s1.querySelectorAll('.co[data-co]').forEach(function(b){
+    var co=b.getAttribute('data-co');
+    if(co===ultima){var t=document.createElement('span');t.className='last';t.textContent='Último acceso';b.appendChild(t);}
+    b.onclick=function(){
+      try{localStorage.setItem(KEY,co);}catch(e){}
+      if(co===here){paso(2);history.replaceState(null,'','#entrar');}
+      else{location.href=b.getAttribute('data-href')+'#entrar';}};
+  });
+  document.getElementById('dback').onclick=function(){
+    document.getElementById('gerr').textContent='';history.replaceState(null,'',location.pathname);paso(1);};
+  paso(location.hash==='#entrar'?2:1);
+})();
+</script>

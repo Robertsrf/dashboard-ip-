@@ -780,6 +780,25 @@ respaldo previo en `dashboard-ip-_backups\prod_<FECHA-HORA>\` (§10.4).
 > **Espacio reservado.** Las instrucciones nuevas pueden anexarse debajo de esta línea como §15.1, §15.2…
 > sin tocar el resto del documento.
 
+### 15.1 Multiempresa: la puerta del Grupo IP (2026-09-25)
+
+El sitio ya no es solo IP. `index.html` abre con la **puerta del Grupo IP** («¿A qué empresa vas a entrar?»):
+IP, **Tiendas Caleb** y Reviplas (deshabilitada, «Próximamente»). Si eliges IP, el PIN se pide en la misma
+página; si eliges Caleb, se navega a `caleb.html#entrar`, que salta directo al PIN. «Cambiar de empresa»
+(en la puerta y en la cabecera de cada dashboard) vuelve a la puerta. Los **cuatro usuarios y PINs son los
+mismos** en todas las empresas: cada build cifra su paquete con el mismo `secrets.json`.
+
+- La puerta vive en **`puerta.html`** y la insertan los dos builds en el marcador de su plantilla, con el
+  logo, el nombre y el color de botón de cada empresa. Los ids `pin`, `enter` y `gerr` los usa `boot()`:
+  no renombrarlos. Los logos de la puerta están en `assets/` (se sirven como archivos, no van embebidos).
+- **IP no cambió por dentro**: la plantilla solo perdió su pantalla de PIN propia y ganó el enlace
+  «Cambiar de empresa». Regenerado el 2026-09-25 sobre el mismo corte 8 (misma `DATA_VERSION`, mismo
+  `history.json`); el diff enmascarando `ENC` son solo esas líneas.
+- **Caleb tiene su propio contexto**: `CONTEXTO_CALEB.md` (datos, reparaciones, certificación y build).
+- `publish.py` sube ahora `index.html`, `history.json`, `caleb.html` y `history_caleb.json`.
+- Para sumar **Reviplas**: su `build_reviplas.py` + `template_reviplas.html`, un logo en `assets/`, y en
+  `puerta.html` quitar `disabled` a su botón y darle `data-co="reviplas" data-href="reviplas.html"`.
+
 ---
 
 *Elaborado a partir del código y los datos reales del repositorio. Autor del sistema: Ing. Roberts Flores.*

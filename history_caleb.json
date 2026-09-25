@@ -1,0 +1,17 @@
+[
+ {
+  "filas": 4726,
+  "desde": "2026-07-06",
+  "hasta": "2026-09-07",
+  "dias_venta": 55,
+  "bruto": 188668.54,
+  "devoluciones": 16957.61,
+  "neto": 171710.84,
+  "costo": 129892.1,
+  "margen_pct": 24.35,
+  "facturas": 2216,
+  "clientes": 1244,
+  "sku_vendidos": 1294,
+  "salidas_precio0_costo": 3591.29
+ }
+]
