@@ -540,10 +540,15 @@ function cobAdapt(){
   TIPS['c-cob-comis']='Comisión total por vendedor'+(bs
     ?', en bolívares: es la moneda en que se paga la comisión de la línea regular, y desde este corte la hoja ya no publica el desglose de bases. El café se comisiona por bulto y va aparte, en su propia sección.'
     :' expresada en $-equivalente. 5% para repostería (incluye desechables y confitería) en Precio 1 y 2, 3% el resto y víveres, más $0,40 por unidad de azúcar, $0,50 por unidad de harina y la comisión por bulto del café. La del supervisor del café no entra aquí: va en su propia sección, en Bs.');
+  /* Hasta el corte 8 LA PROTECTORA iba dentro de la porcion de las analistas;
+     desde el 10 la hoja COBERTURA la junta con AMERICO en una porcion de cafe. */
   const cv=(COB.cobertura||[]).find(c=>!c.total);
+  const caf=(COB.cobertura||[]).find(c=>!c.total&&c!==cv&&/protectora/i.test(c.cat));
   if(cv)TIPS['c-cob-cobertura']='Qué parte de la facturación total del sistema pasa por la cobranza de las 3 analistas ('
-    +cv.pct.toFixed(1)+'%). AMÉRICO es el café viejo: no tiene cuadros de cobranza, así que no se concilia y solo aparece aquí. El café que sí se concilia es LA PROTECTORA, y va dentro de ese '
-    +cv.pct.toFixed(1)+'%. Los clientes fuera de cartera son categoría legítima, no un error.';
+    +cv.pct.toFixed(1)+'%). '+(caf
+      ?'El café va en su propia porción ('+caf.pct.toFixed(1)+'%) y junta dos marcas: AMÉRICO, el café viejo, que no tiene cuadros de cobranza y no se concilia, y LA PROTECTORA, que sí se concilia en su sección de más abajo.'
+      :'AMÉRICO es el café viejo: no tiene cuadros de cobranza, así que no se concilia y solo aparece aquí. El café que sí se concilia es LA PROTECTORA, y va dentro de ese '+cv.pct.toFixed(1)+'%.')
+    +' Los clientes fuera de cartera son categoría legítima, no un error.';
   const n=document.getElementById('caf-nota');
   if(n)n.innerHTML=COB.cafeDentro
     ?'estas cifras <b>ya est&aacute;n dentro</b> de los totales de arriba (grupo CAFE): esta secci&oacute;n es el detalle, no un a&ntilde;adido'

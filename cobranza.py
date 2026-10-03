@@ -59,11 +59,17 @@ def _header_row(raw, wanted, limit=8):
     """Primera fila (de las `limit` primeras) que contenga TODOS los nombres de
     `wanted` ya normalizados. Cada elemento puede ser un nombre o una tupla de
     alternativas, para los encabezados que cambiaron de nombre entre cortes.
-    Devuelve (indice, {norm_nombre: col})."""
+    Devuelve (indice, {norm_nombre: col}).
+    Si dos encabezados normalizan igual manda el primero: en el corte 10 el
+    '% del Cobrado' de las hojas POR ... paso a '% Cobrado', que sin el '%' es
+    'cobrado' y le robaba la columna al dinero."""
     want = [tuple(_norm(x) for x in (w if isinstance(w, tuple) else (w,)))
             for w in wanted]
     for i in range(min(limit, len(raw))):
-        cells = {_norm(v): j for j, v in enumerate(raw.iloc[i].tolist()) if _txt(v)}
+        cells = {}
+        for j, v in enumerate(raw.iloc[i].tolist()):
+            if _txt(v):
+                cells.setdefault(_norm(v), j)
         if all(any(a in cells for a in alts) for alts in want):
             return i, cells
     return None, {}
@@ -127,13 +133,14 @@ def _agg_sheet(xls, name, cat=None):
 def _cobertura(xls):
     """Hoja COBERTURA: reparto del facturado del SISTEMA (fuente Data_IP), no de
     la cobranza. El corte 8 dejo de publicar 'Documentos' y anadio 'Nota': el
-    conteo queda en 0 y el front muestra la nota en su lugar."""
+    conteo queda en 0 y el front muestra la nota en su lugar. El 10 acorto el
+    encabezado del porcentaje a '% sistema'."""
     raw = _sheet(xls, "COBERTURA")
-    hi, cells = _header_row(raw, ["Categoria", "% del sistema"], limit=10)
+    hi, cells = _header_row(raw, ["Categoria", ("% del sistema", "% sistema")], limit=10)
     if hi is None:
         return []
     ic = _at(cells, "Categoria")
-    ipct = _at(cells, "% del sistema")
+    ipct = _at(cells, "% del sistema", "% sistema")
     idoc = _at(cells, "Documentos")
     imon = _at(cells, "Facturado")
     inota = _at(cells, "Nota")
@@ -208,16 +215,26 @@ def _comisiones(xls):
 
 
 def _resumen(xls):
-    """Hoja RESUMEN (corte 8): pares etiqueta -> valor de la descomposicion.
-    Se usa para cotejar contra lo que sale del MAESTRO; si el Excel se
-    contradice a si mismo, mejor enterarse aqui que en el dashboard."""
+    """Hoja RESUMEN (desde el corte 8): pares etiqueta -> valor de la
+    descomposicion, agrupados por bloque: {"regular": {...}, "cafe": {...}}.
+    Se usa para cotejar contra lo que sale de los maestros; si el Excel se
+    contradice a si mismo, mejor enterarse aqui que en el dashboard.
+
+    Las etiquetas se repiten entre bloques y cambian de un corte a otro (en el
+    10 el diferencial regular paso a llamarse 'Diferencial' a secas y el del
+    cafe desaparecio), asi que cada valor se guarda bajo el titulo de su
+    bloque: una fila con una sola celda de texto abre bloque nuevo."""
     sh = _find_sheet(xls, "RESUMEN")
     if sh is None:
         return {}
     raw = _sheet(xls, sh)
-    out = {}
+    out, blk = {}, "otro"
     for _, r in raw.iterrows():
         vals = [v for v in r.tolist() if _txt(v)]
+        if len(vals) == 1:
+            t = _norm(vals[0])
+            blk = "cafe" if "cafe" in t else "regular" if "regular" in t else "otro"
+            continue
         if len(vals) < 2:
             continue
         k, v = _norm(vals[0]), vals[-1]
@@ -225,8 +242,8 @@ def _resumen(xls):
             f = float(v)
         except (TypeError, ValueError):
             continue
-        if f == f and k not in out:      # la 1.a aparicion manda: la linea
-            out[k] = round(f, 2)         # regular va antes que la del cafe
+        if f == f:
+            out.setdefault(blk, {}).setdefault(k, round(f, 2))
     return out
 
 
@@ -239,8 +256,9 @@ def _cafe(xls, resumen):
 
     El corte 8 recorto la hoja: ya no trae Diferencial (se deduce de la
     identidad), ni Cantidad (bultos), ni 'En Sistema', y COMISIONES CAFE quedo
-    como texto sin tabla. Los campos que el corte no publica van en None y el
-    front oculta esa pieza en vez de pintar ceros.
+    como texto sin tabla. El 10 quito tambien Pendiente: se reparte por Estado.
+    Los campos que el corte no publica van en None y el front oculta esa pieza
+    en vez de pintar ceros.
 
     Devuelve None si el corte todavia no trae las hojas: la seccion se oculta
     sola en el front y el resto del modulo sigue funcionando igual.
@@ -275,10 +293,17 @@ def _cafe(xls, resumen):
     vend = txt(col("Vendedor"), "(Sin vendedor)").str.upper()
     est = txt(col("Estado"), "(Sin estado)").str.upper()
     c_sis, c_cant, c_dif = col("En Sistema"), col("Cantidad"), col("Diferencial")
+    c_pend = col("Pendiente")
     fact, cob = num(col("Facturado")), num(col("Cobrado"))
-    pend = num(col("Pendiente"))
     cant = num(c_cant)
     viva = est != ESTADO_ANULADA          # universo cobrable (sin anuladas)
+    if c_pend is not None:
+        pend = num(c_pend)
+    else:
+        # corte 10: sin columna Pendiente. Igual que en el maestro general, lo
+        # que falta por cobrar de una factura CERRADA es diferencial y el de una
+        # que sigue abierta es pendiente: cada brecha cae entera en uno de los dos.
+        pend = (fact - cob).where(viva & (est != "CERRADA"), 0.0)
 
     if c_dif is not None:
         dif = num(c_dif)
@@ -289,17 +314,20 @@ def _cafe(xls, resumen):
     else:
         # sin columna de Diferencial se deduce de la identidad. La comprobacion
         # deja de ser tautologica cotejando: (a) ningun diferencial negativo
-        # --seria cobrar mas de lo facturado-- y (b) el total contra RESUMEN.
+        # --seria cobrar mas de lo facturado-- y (b) los totales contra RESUMEN.
         dif = (fact - cob - pend).where(viva, 0.0)
         neg = round(float(dif.min()), 2)
         if neg < -0.05:
             raise ValueError(f"CAFE: diferencial negativo ({neg}): la identidad no cierra")
-        # RESUMEN nombra distinto los dos diferenciales: el de la linea regular
-        # es "Diferencial (no es deuda)" y el del cafe, a secas, "Diferencial".
-        esp = resumen.get("diferencial")
-        tot = round(float(dif[viva].sum()), 2)
+
+    # el maestro del cafe contra su bloque del RESUMEN, cifra a cifra (las que
+    # el corte publique: el 10 ya no trae el diferencial del cafe)
+    rc = resumen.get("cafe", {})
+    for k, v in (("facturadoneto", fact[viva]), ("cobrado", cob[viva]),
+                 ("pendiente", pend[viva]), ("diferencial", dif[viva])):
+        tot, esp = round(float(v.sum()), 2), rc.get(k)
         if esp is not None and abs(tot - esp) > 0.05:
-            raise ValueError(f"CAFE: diferencial deducido {tot} != RESUMEN {esp}")
+            raise ValueError(f"CAFE: {k} {tot} != RESUMEN {esp}")
 
     def agg(keys, order):
         out = []
@@ -443,7 +471,7 @@ def build(path):
     # el MAESTRO contra la hoja RESUMEN: dos lecturas del mismo Excel que tienen
     # que dar lo mismo. Si no, el libro se contradice y no se publica.
     neto = round(sum(c["fact"] for c in checks), 2)
-    esp = resumen.get("facturadoneto")
+    esp = resumen.get("regular", {}).get("facturadoneto")
     if esp is not None and abs(neto - esp) > 0.05:
         raise ValueError(f"MAESTRO: facturado neto {neto} != RESUMEN {esp}")
 

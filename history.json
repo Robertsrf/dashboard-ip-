@@ -9,7 +9,8 @@
   "riesgo": 292,
   "recuperados": 54,
   "top10_share": 35.4,
-  "ticket": 196.19
+  "ticket": 196.19,
+  "corte": 4
  },
  {
   "version": "1kOuunY9_ihtPwh1XcQZJiXnv179X3XZI|2026-07-20T22:24:30Z|4989739~E:15V4K10ISqQGOubxK45Xyf0S8vtPhztxi~R:1LfaAN9r5Ua9H-hwRjlZtaYUiILgsro6g~L:1fE7z1VtfCTa5ayR844W0IQYw0rBbog_L",
@@ -21,7 +22,8 @@
   "riesgo": 484,
   "recuperados": 17,
   "top10_share": 34.7,
-  "ticket": 193.95
+  "ticket": 193.95,
+  "corte": 5
  },
  {
   "version": "1eWDRLFfBu3LbJjRN9PPSOsicF8khAypl|2026-08-08T19:33:46Z|5174792~E:1y1cRarvQQkVuDkRXb-pCl1-mO297RAkF~L:1PJWN0jkzzZmfjZjDWW5f2Iav_ZWOMMcC",
@@ -33,7 +35,8 @@
   "riesgo": 428,
   "recuperados": 38,
   "top10_share": 34.3,
-  "ticket": 193.14
+  "ticket": 193.14,
+  "corte": 6
  },
  {
   "version": "11PUQfnn_rf2oKpXJozbcUnBks9zTg6Gk|2026-08-20T03:14:50Z|5544076~E:1-CYcxCKhjBeaRrxyx6C18MTL9rQU4ujT~L:1vIS2_zA9iVSNO5oNQI2zvfpk1riKB9Hh~C:1MrfwFBwlWvbIKAci7Fllt0i2qCqNC20k|2026-08-22T11:19:50Z|1820079",
@@ -45,7 +48,8 @@
   "riesgo": 581,
   "recuperados": 33,
   "top10_share": 33.9,
-  "ticket": 193.89
+  "ticket": 193.89,
+  "corte": 7
  },
  {
   "version": "1-U7zh9wXpg93Ox2fDBu09R9PYOAtjilh|2026-09-04T03:02:06Z|6050608~E:1JVSn9AfT1ypdDpD_bewCu4WLqzFHN5xx~L:1vqFh1hCurO-rmhugOMGHY5BuctUUgj8j~C:11BMPjFFgud7DTn-oEx5hlUHZiG044tSs|2026-09-06T13:03:39Z|783418",
@@ -57,6 +61,20 @@
   "riesgo": 493,
   "recuperados": 71,
   "top10_share": 33.8,
-  "ticket": 193.47
+  "ticket": 193.47,
+  "corte": 8
+ },
+ {
+  "version": "1dl5vbHBJw3EIx_hI7YzTIh0v2OU0mjzu|2026-10-03T02:28:47Z|6963167~E:1aXhsiMs9qHw51RJPG55M6JhPS4K4ZxvO~L:1KbCfL-vb9OlqGVCWhxUBv22a5jHra_0-~C:1X9VvZMCZB5mGtWEir8IO_EZErgRyEL6B|2026-10-03T07:23:12Z|665652",
+  "dateMax": "2026-09-30",
+  "total": 4040832.16,
+  "best_month": "2026-09",
+  "best_val": 554915.23,
+  "clientes": 1464,
+  "riesgo": 512,
+  "recuperados": 64,
+  "top10_share": 32.6,
+  "ticket": 192.37,
+  "corte": 10
  }
 ]

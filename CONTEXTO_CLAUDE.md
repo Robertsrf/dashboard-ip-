@@ -11,7 +11,7 @@
 ## 1. Resumen en 10 líneas
 
 - Es un **dashboard de inteligencia de ventas** para *Distribuidora y Suministros IP* (distribuidora de víveres, desechables y repostería en el occidente de Venezuela).
-- Es **una sola página estática** (`index.html`, ~6,1 MB) que se genera con Python desde un Excel de ventas.
+- Es **una sola página estática** (`index.html`, ~6,8 MB) que se genera con Python desde un Excel de ventas.
 - Los datos van **cifrados dentro del HTML** (AES-256-GCM). Se abren con un **PIN de 6 dígitos** por usuario; el descifrado ocurre en el navegador con WebCrypto.
 - Los gráficos son **ECharts 5.5.1** (desde CDN, con respaldo local en `vendor/echarts.min.js` si el CDN no responde). No hay backend, ni base de datos, ni API.
 - Se publica en **GitHub Pages** → https://robertsrf.github.io/dashboard-ip-/ (repo `Robertsrf/dashboard-ip-`, rama `main`).
@@ -152,15 +152,17 @@ Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZ
 | `SUMACANT` | float | = `CANTIDAD − CNTDEVUELT` (verificado: coincide en el 100 % de las filas). |
 | `SUMANETO` | float | = `SUMACANT × PRECIOUNIT` (verificado 100 %). **Es LA métrica de venta neta.** |
 
-### 4.2 Cifras del corte actual (8.º corte, `dateMax` 2026-08-31)
+### 4.2 Cifras del corte actual (10.º corte, `dateMax` 2026-09-30)
 
-- **72 259 filas** · **21 664 facturas** · **1 566 clientes** por nombre (1 554 por código, ver I6) · **1 990 SKU** (1 964 con `SUMACANT > 0`, ver I2) · **111 marcas** · **20 vendedores** · **39 sectores**
-- **Rango:** 2026-01-09 → 2026-08-31 (235 días, `dayCount`)
-- **Venta neta total:** **$6 432 655,30** (informe, sin AMERICO/REVIPLAST: **$3 485 916,93**)
-- **% de devolución global:** 13,47 % de las unidades
-- **Sin mes parcial.** El corte cierra el 31 de agosto, así que agosto está **completo**: `partialInfo()`
-  no marca nada como parcial y **el riesgo NO está inflado** (I4). Por eso el riesgo baja de 581 a 493:
-  es la corrección del corte anterior —que sí iba a mitad de mes—, no una mejora de la cartera.
+> **No hubo corte 9 en el dashboard.** Roberts juntó las dos quincenas de septiembre en un solo corte, el
+> 10.º. El Word sí trae un 9.º (15-sep) en su tabla de evolución, calculado a mano. Ver la numeración en §8.
+
+- **83 239 filas** · **24 716 facturas** · **1 629 clientes** por nombre (1 616 por código, ver I6) · **2 166 SKU** (2 128 con `SUMACANT > 0`, ver I2) · **114 marcas** · **22 vendedores** · **39 sectores**
+- **Rango:** 2026-01-09 → 2026-09-30 (265 días, `dayCount`)
+- **Venta neta total:** **$7 016 508,20** (informe, sin AMERICO/REVIPLAST: **$4 040 832,16**)
+- **% de devolución global:** 15,59 % de las unidades
+- **Sin mes parcial.** El corte cierra el 30 de septiembre, último día del mes, así que septiembre está
+  **completo**: `partialInfo()` no marca nada como parcial y **el riesgo NO está inflado** (I4).
 
 Venta neta por mes:
 
@@ -173,19 +175,21 @@ Venta neta por mes:
 | 2026-05 | **1 110 243** | 3 453 | 984 | ← mejor mes del año
 | 2026-06 | 811 207 | 3 027 | 901 |
 | 2026-07 | 432 523 | 2 217 | 649 | ← el más flojo del año
-| 2026-08 | 570 868 | 2 747 | 762 | ← rebote tras julio, mes completo
+| 2026-08 | 570 868 | 2 747 | 762 | ← rebote tras julio
+| 2026-09 | 583 853 | 3 052 | 773 | ← mes completo
 
-Por grupo: VIVERES 2,76 M · DESECHABLES 1,89 M · REPOSTERIA 1,67 M · CONDIMENTOS 83 K · CONFITERIA 37 K *(+ el grupo basura `"6"`, $335)*.
-Por estado: TRUJILLO 3,35 M · MERIDA 1,60 M · ZULIA 1,37 M · PORTUGUESA 79 K · TACHIRA 28 K.
-Top vendedores: Televenta 1,36 M · David 790 K · José 716 K · Santiago 686 K · Jesús 659 K · Yuraima 578 K.
-Top marcas: **AMERICO 2,51 M** · MARPLAST (N) 538 K · MAXIPLAST (N) 395 K · MASTER TOP (N) 361 K · MULTIPLAST(N) 194 K · INDELMA (N) 176 K.
+Por grupo: VIVERES 2,87 M · DESECHABLES 2,14 M · REPOSTERIA 1,88 M · CONDIMENTOS 90 K · CONFITERIA 42 K *(+ el grupo basura `"6"`, $335)*.
+Por estado: TRUJILLO 3,59 M · MERIDA 1,76 M · ZULIA 1,54 M · PORTUGUESA 99 K · TACHIRA 28 K.
+Top vendedores: Televenta 1,46 M · David 868 K · José 855 K · Santiago 727 K · Jesús 703 K · Yuraima 578 K.
+Top marcas: **AMERICO 2,51 M** · MARPLAST (N) 601 K · MAXIPLAST (N) 453 K · MASTER TOP (N) 392 K · MULTIPLAST(N) 221 K · INDELMA (N) 190 K.
 
-**Frente al 7.º corte** (`dateMax` 2026-08-15): +5 757 filas, +$319 014 de neto en el dashboard (+5,2 %),
-+27 clientes. Como los cortes son acumulativos (I7), la diferencia **es** lo vendido entre el 16 y el 31 de agosto.
+**Frente al 8.º corte** (`dateMax` 2026-08-31): +10 980 filas, +$583 852,90 de neto en el dashboard (+9,1 %),
++63 clientes. Enero–agosto llegan **idénticos al centavo** al corte 8; como los cortes son acumulativos (I7),
+la diferencia **es** septiembre entero.
 
-> **AMERICO lleva dos cortes sin moverse** ($2,51 M en el 7.º y en el 8.º): todo el crecimiento del
-> período viene de la línea regular. Conviene decirlo cuando alguien lea el total del dashboard como
-> crecimiento general.
+> **AMERICO no se mueve desde julio** ($2,51 M en los cortes 7, 8 y 10; su última venta es de julio, $9 248):
+> todo el crecimiento del período viene de la línea regular. Conviene decirlo cuando alguien lea el total
+> del dashboard como crecimiento general.
 
 ### 4.3 ⚠️ Peculiaridades y suciedad de datos (importantes)
 
@@ -346,20 +350,28 @@ Dos informes, cada uno con **resumen** (visible en la pestaña) e **informe comp
 **Recordatorio:** los informes se generan sobre `df_rep`, que **excluye AMERICO y REVIPLAST**. El dashboard no.
 
 ### `history.json`
-Una entrada **por corte**, con: `version, dateMax, total, best_month, best_val, clientes, riesgo, recuperados, top10_share, ticket`. El corte se identifica por **`dateMax`**: si regeneras el mismo corte con otra versión, `reports.py` **reemplaza** la entrada en vez de añadir una nueva (antes solo comparaba `version`, y por eso se acumularon 7 entradas del corte 2026-06-30). Hoy tiene **3 entradas**: 2026-06-30, 2026-07-15 y 2026-07-31. La vigente (corte 6) es:
-total **2 964 385,29** · mejor mes 2026-05 ($553 580,92) · **1 333 clientes** · **428 en riesgo** ·
-**38 recuperados** · ticket **193,14** · top10 **34,3 %**.
+Una entrada **por corte**, con: `version, dateMax, total, best_month, best_val, clientes, riesgo, recuperados, top10_share, ticket`. El corte se identifica por **`dateMax`**: si regeneras el mismo corte con otra versión, `reports.py` **reemplaza** la entrada en vez de añadir una nueva (antes solo comparaba `version`, y por eso se acumularon 7 entradas del corte 2026-06-30). Hoy tiene **6 entradas** (cortes 4, 5, 6, 7, 8 y 10). La vigente (corte 10) es:
+total **4 040 832,16** · mejor mes **2026-09** ($554 915,23, apenas por encima de mayo) · **1 464 clientes** ·
+**512 en riesgo** · **64 recuperados** · ticket **192,37** · top10 **32,6 %**.
+*(El Word del corte 10 llama a septiembre "el cuarto mejor mes": mide sin café ni REVIPLAS, otro universo.)*
 
-**Numeración de cortes.** Los primeros informes se hicieron **a mano, antes de que existiera el sistema**, así que no están en `history.json`. Por eso `corte = len(hist) + CORTE_OFFSET`, con `CORTE_OFFSET = 3` en `reports.py` (pisable con la variable de entorno del mismo nombre). **La numeración es la de los archivos de Drive.**
+**Numeración de cortes.** **La numeración es la de los archivos de Drive.** Desde el corte 10 cada entrada
+de `history.json` guarda **su propio número** en el campo `corte`, porque la serie puede saltarse números:
+el 10 juntó las dos quincenas de septiembre y **no hubo 9**, así que contar por posición lo habría llamado 9.
+Un corte nuevo se numera como **el anterior + 1**; si Drive dice otro número (otra fusión de quincenas), se
+pasa la variable de entorno **`CORTE=<n>`** al build. `CORTE_OFFSET = 3` (`reports.py`) ya solo numera
+entradas sin el campo: los primeros informes se hicieron **a mano, antes del sistema**, y no están en el historial.
 
-| Entrada de `history.json` | Nº de corte | Archivo en Drive |
+| Entrada de `history.json` | `corte` | Archivo en Drive |
 |---|---|---|
-| `2026-06-30` | Corte 4 | `Informe_Ejecutivo_4toCorte_CierreSemestre_Junio2026…` |
-| `2026-07-15` | Corte 5 | `Informe_Ejecutivo_5toCorte_Julio2026…` |
-| `2026-07-31` | **Corte 6** (vigente) | `Informe_Ejecutivo_6toCorte_Julio2026…` (`exec.docx`, 57 034 bytes) |
-| *(próximo)* | Corte 7 | — |
-
-Si algún día se recuperan los cortes 1–3 y se cargan en `history.json`, hay que **bajar el offset en la misma cantidad**.
+| `2026-06-30` | 4 | `Informe_Ejecutivo_4toCorte_CierreSemestre_Junio2026…` |
+| `2026-07-15` | 5 | `Informe_Ejecutivo_5toCorte_Julio2026…` |
+| `2026-07-31` | 6 | `Informe_Ejecutivo_6toCorte_Julio2026…` |
+| `2026-08-15` | 7 | — |
+| `2026-08-31` | 8 | — |
+| *(no existe)* | ~~9~~ | sólo en la tabla del Word del 10 (15-sep, hecho a mano) |
+| `2026-09-30` | **10** (vigente) | `Informe_Ejecutivo_10moCorte.docx` (`exec.docx`, 24 503 bytes) |
+| *(próximo)* | 11 | — |
 
 ### `risk_list.xlsx` (Drive, opcional)
 El del corte 8 trae **9 hojas**: `Índice` (se salta), `📄 Seguimiento (Resumen)`, `🎯 Plan de Acción`,
@@ -414,14 +426,38 @@ que cambiaron de nombre de verdad. Lo que cambió del corte 7 al 8:
 | `COMISIONES CAFÉ` | tabla | **texto sin tabla** |
 | Hojas nuevas | — | `RESUMEN`, `COMPARADOR`, `COBERTURA OTROS` |
 
+**Lo que cambió del corte 8 al 10** (`Conciliacion_Facturado_vs_Cobrado_Septiembre_MarJunSep.xlsx`, camadas
+Mar + Jun–Sep, 15 hojas):
+
+| | Corte 8 | Corte 10 |
+|---|---|---|
+| `COBERTURA OTROS` | existe | **desaparece** (el dashboard no la leía) |
+| `RESUMEN`, diferencial regular | `Diferencial (no es deuda)` | **`Diferencial`** a secas |
+| `RESUMEN`, bloque café | neto · cobrado · diferencial · pendiente | **sin diferencial** |
+| `MAESTRO CAFÉ` | trae `Pendiente` | **sin `Pendiente`**: se reparte por `Estado` |
+| `POR GRUPO` / `POR PRECIO LISTA` | `% del Cobrado` | **`% Cobrado`** |
+| `COBERTURA` | `% del sistema`; La Protectora **dentro** de "En cobranza" | **`% sistema`**; café = **Américo + Protectora** en una porción propia |
+
+Tres trampas que dejó ese cambio, ya resueltas en `cobranza.py`:
+- **`% Cobrado` normaliza igual que `Cobrado`** (`_norm` borra el `%`) y le robaba la columna al dinero: el
+  cobrado por grupo salía 0,97. `_header_row` ahora se queda con la **primera** columna de cada nombre.
+- **El `RESUMEN` se lee por bloques** (`{"regular": …, "cafe": …}`, el título de bloque es una fila de una sola
+  celda): con las etiquetas repetidas, leer "la primera aparición" comparaba el café contra el diferencial regular.
+- **Sin `Pendiente`, la brecha de cada factura cae entera de un lado**: `CERRADA` ⇒ diferencial, abierta ⇒
+  pendiente. Es la misma regla que cumple el MAESTRO regular (verificado: ninguna CERRADA tiene pendiente y
+  ninguna PENDIENTE tiene diferencial), y con ella el pendiente del café cuadra al centavo con el `RESUMEN`.
+
+El tooltip de la cobertura (`cobAdapt()`) detecta si alguna porción nombra a "Protectora" y cambia el texto.
+
 **Dónde vive el café es lo más peligroso de leer mal.** El flag `cafeDentro` del payload lo resuelve: si el
 MAESTRO trae `Grupo=CAFE`, los totales de la pestaña **ya incluyen** el café y la sección es solo el detalle;
 si no lo trae, el café **se suma aparte**. El front cambia el texto de la tarjeta según ese flag (`cobAdapt()`).
 Leerlo al revés cuenta el café dos veces, o lo pierde.
 
 **Verificaciones que hace `cobranza.py` y que abortan el build:** la identidad camada a camada, el facturado
-neto del MAESTRO contra la hoja `RESUMEN`, y —cuando el diferencial del café hay que deducirlo— que no salga
-ningún diferencial negativo y que el total cuadre con el `RESUMEN`. Si el libro se contradice, revienta aquí.
+neto del MAESTRO contra el bloque regular del `RESUMEN`, que no salga ningún diferencial negativo en el café
+cuando hay que deducirlo, y el maestro del café contra **su** bloque del `RESUMEN` cifra a cifra (neto,
+cobrado, pendiente y diferencial, las que el corte publique). Si el libro se contradice, revienta aquí.
 
 **Por qué no se compara mes contra mes.** Una factura despachada en abril se puede terminar de cobrar en
 junio, así que el eje es la **camada** (mes de despacho) y cada camada **madura** con el tiempo. La camada
@@ -594,6 +630,21 @@ python build_dashboard.py ./data_ip.xlsx \
   ./index.html
 ```
 
+Corrida del 10.º corte (2026-10-02). **`CORTE=10`** porque no hubo 9 (ver §8):
+
+```bash
+CORTE=10 EXEC_ID=1aXhsiMs9qHw51RJPG55M6JhPS4K4ZxvO LIST_ID=1KbCfL-vb9OlqGVCWhxUBv22a5jHra_0- \
+COB_ID=1X9VvZMCZB5mGtWEir8IO_EZErgRyEL6B \
+EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx COB_XLSX=./cobranza.xlsx \
+SECRETS_PATH=./secrets.json \
+python build_dashboard.py ./data_ip.xlsx \
+  "1dl5vbHBJw3EIx_hI7YzTIh0v2OU0mjzu|2026-10-03T02:28:47Z|6963167~E:1aXhsiMs9qHw51RJPG55M6JhPS4K4ZxvO~L:1KbCfL-vb9OlqGVCWhxUBv22a5jHra_0-~C:1X9VvZMCZB5mGtWEir8IO_EZErgRyEL6B|2026-10-03T07:23:12Z|665652" \
+  ./index.html
+```
+
+Los archivos de Drive se bajan sin pasar por el MCP (son de enlace público):
+`curl -sL "https://drive.google.com/uc?export=download&id=<ID>" -o <archivo>`, y se compara el tamaño con Drive.
+
 `RISK_DOCX` / `RISK_ID` ya no se usan: la pestaña de Seguimiento se eliminó.
 
 Regenerar **el mismo corte** (mismo `dateMax`) ya no duplica nada: `reports.py` **reemplaza** la
@@ -678,6 +729,17 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 ## 14. Historial de cambios del sistema
 
+- **2026-10-02** — **Corte 10** (`dateMax` 2026-09-30: 83 239 filas · $7 016 508,20 en el dashboard ·
+  $4 040 832,16 en el informe · 1 629 clientes por nombre · 512 en riesgo · 64 recuperados). **No hay
+  corte 9**: Roberts juntó las dos quincenas de septiembre. Por eso **cada entrada de `history.json` guarda
+  ahora su número** (`corte`, rellenado 4–8 en las viejas) y el build acepta **`CORTE=<n>`**; antes el número
+  salía de la posición y este corte se habría llamado 9 (§8). **El Excel de conciliación volvió a cambiar**
+  (§8 bis): sin `Pendiente` en el café, `RESUMEN` con etiquetas repetidas entre bloques, `% Cobrado` que
+  le robaba la columna al cobrado en `POR GRUPO`/`POR PRECIO LISTA`, y `COBERTURA` con `% sistema` y el café
+  de La Protectora junto a Américo. `cobranza.py` lee los dos formatos (el payload del corte 8 sale idéntico
+  al de antes del cambio) y el tooltip de la cobertura se adapta. Verificado en Chrome headless: 11 pestañas,
+  todas las gráficas pintadas, 0 errores de consola.
+
 - **2026-09-14** — **Los seis hallazgos restantes del detector de Impeccable, aplicados** (a petición de
   Roberts: mantener naranja y azul, hacer el resto): fuera todo borde de color de más de 1 px (cabecera,
   KPIs, títulos de informe, recuadros, tarjeta de café — el naranja y el azul quedan en botones, chips,
@@ -743,14 +805,14 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 
 ## 15. Punto de partida para trabajo nuevo (al 2026-09-06)
 
-**Estado del repositorio:** rama `main`. Lo publicado en GitHub Pages corresponde al **corte 8**
-(`DATA_VERSION` en la línea 2 de `index.html`, `dateMax` 2026-08-31). Los archivos de trabajo
+**Estado del repositorio:** rama `main`. Lo publicado en GitHub Pages corresponde al **corte 10**
+(`DATA_VERSION` en la línea 2 de `index.html`, `dateMax` 2026-09-30). Los archivos de trabajo
 (`data_ip.xlsx`, `risk_list.xlsx`, `exec.docx`, `cobranza.xlsx`, `secrets.json`) están en la carpeta
 pero **fuera de git**, así que se puede regenerar el mismo corte sin bajar nada de Drive.
 
-**Ojo con el corte 9:** el Excel de conciliación cambió de formato entre el 7.º y el 8.º corte, y no hay
-razón para pensar que se estabilizó. `cobranza.py` acepta los dos formatos por nombre de encabezado, pero un
-tercero volverá a romperlo. El primer paso al recibir un corte nuevo de cobranza es **volcar los encabezados
+**Ojo con el corte 11:** el Excel de conciliación cambió de formato en el 8.º y otra vez en el 10.º, y no
+hay razón para pensar que se estabilizó. `cobranza.py` acepta los tres formatos por nombre de encabezado,
+pero un cuarto volverá a romperlo. El primer paso al recibir un corte nuevo de cobranza es **volcar los encabezados
 de todas las hojas** y compararlos con la tabla de §8 bis antes de correr el build.
 
 **Antes de aceptar una instrucción nueva, ubícala en una de estas tres categorías** — cada una tiene un
