@@ -1,192 +1,175 @@
 #!/usr/bin/env python3
+"""Generador del dashboard de Distribuidora y Suministros IP (Sistema Grupo IP v4).
+
+Uso:  python build_dashboard.py <data_ip.xlsx> "<version>" <index.html>
+
+Entorno: SECRETS_PATH, EXEC_DOCX, RISK_LIST_XLSX, COB_XLSX (insumos opcionales),
+EXEC_ID, LIST_ID, COB_ID (enlaces de Drive), CORTE (numero si no es el anterior + 1).
+Procedimiento completo de un corte: CONTEXTO_CLAUDE.md §10.2. Reglas: METODO.md.
 """
-Generador del dashboard IP (v3 - marca, ECharts, analitico).
-Uso: python3 build_dashboard.py <ruta_xlsx> <version_str> <salida_html>
-"""
-import sys, json, html, os
+import base64
+import json
+import os
+import sys
+
 import pandas as pd
+
+import cobranza as COB
 import reports as REPORTS
+import risklist as RLIST
 import secure as SECURE
 import wordrep as WORDREP
-import risklist as RLIST
-import cobranza as COB
+from grupo import changelog as CL
+from grupo import pagina as PAG
+from grupo import paquete as PAQ
+from grupo import reglas as REGLAS
+from grupo import reunion as REUNION
+
+AQUI = os.path.dirname(os.path.abspath(__file__))
+MESES = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+TEXTO = ["GRUPO", "VENDEDOR", "SECTOR", "MARCA", "NOMBRECLI", "DOCUMENTO", "PRODUCTO", "REFERENCIA"]
+# (clave en el paquete, columna del Excel): cada una es un segmentador o un conteo
+DIMENSIONES = [("mes", "MES"), ("grupo", "GRUPO"), ("vend", "VENDEDOR"), ("sector", "SECTOR"),
+               ("estado", "ESTADO"), ("marca", "MARCA"), ("familia", "REFERENCIA"),
+               ("cli", "NOMBRECLI"), ("prod", "PRODUCTO"), ("doc", "DOCUMENTO")]
 
 
 def _warn(msg):
-    """Aviso visible en la consola del build. Los insumos opcionales (Word, lista,
-    cobranza) pueden faltar sin romper el build, pero nunca fallar en silencio."""
+    """Los insumos opcionales pueden faltar sin romper el build, pero nunca en silencio."""
     print(f"   AVISO: {msg}", file=sys.stderr)
 
 
-def _wrap_summary(title, body, full_id, fname):
-    return ('<div class="rep"><div class="rephead"><div>'
-            f'<h2>{title}</h2><div class="repsub">Resumen tomado del Word cargado en Drive · descarga el documento completo</div></div>'
-            f'<div class="repbtns"><button class="pdfbtn" onclick="downloadReport(\'{full_id.replace("-full","")}\',\'{fname}\')">⬓ Descargar informe (Word)</button></div></div>'
-            f'{body}<div class="repnote">📄 Resumen del informe cargado en Drive. Usa <b>Descargar informe (Word)</b> para el documento completo.</div></div>')
+def _estado(sector):
+    partes = sector.split(",")
+    return (partes[1] if len(partes) > 1 else partes[0]).strip().upper() or "(Sin dato)"
 
 
-# Codigos de vendedor que cambiaron de titular. El Excel trae el NOMBRE con el
-# que el ERP exporta el codigo, y ese nombre se queda pegado al titular viejo:
-# desde que aparece el nuevo, todo lo del viejo es del nuevo (lo pidio Roberts el
-# 2026-10-19). `desde` = la primera aparicion conocida del nuevo; si el nuevo ya
-# sale en los datos antes de esa fecha, manda la fecha de los datos.
-VEND_RELEVO = [
-    # (codigo, viejo, nuevo, desde)
-    (10, "Leonardo", "Héctor", None),          # Héctor sale en los datos desde el 18-05
-    (20, "Edixon", "Jorge", "2026-09-24"),     # 1.a factura de Jorge: *0140591 (conciliacion corte 11)
-]
-# Grafias del mismo vendedor (la LEYENDA de la conciliacion las unifica igual)
-VEND_ALIAS = {"Hector": "Héctor", "Jose": "José", "Televenta3": "Televenta"}
-
-
-def vendedores(df):
-    """Aplica alias y relevos de codigo sobre VENDEDOR (ya con strip y fecha)."""
-    df["VENDEDOR"] = df["VENDEDOR"].replace(VEND_ALIAS)
-    for _cod, viejo, nuevo, desde in VEND_RELEVO:
-        f = df.loc[df["VENDEDOR"] == nuevo, "FECHADOC"].min()
-        if desde is not None:
-            d = pd.Timestamp(desde)
-            f = d if pd.isna(f) else min(f, d)
-        if pd.isna(f):
-            continue
-        df.loc[(df["VENDEDOR"] == viejo) & (df["FECHADOC"] >= f), "VENDEDOR"] = nuevo
-    return df
-
-
-def main():
-    xlsx, version, out = sys.argv[1], sys.argv[2], sys.argv[3]
+def cargar(xlsx):
     df = pd.read_excel(xlsx, engine="openpyxl")
-
-    for c in ["GRUPO", "VENDEDOR", "SECTOR", "MARCA", "NOMBRECLI", "DOCUMENTO", "PRODUCTO"]:
+    for c in TEXTO:
         df[c] = df[c].fillna("(Sin dato)").astype(str).str.strip()
     df["MARCA"] = df["MARCA"].replace({"nan": "(Sin marca)", "": "(Sin marca)"})
     for c in ["CANTIDAD", "CNTDEVUELT", "SUMANETO"]:
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
     df["FECHADOC"] = pd.to_datetime(df["FECHADOC"], errors="coerce")
-    df = df.dropna(subset=["FECHADOC"])
-    df = vendedores(df)
+    df = df.dropna(subset=["FECHADOC"]).reset_index(drop=True)
+    df = REGLAS.vendedores(df)
     df["MES"] = df["FECHADOC"].dt.strftime("%Y-%m")
+    df["ESTADO"] = df["SECTOR"].map(_estado)
+    return df
 
-    def encode(col):
+
+def ventas(df):
+    """Dimensiones (nombres ordenados) y columnas del paquete. Cada dimension se
+    codifica a indices enteros: es lo que vuelve manejable el paquete."""
+    dims, cols = {}, {}
+    for clave, col in DIMENSIONES:
         vals = sorted(df[col].unique().tolist())
         idx = {v: i for i, v in enumerate(vals)}
-        return vals, df[col].map(idx).astype(int).tolist()
+        cols[clave] = df[col].map(idx).to_numpy()
+        dims[clave] = vals if clave != "doc" else len(vals)   # los numeros de factura no se muestran
+    dia0 = df["FECHADOC"].dt.normalize().min()
+    cols["dia"] = (df["FECHADOC"].dt.normalize() - dia0).dt.days.to_numpy()
+    cols["cant"] = (df["CANTIDAD"].round(3).to_numpy(), 1000)
+    cols["dev"] = (df["CNTDEVUELT"].round(3).to_numpy(), 1000)
+    cols["neto"] = (df["SUMANETO"].round(2).to_numpy(), 100)
+    meses = dims["mes"]
+    year = meses[-1][:4]
+    dims["mesLabels"] = [f"{MESES[int(m[5:]) - 1]} {m[2:4]}" for m in meses]
+    dims["fullLabels"] = [f"{MESES[i]} {year[2:]}" for i in range(12)]
+    dims["histMonthNums"] = [int(m[5:]) for m in meses]
+    fechas = {"dateMin": df["FECHADOC"].min().strftime("%Y-%m-%d"),
+              "dateMax": df["FECHADOC"].max().strftime("%Y-%m-%d"), "year": year,
+              "dayZero": dia0.strftime("%Y-%m-%d"), "dayCount": int(cols["dia"].max()) + 1}
+    return dims, cols, fechas
 
-    mes_vals, mes_i = encode("MES")
-    grupo_vals, grupo_i = encode("GRUPO")
-    vend_vals, vend_i = encode("VENDEDOR")
-    sector_vals, sector_i = encode("SECTOR")
-    marca_vals, marca_i = encode("MARCA")
-    cli_vals, cli_i = encode("NOMBRECLI")
-    prod_vals, prod_i = encode("PRODUCTO")
-    doc_vals, doc_i = encode("DOCUMENTO")
 
-    cant = df["CANTIDAD"].round(2).tolist()
-    dev = df["CNTDEVUELT"].round(2).tolist()
-    neto = df["SUMANETO"].round(2).tolist()
-    _daymin = df["FECHADOC"].dt.normalize().min()
-    dayoff = ((df["FECHADOC"].dt.normalize() - _daymin).dt.days).astype(int).tolist()
+def informes(df, version):
+    """history.json (reports.py) y el resumen del informe ejecutivo. Los informes
+    excluyen AMERICO y REVIPLAST (invariante I3); el dashboard no."""
+    mk, cl = df["MARCA"].str.upper(), df["NOMBRECLI"].str.upper()
+    df_rep = df[~((mk == "AMERICO") | cl.str.contains("REVIPLAST"))].copy()
+    rep = REPORTS.build(df_rep, os.path.join(AQUI, "history.json"), version)
+    # sin Word, el resumen que arma reports.py
+    ejecutivo = {"fuente": "sistema", "html": rep["exec"]}
+    ep, docx = os.environ.get("EXEC_DOCX"), ""
+    if ep and os.path.exists(ep):
+        try:
+            cuerpo, docx = WORDREP.extract(ep)
+            ejecutivo = {"fuente": "word", "html": cuerpo}
+        except Exception as e:      # el Word es opcional, pero el fallo se ve
+            _warn(f"Word no procesado ({ep}): {e!r}")
+    with open(os.path.join(AQUI, "history.json"), encoding="utf-8") as f:
+        return ejecutivo, docx, json.load(f)
 
-    rows = [[mes_i[k], grupo_i[k], vend_i[k], sector_i[k], marca_i[k],
-             cli_i[k], prod_i[k], doc_i[k], cant[k], dev[k], neto[k], dayoff[k]]
-            for k in range(len(df))]
 
-    meses_es = {"01": "Ene", "02": "Feb", "03": "Mar", "04": "Abr", "05": "May",
-                "06": "Jun", "07": "Jul", "08": "Ago", "09": "Sep", "10": "Oct",
-                "11": "Nov", "12": "Dic"}
-    mes_labels = [f"{meses_es.get(m.split('-')[1], m)} {m.split('-')[0][2:]}" for m in mes_vals]
-    year = mes_vals[-1].split("-")[0]
-    full_labels = [f"{meses_es[f'{mm:02d}']} {year[2:]}" for mm in range(1, 13)]
-    hist_month_nums = [int(m.split("-")[1]) for m in mes_vals]
-
-    payload = {
-        "version": version,
-        "generated": pd.Timestamp.now().strftime("%Y-%m-%d %H:%M"),
-        "dateMin": df["FECHADOC"].min().strftime("%Y-%m-%d"),
-        "dateMax": df["FECHADOC"].max().strftime("%Y-%m-%d"),
-        "year": year,
-        "dayZero": _daymin.strftime("%Y-%m-%d"), "dayCount": (int(max(dayoff))+1) if dayoff else 0,
-        "dims": {
-            "mes": mes_vals, "mesLabels": mes_labels, "fullLabels": full_labels,
-            "histMonthNums": hist_month_nums,
-            "grupo": grupo_vals, "vendedor": vend_vals, "sector": sector_vals,
-            "marca": marca_vals, "cliente": cli_vals, "producto": prod_vals,
-        },
-        "rows": rows,
-    }
-    data_json = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
-
-    # Informes (Ejecutivo + Clientes riesgo/recuperados) con historico de cortes
-    hist_path = os.path.join(os.path.dirname(os.path.abspath(out)) or ".", "history.json")
-    # Informes: excluir marca AMERICO y cliente REVIPLAST (solo informes, no dashboard)
-    _mk = df["MARCA"].astype(str).str.upper(); _cl = df["NOMBRECLI"].astype(str).str.upper()
-    df_rep = df[~((_mk == "AMERICO") | (_cl.str.contains("REVIPLAST")))].copy()
-    try:
-        rep = REPORTS.build(df_rep, hist_path, version)
-        exec_html, risk_html, exec_full, risk_full = rep["exec"], rep["risk"], rep["execFull"], rep["riskFull"]
-    except Exception as e:
-        _warn(f"reports.build fallo: {e!r}")
-        exec_html = risk_html = exec_full = risk_full = f'<div class="rep"><p>No se pudo generar el informe: {html.escape(str(e))}</p></div>'
-    # Word cargados en Drive (opcional): resumen desde el Word + descarga del archivo real
-    exec_b64 = risk_b64 = ""
-    ep = os.environ.get("EXEC_DOCX"); rp = os.environ.get("RISK_DOCX")
-    try:
-        if ep and os.path.exists(ep):
-            wbody, exec_b64 = WORDREP.extract(ep); exec_html = _wrap_summary("Informe Ejecutivo", wbody, "exec-full", "Informe_Ejecutivo_IP.docx")
-        if rp and os.path.exists(rp):
-            wbody, risk_b64 = WORDREP.extract(rp); risk_html = _wrap_summary("Seguimiento de Clientes", wbody, "risk-full", "Seguimiento_Clientes_IP.docx")
-    except Exception as e:
-        # nunca en silencio: sin python-docx el resumen del Word se perdia semanas
-        # sin que nadie lo notara. El build sigue (el Word es opcional) pero avisa.
-        _warn(f"Word no procesado ({ep or rp}): {e!r}")
-    # Lista de clientes en riesgo (Excel de Drive, opcional)
-    rlp = os.environ.get("RISK_LIST_XLSX"); risk_list = None; list_b64 = ""
-    try:
-        if rlp and os.path.exists(rlp):
-            risk_list = RLIST.load(rlp)
-            import base64 as _b64x
-            list_b64 = _b64x.b64encode(open(rlp, "rb").read()).decode()
-    except Exception as e:
-        risk_list = None
-        _warn(f"Lista de riesgo no procesada ({rlp}): {e!r}")
-    # Conciliacion de cobranza (Excel de Drive, opcional): si falta, la pestana
-    # se oculta sola en el front y el resto del dashboard funciona igual.
-    cbp = os.environ.get("COB_XLSX"); pcob = None
+def adjuntos():
+    """Lista de riesgo, conciliacion de cobranza y enlaces de Drive (opcionales)."""
+    out = {"riskList": None, "listDocx": "", "Pcob": None}
+    rlp = os.environ.get("RISK_LIST_XLSX")
+    if rlp and os.path.exists(rlp):
+        try:
+            out["riskList"] = RLIST.load(rlp)
+            with open(rlp, "rb") as f:
+                out["listDocx"] = base64.b64encode(f.read()).decode()
+        except Exception as e:
+            _warn(f"Lista de riesgo no procesada ({rlp}): {e!r}")
+    cbp = os.environ.get("COB_XLSX")
     if cbp and os.path.exists(cbp):
-        pcob = COB.build(cbp)          # si la identidad no cuadra, revienta aqui a proposito
-        print(f"   cobranza: {len(pcob['rows'])} facturas, camadas {pcob['camadaMin']}..{pcob['camadaMax']}")
-    def _dl(envk):
-        i = os.environ.get(envk, "")
+        out["Pcob"] = COB.build(cbp)       # si la identidad no cuadra, revienta aqui a proposito
+        print(f"   cobranza: {len(out['Pcob']['rows'])} facturas, camadas "
+              f"{out['Pcob']['camadaMin']}..{out['Pcob']['camadaMax']}")
+
+    def enlace(k):
+        i = os.environ.get(k, "")
         return f"https://drive.google.com/uc?export=download&id={i}" if i else ""
-    drive_links = {"exec": _dl("EXEC_ID"), "risk": _dl("RISK_ID"), "list": _dl("LIST_ID"), "cob": _dl("COB_ID")}
-    combined = json.dumps({"P": payload, "exec": exec_html, "risk": risk_html, "execFull": exec_full, "riskFull": risk_full, "execDocx": exec_b64, "riskDocx": risk_b64, "riskList": risk_list, "listDocx": list_b64, "driveLinks": drive_links, "Pcob": pcob}, ensure_ascii=False, separators=(",", ":"))
-    sec_path = os.environ.get("SECRETS_PATH", os.path.join(os.path.dirname(os.path.abspath(__file__)), "secrets.json"))
-    enc = SECURE.encrypt(combined, json.load(open(sec_path, encoding="utf-8")))
-    enc_json = json.dumps(enc, ensure_ascii=False, separators=(",", ":"))
-    logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logo.svg")
-    logo_svg = open(logo_path, encoding="utf-8").read() if os.path.exists(logo_path) else '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#24205b" stroke-width="5"/><text x="50" y="66" font-size="46" font-weight="700" fill="#ff4f20" text-anchor="middle" font-family="Georgia,serif">IP</text></svg>'
-    ve_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ve_states.geojson")
-    ve_geo = open(ve_path, encoding="utf-8").read() if os.path.exists(ve_path) else '{"type":"FeatureCollection","features":[]}'
-    # Puerta del Grupo IP (compartida con Caleb): va primero porque trae su propio __LOGO_SVG__
-    puerta = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "puerta.html"), encoding="utf-8").read()
-    puerta = (puerta.replace("__PUERTA_AQUI__", "ip").replace("__PUERTA_ACENTO__", "#c93608")
-                    .replace("__PUERTA_LOGO__", "__LOGO_SVG__").replace("__PUERTA_NOMBRE__", "Distribuidora y Suministros IP"))
-    out_html = (TEMPLATE.replace("__PUERTA__", puerta)
-                        .replace("__VERSION__", html.escape(version))
-                        .replace("__ENC_JSON__", enc_json)
-                        .replace("__VE_GEO__", ve_geo)
-                        .replace("__LOGO_SVG__", logo_svg))
-    with open(out, "w", encoding="utf-8") as f:
-        f.write(out_html)
-    print(f"OK -> {out} ({len(out_html)/1e6:.2f} MB, {len(rows)} filas)")
+    out["driveLinks"] = {"exec": enlace("EXEC_ID"), "list": enlace("LIST_ID"), "cob": enlace("COB_ID")}
+    return out
 
 
-TEMPLATE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "template.html")
-# Se lee con newline por defecto (universal): convierte CRLF y LF a salto simple,
-# exactamente igual que hacia el literal de codigo. Asi el index.html sale identico
-# aunque git reescriba los finales de linea del archivo (core.autocrlf=true).
-with open(TEMPLATE_PATH, encoding="utf-8") as _f:
-    TEMPLATE = _f.read()
+CFG = {"clave": "ip", "nombre": "Distribuidora y Suministros IP", "modulo": "ip.js",
+       "titulo": "Distribuidora y Suministros IP · Inteligencia de Ventas", "acento": "#c93608",
+       "logo_html": '<img src="assets/logo-ip.png" alt="" width="48" height="48">',
+       "puerta_logo": '<img src="assets/logo-ip.png" alt="Distribuidora y Suministros IP">'}
+
+
+def main():
+    if len(sys.argv) != 4:
+        raise SystemExit(__doc__)
+    xlsx, version, salida = sys.argv[1:4]
+    cl_path = os.path.join(AQUI, "changelog.json")
+    CL.verificar(cl_path, AQUI)                 # codigo nuevo sin entrada en Novedades: no se publica
+    df = cargar(xlsx)
+    dims, cols, fechas = ventas(df)
+    ejecutivo, docx, hist = informes(df, version)
+    corte = hist[-1]["corte"]
+    CL.corte(cl_path, "ip", corte, fechas["dateMax"],
+             ["Ventas hasta el " + "-".join(reversed(fechas["dateMax"].split("-"))) + "."])   # sin cifras: el repo es publico
+    meta = dict(fechas, empresa="ip", version=version, corte=corte, dims=dims,
+                generated=pd.Timestamp.now().strftime("%Y-%m-%d %H:%M"),
+                exec=ejecutivo, execDocx=docx, changelog=CL.cargar(cl_path), **adjuntos())
+    # con enlace de Drive la descarga va al archivo exacto: la copia embebida
+    # solo pesaria (~180 KB); se queda como respaldo cuando no hay enlace
+    for clave, copia in (("exec", "execDocx"), ("list", "listDocx")):
+        if meta["driveLinks"][clave]:
+            meta[copia] = ""
+
+    with open(os.environ.get("SECRETS_PATH", os.path.join(AQUI, "secrets.json")), encoding="utf-8") as f:
+        secretos = json.load(f)
+    iters = int(secretos.get("iterations", 200000))
+    enc = SECURE.encrypt_bytes(PAQ.empaquetar(meta, cols), secretos["users"], iters)
+    reunion = SECURE.reunion_users(secretos)
+    enc_r = (SECURE.encrypt_bytes(PAQ.empaquetar(*REUNION.limpiar("ip", meta, cols)), reunion, iters)
+             if reunion else None)
+
+    with open(os.path.join(AQUI, "ve_states.geojson"), encoding="utf-8") as f:
+        geo = json.load(f)
+    with open(os.path.join(AQUI, "app", "favicons.json"), encoding="utf-8") as f:
+        cfg = dict(CFG, favicon=json.load(f)["ip"])
+    html = PAG.construir(cfg, enc, enc_r, version, extra={"geo": geo})
+    PAG.escribir(salida, html)
+    print(f"OK -> {salida} ({len(html) / 1e6:.2f} MB, {len(df)} filas, corte {corte}"
+          f"{', con paquete de reunion' if enc_r else ''})")
 
 
 if __name__ == "__main__":

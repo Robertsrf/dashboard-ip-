@@ -225,7 +225,7 @@ Qué contiene cada grupo, para reconocerlo si el ERP cambia la numeración:
 
 Cuando Roberts suba un archivo nuevo a `Informes IP / Tiendas caleb`:
 
-1. **Listar la carpeta de Drive** (id `1dkRKn4y-74QM8i0Q8n79IgdX8HAn2ih8`) y tomar el reporte más reciente.
+1. **Listar la carpeta de Drive** (id `<id>`) y tomar el reporte más reciente.
    Bajarlo **por ID con curl**, no de `Downloads`:
    `curl -sL "https://drive.google.com/uc?export=download&id=<ID>" -o caleb.xlsx`. Comparar tamaño con Drive.
 2. **Correr `python caleb_clean.py caleb.xlsx`.** Valida firma y columnas, repara, y corre 8 verificaciones:
@@ -268,19 +268,16 @@ Venta neta por mes (corte 1): julio 52 819 (23 días) · agosto 93 039 (26 días
 
 ## 9. El dashboard: cómo se construye
 
-Estilo elegido el 2026-09-25: **D · Panel ejecutivo**, hermano del dashboard de IP (misma gramática; colores de
-Caleb: azul `#0F4F9C` para datos y acciones, rojo `#D7191F` solo para alertas). Contrato de diseño en
-`.impeccable/surfaces/template-caleb-html.md`; reglas generales en `NORMAS_SISTEMA.md`.
+Desde la v4 (2026-10-20) Caleb usa el núcleo común del Grupo IP: proceso en `METODO.md`, interfaz en
+`DESIGN.md` (colores de Caleb: azul `#0F4F9C` para datos y acciones, rojo `#D7191F` solo para alertas).
 
 ### 9.1 Archivos
 
 | Archivo | Rol | ¿En git? |
 |---|---|---|
 | `caleb_clean.py` | Lee, repara y certifica el Excel (§3, §6). `build_caleb.py` lo llama primero | Sí |
-| `build_caleb.py` | Arma el paquete, lo cifra con `secrets.json` (los mismos PINs de IP) y genera `caleb.html` | Sí |
-| `template_caleb.html` | **Toda la UI de Caleb**. Único sitio donde se edita | Sí |
-| `puerta.html` | Puerta del Grupo IP (elegir empresa → PIN). La comparten IP y Caleb | Sí |
-| `assets/logo-caleb.png`, `assets/logo-ip.png` | Logos livianos (720 px y 360 px) que usan la puerta y la cabecera | Sí |
+| `build_caleb.py` | Certifica, arma el paquete v2, lo cifra (mismos PIN que IP + el de reunión) y genera `caleb.html` | Sí |
+| `app/caleb.js` | **Las secciones de Caleb** sobre el núcleo (`app/core.js`, `app/motor.js`) | Sí |
 | `caleb.html` | Artefacto publicado. **Nunca se edita a mano** | Sí |
 | `history_caleb.json` | Cifras de control, una entrada por corte (clave `hasta`) | Sí |
 | `caleb_data.xlsx` | El Excel del corte, bajado de Drive | **No** (`*.xlsx`) |
@@ -289,42 +286,39 @@ Caleb: azul `#0F4F9C` para datos y acciones, rojo `#D7191F` solo para alertas). 
 
 ```bash
 python build_caleb.py caleb_data.xlsx "<fileId>|<modifiedTime>|<size>" caleb.html
+python tools/verificar.py caleb.html
 ```
 
-Corte 1: `"10n7q7dFteMAE2y4PJQpwSgYRZCDBwOn4|2026-09-25T03:30:42Z|955142"`. El build imprime la certificación
-de `caleb_clean.py` y **sale con error si alguna verificación falla o si queda un marcador sin reemplazar**.
-`publish.py` ya sube `caleb.html` y `history_caleb.json` junto con los archivos de IP.
+Corte 1: `"<id>|2026-09-25T03:30:42Z|955142"`. El build imprime la certificación
+de `caleb_clean.py` y **sale con error si alguna verificación falla, si queda un marcador sin reemplazar o si
+el código cambió sin entrada en Novedades**. Agrega solo la entrada del corte.
 
-### 9.3 El paquete (`P`, cifrado dentro de `caleb.html`)
+### 9.3 El paquete v2 (cifrado dentro de `caleb.html`)
 
-Cada fila es `[día, hora, factura, producto, vendedor, cliente, cantidad, devuelto, preciofin, costounit,
-descuento]`. Grupo y marca **viven en el producto** (`prodGrupo`, `prodMarca`: ningún código cambia de grupo ni
-de marca), el tipo en el cliente (`cliTipo`) y la serie en la factura (`docSerie`). La existencia va por
-producto (`prodEx`). El mes sale de `dayMes[día]`. El front calcula neto, bruto, devuelto, costo y salidas a
-$0 con las fórmulas de §4.
+Una fila por línea de factura, en columnas: códigos `dia, hora, doc, prod, vend, cli, mes, grupo, marca,
+tipo, serie`; cantidades `cant, dev, q` (milésimas); y los importes ya calculados con las fórmulas de §4,
+con 4 decimales: `precio, costo, neto, bruto, devm, vm, cst, p0, sc`. Lo que la v3 derivaba en el navegador
+fila a fila se calcula una vez en Python. El paquete de **reunión** no lleva `precio, costo, vm, cst, p0, sc`
+(lista blanca en `grupo/reunion.py`). La existencia sigue por producto (`dims.prodEx`).
 
-### 9.4 Lo que hace el front
+### 9.4 Lo que hace el front (`app/caleb.js`)
 
-- **8 indicadores:** venta neta · venta por día de venta (con cierre proyectado del mes en curso: lo vendido
-  en el mes + ritmo × días de lunes a sábado que faltan) · margen bruto (C1, C4, C10; las salidas a $0 se
-  informan aparte) · ticket ·
-  facturas (y anuladas) · clientes (y nuevos) · devoluciones · agotados que se venden.
-- **Comparador «Comparar con»**, en la barra de fechas: el mes anterior por día (por defecto) · el período
-  anterior del mismo largo · el mismo tramo del mes pasado · sin comparar. Los flujos se comparan **por día
-  de venta** (C9); margen y devolución, en **puntos**; el ticket, en %. Sin datos para comparar lo dice en
-  la tarjeta en lugar de mostrar un número.
-- **7 segmentadores:** meses, grupo, vendedor, tipo de cliente, marca, cliente y producto (estos dos con
-  buscador: pintan 200 opciones y el buscador llega al resto). Casi todas las barras filtran al hacer clic.
-- **8 secciones:** Resumen (con «Qué atender»), Ventas en el tiempo, Rentabilidad, Productos e inventario,
-  Vendedores, Clientes (con «Clientes que dejaron de venir»: 2+ facturas y sin volver en 15/21/30 días),
-  Devoluciones y anulaciones, Comparar períodos.
-- **«Qué atender»** se arma solo con reglas fijas, sobre la selección: agotados que se venden · productos de
-  los 10 más vendidos con menos de 15 días de inventario · vendedores con ≥ 3 % de la venta y margen 8 puntos
-  bajo el de la tienda · salidas a $0 · devolución ≥ 5 % · clientes frecuentes sin volver en 21 días.
+- **8 indicadores:** venta neta y venta por día de venta (con cierre proyectado del mes) y margen bruto son
+  **sensibles** (no salen en reunión); ticket, facturas (y anuladas), clientes (y nuevos), devoluciones y
+  agotados que se venden.
+- **«Comparar con»** en la barra de fechas: el mes anterior por día (por defecto) · el período anterior ·
+  el mismo tramo del mes pasado · sin comparar. Flujos por día de venta (C9); margen y devolución en puntos.
+- **7 segmentadores:** mes, grupo, vendedor, tipo de cliente, marca, cliente y producto (estos dos buscan
+  también por código).
+- **Ruta:** 1 Inicio (titular, indicadores, semanas, grupos, vendedores, productos, qué atender) y Ventas en
+  el tiempo · 2 Productos e inventario, Vendedores, Clientes, Rentabilidad · 3 Devoluciones y anulaciones ·
+  4 Comparar períodos y Novedades. **Agenda de reunión:** Inicio, Vendedores, Clientes, Inventario, Devoluciones.
+- **«Qué atender»**: agotados que se venden · los 10 más vendidos con menos de 15 días de inventario ·
+  vendedores con ≥ 3 % de la venta y margen 8 puntos bajo la tienda · salidas a $0 · devolución ≥ 5 % ·
+  clientes frecuentes sin volver en 21 días (en reunión no salen las de margen ni las de $0).
 
 ### 9.5 Verificación antes de publicar
 
-`node --check` del último `<script>` de `template_caleb.html`, build limpio, entrar con un PIN real y recorrer
-las 8 secciones en escritorio (1440 px) y teléfono (390 px) sin errores de consola ni desplazamiento lateral,
-y `impeccable detect --json template_caleb.html puerta.html` sin hallazgos. Los indicadores con todo el
-período deben dar las cifras de §7.
+`python tools/verificar.py caleb.html` y, con el servidor local, `python tools/navegador.py
+http://127.0.0.1:8765/caleb.html` con `--rol admin` y `--rol reunion`, en 1440 y 390 px. Los indicadores con
+todo el período deben dar las cifras de §7.

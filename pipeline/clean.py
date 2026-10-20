@@ -8,11 +8,18 @@ CONTEXTO_CLAUDE.md.
 Uso:
     from clean import clean_df, VENDEDORES_ESPURIOS, filtrar_informe
 """
+import os
+import sys
+
 import pandas as pd
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from grupo import reglas  # noqa: E402  (relevos de vendedor: los mismos que el dashboard)
+
 # Vendedores que aparecen en la data pero no son vendedores reales: se excluyen
-# del analisis de desempeno del equipo (no de los totales de venta).
-VENDEDORES_ESPURIOS = ["2", "23", "Leonardo"]
+# del analisis de desempeno del equipo (no de los totales de venta). "Leonardo"
+# salio de esta lista el 2026-10-19: es el codigo 10, que es de Héctor.
+VENDEDORES_ESPURIOS = ["2", "23"]
 
 # Valores de GRUPO que son basura de captura.
 GRUPOS_ESPURIOS = ["6"]
@@ -52,6 +59,7 @@ def clean_df(df):
     for col in NUMERICAS:
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0.0)
+    df = reglas.vendedores(df)
 
     df["MARCA_LIMPIA"] = (df["MARCA"].astype(str)
                           .str.replace(r"\s*\(N\)$", "", regex=True).str.strip()

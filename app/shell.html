@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- DATA_VERSION: __VERSION__ -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="__CSP__">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>__TITULO__</title>
+<link rel="icon" type="image/svg+xml" href="__FAVICON__">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap">
+<style>__CSS__</style>
+</head>
+<body data-empresa="__EMPRESA__" class="bloqueado">
+__PUERTA__
+<div id="app" hidden>
+  <div class="franja-reunion" id="franja-reunion"></div>
+  <header class="cab">
+    <a class="cab-marca" href="#inicio">__LOGO__<span class="cab-nombre" id="cab-nombre"></span></a>
+    <p class="cab-corte" id="cab-corte"></p>
+    <div class="cab-acc">
+      <span class="hola" id="hola"></span>
+      <button class="btn btn-sec" type="button" id="b-reunion" hidden>Modo reunión</button>
+      <a class="btn btn-txt" href="index.html">Cambiar de empresa</a>
+    </div>
+  </header>
+  <div class="barra" id="barra">
+    <button class="btn btn-sec" type="button" id="b-menu" aria-controls="nav" aria-expanded="false">
+      <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg><span>Secciones</span></button>
+    <div class="fechas" id="fechas"></div>
+    <div class="segs" id="segs"></div>
+    <button class="btn btn-sec solo-movil" type="button" id="b-filtros" aria-expanded="false">Filtros <span id="n-filtros"></span></button>
+    <div class="barra-fin">
+      <button class="btn btn-txt" type="button" id="b-limpiar">Quitar filtros</button>
+      <button class="btn btn-pri solo-movil" type="button" id="b-listo">Ver resultados</button>
+    </div>
+  </div>
+  <div class="activos" id="activos" aria-live="polite"></div>
+  <div class="cuerpo">
+    <nav class="nav" id="nav" aria-label="Secciones"></nav>
+    <main class="main" id="main" tabindex="-1"><div class="cargando">Abriendo los datos…</div></main>
+  </div>
+  <footer class="pie" id="pie"></footer>
+</div>
+<div class="velo" id="velo" hidden></div>
+<div class="tip" id="tip" role="tooltip"></div>
+<script type="application/json" id="cfg">__CFG__</script>
+<script type="application/json" id="extra">__EXTRA__</script>
+<script type="application/json" id="enc">__ENC__</script>
+<script type="application/json" id="enc-r">__ENC_R__</script>
+<script src="vendor/echarts.min.js"></script>
+<script>__JS_MOTOR__</script>
+<script>__JS_CORE__</script>
+<script>__JS_EMPRESA__</script>
+</body>
+</html>

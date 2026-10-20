@@ -3,7 +3,8 @@
 > Documento único de contexto para cargar en un **Proyecto de Claude**.
 > Contiene: qué es el sistema, cómo está construido, cómo son los datos, cómo se despliega,
 > cómo se edita sin romperlo, y las trampas conocidas.
-> Verificado contra el código y los datos reales el **2026-09-06**, sobre el **8.º corte** (`dateMax` 2026-08-31).
+> Verificado contra el código y los datos reales el **2026-10-20** (v4), sobre el **10.º corte** (`dateMax` 2026-09-30).
+> **Proceso, arquitectura e interfaz desde la v4: `METODO.md` y `DESIGN.md`.** Este documento manda en los datos.
 > **No contiene PINs, tokens ni credenciales.**
 
 ---
@@ -16,10 +17,10 @@
 - Los gráficos son **ECharts 5.5.1** (desde CDN, con respaldo local en `vendor/echarts.min.js` si el CDN no responde). No hay backend, ni base de datos, ni API.
 - Se publica en **GitHub Pages** → https://robertsrf.github.io/dashboard-ip-/ (repo `Robertsrf/dashboard-ip-`, rama `main`).
 - Se actualiza **a petición**, no en automático: se suben los archivos a Google Drive y se pide la corrida en el chat (§10.2). Las tareas programadas de Cowork se retiraron el 2026-08-09.
-- El HTML/CSS/JS vive en **`template.html`**, un único archivo que `build_dashboard.py` lee al arrancar. *(Antes estaba duplicado dentro del `.py` y había que editar dos sitios; eso se eliminó — ver §14.)*
+- Desde la v4 (2026-10-20) la interfaz vive en **`app/`** (núcleo común a todas las empresas + un módulo por empresa) y los datos viajan en un **paquete v2** de columnas binarias comprimidas (`grupo/paquete.py`): `index.html` bajó de 7,1 MB a 2,2 MB con dos paquetes (el normal y el de reunión).
 - Los datos son **cortes quincenales acumulativos**: el último mes casi siempre está incompleto, y el sistema lo compensa explícitamente.
 - Autor: **Ing. Roberts Flores**.
-- Documentación previa en el repo: `SYSTEM.md` (referencia técnica), `COWORK_ACTUALIZACION.md` (**la tarea automática, ya retirada** — referencia histórica), `README.md` (mínimo). Este documento los engloba.
+- Documentación: `CLAUDE.md` (entrada), `METODO.md` (proceso), `DESIGN.md` (interfaz), este documento (datos de IP), `CONTEXTO_CALEB.md` y `docs/v4-*.md`.
 
 ---
 
@@ -64,68 +65,34 @@ Comparar cortes = comparar totales. **Jamás sumarlos.**
 
 ## 2. Inventario de archivos del repo
 
-| Archivo | Tamaño aprox. | Rol | ¿En git? |
-|---|---|---|---|
-| `build_dashboard.py` | 6 KB | **Generador**. `main()` (líneas 21–131) lee el Excel y arma el payload; al final lee `template.html` en la variable `TEMPLATE`. | Sí |
-| `template.html` | 82 KB | **Toda la UI**: HTML + CSS + JS del dashboard, con los 4 placeholders. **Único sitio donde se edita la interfaz.** | Sí |
-| `index.html` | 4,8 MB | **Artefacto desplegado**. HTML + JS + `const ENC = {...}` con los datos cifrados. Generado, nunca editado a mano. | Sí |
-| `vendor/echarts.min.js` | 1.0 MB | Respaldo local de ECharts **5.5.1**. Solo se carga si `window.echarts` no existe tras el `<script>` del CDN. | Sí |
-| `pipeline/` | 30 KB | Pipeline de informes: `clean.py`, `analysis.py`, `rep_helpers.js`, `build_report.js`. **Herramienta paralela**: no la importa nadie en producción. | Sí (los intermedios `.json`/`.doc` no) |
-| `reports.py` | 31 KB | Genera los informes **Ejecutivo** y de **Riesgo/Recuperados** en HTML (resumen + versión completa). | Sí |
-| `secure.py` | 1 KB | Cifrado del payload: PBKDF2-SHA256 + AES-256-GCM, una clave envuelta por PIN. | Sí |
-| `risklist.py` | 4.3 KB | Convierte el Excel "Lista de Clientes en Riesgo/Recuperados" (multi-hoja) a JSON. Distingue **hojas lista** (una tabla) de **hojas narrativas** (KPIs + títulos + párrafos), que se emiten como bloques — ver §8. | Sí |
-| `cobranza.py` | 16 KB | Convierte el Excel de **conciliación Facturado vs. Cobrado** en el payload `Pcob` de la pestaña 💵 Cobranza. Detecta encabezados por nombre y **aborta el build si la identidad `Facturado = Cobrado + Diferencial + Pendiente` no cuadra**. | Sí |
-| `wordrep.py` | 3.4 KB | Extrae el resumen HTML + base64 de los Word de informe (requiere `python-docx`). Recorre el documento **en orden real** (párrafos y tablas intercalados): desde el 8.º corte el informe pone sus hallazgos en tablas, y `d.paragraphs` no las ve. | Sí |
-| `publish.py` | 1.4 KB | `git add index.html history.json` + commit `Auto-update <fecha>` + `push origin main`. | Sí |
-| `history.json` | 1 KB | Histórico de cortes publicados: **una entrada por corte**, identificado por `dateMax`. | Sí |
-| `ve_states.geojson` | 34 KB | 25 estados de Venezuela simplificados, para el mapa choropleth. Se embebe en el HTML. | Sí |
-| `Logo.svg` | 160 KB | Logo, se embebe inline en el HTML (placeholder `__LOGO_SVG__`). | Sí |
-| `netlify.toml` | 104 B | **Residual**. Netlify ya no se usa (créditos agotados). Se conserva por si se retoma. | Sí |
-| `package.json` | 48 B | Solo `{"name":"dashboard-ip","private":true}`. Sin dependencias. No hay build de Node. | Sí |
-| `.nojekyll` | 0 B | Evita que GitHub Pages procese el sitio con Jekyll. **No borrar.** | Sí |
-| `data_ip.xlsx` | 5.0 MB | Excel fuente de ventas (viene de Drive). | **No** (.gitignore) |
-| `risk_list.xlsx` | 111 KB | Excel de lista de riesgo (viene de Drive). | **No** |
-| `exec.docx` | 57 KB | Word del informe ejecutivo del corte vigente (viene de Drive). | **No** |
-| `cobranza.xlsx` | 1.9 MB | Excel de conciliación de cobranza, 13 hojas (viene de Drive). **Insumo opcional**: si falta, la pestaña se oculta y el resto funciona igual. | **No** |
-| `secrets.json` | 334 B | PINs, nombres, roles de los 4 usuarios. | **No — NUNCA subir** |
-| `SYSTEM.md`, `COWORK_ACTUALIZACION.md`, `README.md` | — | Documentación. | Sí |
-
-`.gitignore` protege: `secrets.json`, `data_ip.xlsx`, `*.xlsx`, `*.docx`, `patch.py`, `site/`, `*.log`,
-los intermedios del pipeline (`pipeline/*.json`, `pipeline/*.doc`, `pipeline/*.pkl`) y `__pycache__/`.
-`.gitattributes` marca `vendor/echarts.min.js` como `-text` para que `core.autocrlf` no le reescriba
-los finales de línea.
+| Archivo | Rol | ¿En git? |
+|---|---|---|
+| `app/` | **Toda la interfaz**: `shell.html` (armazón), `core.css`, `motor.js` (datos), `core.js` (núcleo), `ip.js`, `caleb.js` (módulos), `puerta.html`, `favicons.json` | Sí |
+| `grupo/` | Núcleo Python: `paquete.py` (paquete v2), `pagina.py` (arma el HTML y la CSP), `reglas.py` (relevos de vendedor), `reunion.py` (paquete de reunión), `changelog.py` (Novedades) | Sí |
+| `build_dashboard.py` | Build de IP: `cargar()` → `ventas()` → `informes()` → `adjuntos()` → paquetes → página | Sí |
+| `build_caleb.py`, `caleb_clean.py` | Build y certificación de Caleb (`CONTEXTO_CALEB.md`) | Sí |
+| `cobranza.py`, `risklist.py`, `wordrep.py` | Parsers de la conciliación, la lista de riesgo y el Word | Sí |
+| `reports.py` | `history.json` y el resumen ejecutivo de respaldo (sin Word) | Sí |
+| `secure.py` | AES-256-GCM + PBKDF2 por PIN; una clave maestra por paquete | Sí |
+| `publish.py` | `git add` de los artefactos + commit + push | Sí |
+| `changelog.json` | **Novedades**: todas las versiones desde el 2026-07-07 | Sí |
+| `history.json`, `history_caleb.json` | Historial de cortes (uno por corte) | Sí |
+| `tests/`, `tools/` | Pruebas (`unittest`, `node --test`) y verificación (`verificar.py`, `navegador.py`, `paridad.mjs`) | Sí |
+| `vendor/echarts.min.js` | ECharts **5.5.1**, servido desde el propio sitio (sin CDN) | Sí |
+| `ve_states.geojson`, `assets/` | Mapa de estados; logos (`assets/fuentes/` guarda los originales) | Sí |
+| `pipeline/` | Herramienta paralela de informes; usa `grupo/reglas.py` | Sí |
+| `index.html`, `caleb.html` | **Artefactos**. Nunca se editan a mano | Sí |
+| `.nojekyll` | Evita que GitHub Pages procese el sitio con Jekyll. **No borrar** | Sí |
+| `secrets.json` | PIN de los 4 usuarios y el de reunión | **Nunca** |
+| `data_ip.xlsx`, `risk_list.xlsx`, `exec.docx`, `cobranza.xlsx`, `caleb_data.xlsx` | Insumos de Drive | **No** |
 
 ---
 
 ## 3. Arquitectura y flujo de datos
 
-```
-Google Drive "Informes IP"                    (parentId 1K1FPQkJBgwqjzSoVxEX6AbZFVzhQzscE)
-  ├─ Data_IP_Actualizada*.xlsx   (obligatorio)  ─┐
-  ├─ *Ejecutivo*.docx            (opcional)      │
-  └─ *Lista*Riesgo*.xlsx         (opcional)      │
-                                                 v
-                              build_dashboard.py  main()
-                                 │
-                                 ├─ pandas: limpia + codifica dimensiones a índices enteros
-                                 ├─ arma payload P {version, fechas, dims, rows}
-                                 ├─ reports.build()  ──> exec/risk HTML + actualiza history.json
-                                 ├─ wordrep/risklist ──> resúmenes, base64, tabla de riesgo
-                                 ├─ secure.encrypt() ──> ENC {iv, ct, users[...]}
-                                 └─ TEMPLATE (leído de template.html)
-                                       .replace(__VERSION__, __ENC_JSON__, __VE_GEO__, __LOGO_SVG__)
-                                                 v
-                                          index.html (4,8 MB)
-                                                 v
-                                  publish.py → git push → GitHub Pages (~1 min)
-                                                 v
-                       Navegador: PIN → PBKDF2 → AES-GCM → P → new App() → ECharts
-```
-
-**No hay servidor.** Todo el cómputo (filtros, KPIs, regresiones, agregaciones) ocurre en el navegador sobre el array `P.rows` en memoria (**72 259 filas** en el corte 8).
-
-### Los 4 placeholders del TEMPLATE
-`__VERSION__` · `__ENC_JSON__` · `__VE_GEO__` · `__LOGO_SVG__`. Si añades uno nuevo, hay que sustituirlo en `main()` (líneas ~124–127).
+El diagrama y la tabla de responsabilidades están en **`METODO.md` §1**. Lo esencial: no hay servidor; el
+navegador descifra el paquete, lo descomprime con `DecompressionStream` y el motor (`app/motor.js`) filtra en
+una sola pasada sobre arreglos tipados (**83 239 filas** en el corte 10). Solo se pinta la sección visible.
 
 ---
 
@@ -211,110 +178,55 @@ la diferencia **es** septiembre entero.
 
 ## 5. Modelo de datos en el navegador
 
-Tras el login, `P` es el payload descifrado:
+Tras el PIN, `GIP.S.P` es el `meta` del paquete y `GIP.S.M` el motor sobre sus columnas.
 
-```js
-P = {
-  version, generated,          // "2026-08-09 15:26"
-  dateMin, dateMax,            // "2026-01-09", "2026-07-31"
-  year,                        // "2026"
-  dayZero, dayCount,           // "2026-01-09", 235
-  dims: { mes, mesLabels, fullLabels, histMonthNums,
-          grupo, vendedor, sector, marca, cliente, producto },
-  rows: [ [ ... 12 enteros/floats ... ], ... ]   // 72 259 filas
-}
+```
+meta = { empresa:'ip', version, generated, dateMin, dateMax, year, dayZero, dayCount, corte,
+         dims:{ mes, mesLabels, fullLabels, histMonthNums, grupo, vend, sector, estado, marca, familia,
+                cli, prod, doc:<cantidad> },
+         exec:{fuente:'word'|'sistema', html}, execDocx, riskList, listDocx, driveLinks:{exec,list,cob},
+         Pcob, changelog, cols:[{n,t,s,o,l}], filas }
+columnas (una entrada por línea de factura):
+  mes grupo vend sector estado marca familia cli prod doc dia   códigos enteros (u8/u16/u32)
+  cant dev   milésimas (i32, escala 1000)     neto   centavos (i32, escala 100)
 ```
 
-Cada fila es un array plano; los índices están en la constante `R`:
-
-```js
-const R = {MES:0, GRUPO:1, VEND:2, SECTOR:3, MARCA:4, CLI:5,
-           PROD:6, DOC:7, CANT:8, DEV:9, NETO:10, DAY:11};
-```
-
-- Las dimensiones se **codifican a índices enteros** (`encode()` en `main()`), con los valores ordenados alfabéticamente en `P.dims.*`. Esto es lo que reduce 5 MB de Excel a un payload manejable.
-- `MES` es un índice **cronológico** (los meses van ordenados) → permite rangos `[a,b]`.
-- `DAY` = días transcurridos desde `P.dayZero`. Es la base del filtro de fechas, del calendario heatmap y de la pestaña Comparar.
-- El payload completo (`combined`) que se cifra es:
-  `{P, exec, risk, execFull, riskFull, execDocx, riskDocx, riskList, listDocx, driveLinks}`.
-
-> **Limitación estructural:** no se pueden añadir campos al payload sin **regenerar** `index.html` (los datos van cifrados). Por eso cosas como la detección de mes parcial se calculan **en el navegador** a partir de `P.dateMax`, no en Python.
+- Cada dimensión va **codificada a índices** con sus nombres ordenados en `dims`; `doc` solo cuenta.
+- `estado` sale de `SECTOR` (`CIUDAD,ESTADO,VE`) y `familia` es `REFERENCIA`: los dos son segmentadores nuevos.
+- Las sumas del navegador son exactas (enteros); el motor devuelve unidades reales.
+- `execDocx` y `listDocx` (copias embebidas) van vacíos cuando hay enlace de Drive.
 
 ---
 
 ## 6. La aplicación front-end
 
-Todo vive en la clase `App` (una sola instancia global, `window.APP`), dentro del último `<script>`.
+Todo lo general (filtros, menú, tarjetas, kit de gráficos y tablas, ayuda, descarga HD, reunión, Novedades)
+es del núcleo y está descrito en `METODO.md` y `DESIGN.md`. Aquí, lo propio de IP (`app/ip.js`).
 
-### 6.1 Segmentadores (filtros)
+**Segmentadores (9):** Mes · Grupo · Vendedor · Estado · Zona · Marca · Familia · Cliente · Producto, más
+el rango de fechas con atajos. Clic en un gráfico = filtrar (el mapa filtra por estado).
 
-Estado: `this.f = {mes, grupo, vend, sector, marca, cli}` — cada uno un `Set` de índices.
-Rango de fechas: `this.dayRange = [a, b]` en offsets de día.
+**Indicadores (8):** venta neta y proyección del año (**sensibles**: no salen en reunión), ticket,
+clientes, facturas, unidades, productos y % de devolución. La flecha compara el último mes con venta contra el
+anterior; si es el mes del corte y va a medias, lo escala a cierre (§7).
 
-- **Semántica:** `Set` vacío = "todos". `filtered()` combina todos los filtros **y** el rango de días con AND.
-- `DIMS` (en `initMeta()`) define cada segmentador: `{field, names, label}`. `buildFilters()` los dibuja.
-- **Chips colapsados** (`syncFilterUI()`): 1 seleccionado → nombre; varios → `"N seleccionadas"`; la ✕ limpia ese filtro.
-- Las casillas de cada menú se sincronizan **solo al abrirlo** (rendimiento: 1 566 clientes en el corte 8).
-- **Barra de fechas** (`buildDayBar()` sobre `#timebar`): inputs `Desde`/`Hasta` + atajos *Último día · 7 días · Este mes · Todo*. Si no hay `P.dayZero`, la barra se oculta y no se filtra por día.
-- Botón **"Limpiar todo"** → `APP.reset()`.
+**Ruta de secciones:**
 
-### 6.2 KPIs (8, definidos en `buildKPIs()`)
-
-| id | Etiqueta | Cálculo |
+| Paso | Sección | Lo principal |
 |---|---|---|
-| `neto` | Venta neta (hero) | Σ `SUMANETO` |
-| `fac` | Facturas | `DOCUMENTO` distintos |
-| `tk` | Ticket promedio | neto ÷ facturas |
-| `cli` | Clientes únicos | `NOMBRECLI` distintos |
-| `sku` | SKU únicos | `PRODUCTO` distintos |
-| `uni` | Unidades | Σ `CANTIDAD` |
-| `dev` | % Devolución | Σ dev ÷ Σ cant × 100 |
-| `proy` | Proyección año | Σ de `projLine()` (reales + proyectados a diciembre) |
+| 1 Cómo vamos | Inicio | Titular automático del corte, indicadores, venta mensual + proyección, **qué lo explica** (vendedores, marcas y estados que más suben y bajan), **qué atender** (inactivos, vendedores que caen > 25 %, lista de riesgo, cobranza pendiente, mes a medias) |
+| | Tendencia | Proyección, crecimiento mensual, acumulado, detalle por mes, unidades y ticket, calendario por día |
+| 2 Qué lo mueve | Vendedores | Ranking, **cambio frente al mes anterior** (base ≥ $5.000), trayectoria de los 6 líderes, tabla |
+| | Clientes | Inactivos > 45 días (respeta segmentadores, no fechas), ranking, Pareto, trayectoria, tabla |
+| | Productos y marcas | Grupos mes a mes y su peso, marcas, productos (por venta o unidades), trayectoria, tabla por marca/familia/producto/grupo |
+| | Zonas | Mapa por estado (se encuadra solo), ranking de zonas, trayectoria, tabla por zona/estado |
+| 3 Qué atender | Riesgo y recuperados | El Excel de Drive hoja por hoja; en reunión, el enfoque en un vendedor filtra la lista |
+| | Cobranza | §8 bis, con sus filtros propios de camada y analista |
+| 4 Herramientas | Comparar períodos | A contra B respetando los segmentadores |
+| | Informe del corte | Resumen del Word + descarga |
+| | Novedades | Historial de versiones |
 
-Cada KPI tiene: valor, **sparkline** (serie mensual), **delta ▲/▼** (último mes vs. anterior) y un botón **(i)** con explicación (`tip`). Para KPIs de volumen, si el último mes es parcial el delta se calcula sobre el mes **escalado a cierre** y se marca `(proy.)`.
-
-### 6.3 Secciones (panel lateral izquierdo)
-
-La navegación es un **panel lateral colapsable** (`<aside id="sidenav">`), agrupado en cuatro bloques:
-**Resumen** · **Análisis** (tend, vend, marca, sector, cli, prod) · **Comparar** · **Informes** (exec, rlist).
-El botón **☰ Ocultar menú** vive en la **primera fila dentro del propio panel** (`#navtoggle`); al colapsar,
-aparece un botón flotante **☰** (`#navopen`, fijo arriba a la izquierda) para volver a abrirlo. Ambos llaman a
-`toggleNav()`, que alterna `body.nav-collapsed` y recuerda el estado en `localStorage` (`ipNavCollapsed`). Bajo 640 px el panel es un **cajón superpuesto** cerrado por defecto (`body.nav-open`),
-con scrim, que se cierra al elegir sección o con `Escape`.
-
-> **La trampa:** ECharts **no** se reajusta solo al cambiar el ancho de su contenedor. `toggleNav()` llama
-> a `resizeCharts()` a los **260 ms** (algo más que la transición de 220 ms). Y `.content` lleva
-> `min-width:0`, sin lo cual la columna flex no puede encogerse y los gráficos se desbordan.
-
-| tab | Título | Contenido principal |
-|---|---|---|
-| `resumen` | Resumen ejecutivo | Calendario heatmap `c-cal`, tendencia+proyección `c-trend`, participación por grupo `c-grupo`, top 10 vendedores `c-vend10`, top 10 marcas `c-marca10`, crecimiento intermensual `c-mom`, acumulado `c-cum` |
-| `tend` | Tendencia y proyección | `c-proj`, tabla `t-proj`, unidades y ticket `c-units` |
-| `vend` | Vendedores | `c-vendrank`, `c-vendcmp` (top 6), tabla `t-vend` |
-| `marca` | Marcas y grupos | `c-marca-bars`, `c-marcacmp`, `c-grupomes`, tabla `t-marca` |
-| `sector` | 🗺️ Sectores / Zonas | `c-secrank`, `c-secestado` (pie), **`c-secmap`** (mapa choropleth), `c-seccmp`, tabla `t-sector` |
-| `cli` | Clientes | `c-cli`, Pareto `c-pareto`, `c-clicmp`, **clientes inactivos** `inact-box`, tabla `t-cli` |
-| `prod` | Productos / SKU | `c-prodneto`, `c-produ`, `c-prodcmp`, tabla `t-prod` |
-| `comp` | ⚖️ Comparar | Dos rangos de fecha A vs B → tabla de 6 indicadores con Δ + `c-cmp` |
-| `exec` | 📄 Informe ejecutivo | **En la práctica, siempre el resumen del Word de Drive**: si hay `EXEC_DOCX`, sustituye al HTML de `reports.py`. `execFull` (el informe completo generado) viaja en el payload pero **nadie lo renderiza** — `printFull()` y `downloadDoc()` están definidos y nunca se llaman. Lo que se ve es el resumen + el botón de descarga del Word real. |
-| `rlist` | 🔴 Clientes en riesgo y recuperados | Tabla navegable del Excel de Drive + descarga. **Oculta si no hay `riskList`.** |
-
-> **Eliminada:** la pestaña `risk` ("Riesgo y recuperados", resumen del Word de Seguimiento de Clientes).
-> El seguimiento de cartera se fusionó en el mismo Excel de `rlist`. `reports.py` **sigue generando**
-> `risk`/`riskFull` y el payload sigue trayéndolos: solo dejaron de renderizarse, así que revertir es
-> devolver el `<button>` y el `<div class="panel" data-panel="risk">` a `template.html`.
-
-### 6.4 Piezas técnicas del front que conviene conocer
-
-- **`hbz(id, pairs, opt)`** — todas las barras horizontales. Muestra una **ventana fija** (desktop 10–14, **móvil 8**) con **slider vertical** (`dataZoom` con `zoomLock:true`) para recorrer el resto, y `filterMode:'filter'` para que **el eje X se reescale a las barras visibles** (si no, un valor enorme aplasta a los demás).
-- **`isMob()`** = `innerWidth <= 640`. Ajusta ventana, márgenes, truncado de etiquetas y fuentes. Al cruzar el breakpoint se re-renderiza la pestaña.
-- **`injectDownloads()`** — añade un botón **⬇** al `h3` de cada tarjeta que tenga un `.chart` con id. Exporta PNG **HD**: calcula `pixelRatio` para que el lado largo quede ≥ 2048 px y el corto ≥ 1280 px (umbral para que WhatsApp ofrezca el toggle "HD"), y compone con canvas el **título + subtítulo + línea naranja** sobre la imagen. Archivo `<Titulo>_HD.png`.
-- **`injectInfo()`** — inyecta el botón (i) con el texto de `TIPS[chartId]` en cada gráfico. **Si añades un gráfico, añade su entrada en `TIPS`.**
-- **`calHeatmap(d)`** — calendario tipo GitHub por día, respeta los filtros, con escala de color numérica visible.
-- **Mapa de estados** (`tSector`): `echarts.registerMap('VE', VE_GEO)` una sola vez (`this._veReg`). El estado sale de `sector.split(',')[1]`, normalizado con `vnorm()` (mayúsculas, sin acentos, trim). Clic → `filterByState()` selecciona todos los sectores de ese estado. Tiene roam (zoom/pan) y etiqueta de monto sobre cada estado con datos.
-- **`printReport(sel, title)` / `printFull` / `downloadDoc`** — imprimir a PDF y bajar los informes como `.doc` usando `PRINT_CSS`.
-- **Paleta:** `PAL` (12 colores). Marca: `--brand:#ff4f20` (naranja) y `--navy:#24205b`. Positivo `#16a34a`, negativo `#e0472c`. Fuente **Inter** (Google Fonts).
-- **Dependencias externas (CDN):** `echarts@5.5.1` de jsDelivr y Google Fonts. ECharts **sí tiene respaldo local**: si tras el `<script>` del CDN no existe `window.echarts`, un `document.write` carga `vendor/echarts.min.js` (ruta relativa, por eso `index.html` debe seguir en la raíz del repo). **Google Fonts no tiene respaldo**: sin internet la tipografía cae a `system-ui`, pero los gráficos dibujan igual.
+**Agenda de reunión:** Inicio (sin totales), Vendedores, Clientes, Riesgo, Productos y marcas, Zonas, Cobranza.
 
 ---
 
@@ -334,7 +246,7 @@ El usuario sube **cortes quincenales**, así que el último mes casi siempre est
 
 ## 8. Informes (`reports.py`)
 
-Dos informes, cada uno con **resumen** (visible en la pestaña) e **informe completo** (descargable como Word/PDF desde el navegador).
+`reports.py` calcula las métricas del corte (`history.json`) y arma un **resumen ejecutivo de respaldo**, que solo se ve si el corte no trae Word. Los informes HTML completos se retiraron en la v4: el informe real es el Word que arma Roberts.
 
 **Metodología clave — ventana reciente = últimos 2 meses:**
 
@@ -345,7 +257,6 @@ Dos informes, cada uno con **resumen** (visible en la pestaña) e **informe comp
 - Se calculan además: riesgo por vendedor (`rv`), riesgo por sector (`rs`), **Top 20 en riesgo** con última compra (`risk20`), top 10 recuperaciones.
 - Perfil de vendedor (`_perfil`): *Alto ticket / mayorista* (ticket > 1,8× mediana) · *Amplitud / venta cruzada* (>120 clientes) · *En desarrollo* (<$15 K) · *Equilibrado*.
 
-**Estructura del informe ejecutivo completo:** 1 resumen + cortes + hallazgos · 2 panorama financiero · 3 evolución temporal + proyección anual · 4 productos/marcas/SKU · 5 clientes · 6 vendedores · 7 geográfico · 8 alertas · 9 insights BI · 10 recomendaciones con responsable y prioridad.
 
 **Recordatorio:** los informes se generan sobre `df_rep`, que **excluye AMERICO y REVIPLAST**. El dashboard no.
 
@@ -559,7 +470,7 @@ Netlify está **pausado por créditos** y ya no es el hosting. La función serve
 **Los 9 pasos de una corrida.** Cada uno con su verificación; si alguno falla, **no se publica**.
 
 1. **Respaldo.** Copia completa del repo a `dashboard-ip-_backups\prod_<FECHA-HORA>\`.
-2. **Listar Drive** (carpeta "Informes IP", `parentId 1K1FPQkJBgwqjzSoVxEX6AbZFVzhQzscE`) y quedarse
+2. **Listar Drive** (carpeta "Informes IP", `parentId <id>`) y quedarse
    con el Excel de datos, el Word Ejecutivo y el Excel de riesgo **más recientes**.
 3. **Validar que cada archivo es lo que dice ser** — el paso que ahora es obligatorio:
    ```python
@@ -583,7 +494,7 @@ Netlify está **pausado por créditos** y ya no es el hosting. La función serve
    descarga rota.
 7. **Verificar el artefacto**: descifrar con un PIN real y comprobar los 4 logins, nº de filas,
    `dayCount`, `riskList`, `driveLinks`, que cada botón tenga panel, que no queden placeholders,
-   que el JS de `template.html` coincida con el del `index.html` y que pase `node --check`.
+   que pase `node --check` (todo lo hace `tools/verificar.py`).
 8. **Cotejar** el neto, las filas, los clientes y el rango de fechas contra el corte anterior de
    `history.json`. Caída de neto >25 % o menos filas que el corte anterior ⇒ **avisar, no publicar en silencio**.
 9. **Publicar**: `git add index.html history.json` + commit + `git push origin main`.
@@ -621,38 +532,37 @@ python build_dashboard.py ./data_ip.xlsx "<VERSION>" ./index.html
 Ejemplo real de la corrida del 8.º corte (2026-09-06):
 
 ```bash
-EXEC_ID=1JVSn9AfT1ypdDpD_bewCu4WLqzFHN5xx LIST_ID=1vqFh1hCurO-rmhugOMGHY5BuctUUgj8j \
-COB_ID=11BMPjFFgud7DTn-oEx5hlUHZiG044tSs \
+EXEC_ID=<id> LIST_ID=<id> \
+COB_ID=<id> \
 EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx COB_XLSX=./cobranza.xlsx \
 SECRETS_PATH=./secrets.json \
 python build_dashboard.py ./data_ip.xlsx \
-  "1-U7zh9wXpg93Ox2fDBu09R9PYOAtjilh|2026-09-04T03:02:06Z|6050608~E:1JVSn9AfT1ypdDpD_bewCu4WLqzFHN5xx~L:1vqFh1hCurO-rmhugOMGHY5BuctUUgj8j~C:11BMPjFFgud7DTn-oEx5hlUHZiG044tSs|2026-09-06T13:03:39Z|783418" \
+  "<id>|2026-09-04T03:02:06Z|6050608~E:<id>~L:<id>~C:<id>|2026-09-06T13:03:39Z|783418" \
   ./index.html
 ```
 
 Corrida del 10.º corte (2026-10-02). **`CORTE=10`** porque no hubo 9 (ver §8):
 
 ```bash
-CORTE=10 EXEC_ID=1aXhsiMs9qHw51RJPG55M6JhPS4K4ZxvO LIST_ID=1KbCfL-vb9OlqGVCWhxUBv22a5jHra_0- \
-COB_ID=1X9VvZMCZB5mGtWEir8IO_EZErgRyEL6B \
+CORTE=10 EXEC_ID=<id> LIST_ID=<id> \
+COB_ID=<id> \
 EXEC_DOCX=./exec.docx RISK_LIST_XLSX=./risk_list.xlsx COB_XLSX=./cobranza.xlsx \
 SECRETS_PATH=./secrets.json \
 python build_dashboard.py ./data_ip.xlsx \
-  "1dl5vbHBJw3EIx_hI7YzTIh0v2OU0mjzu|2026-10-03T02:28:47Z|6963167~E:1aXhsiMs9qHw51RJPG55M6JhPS4K4ZxvO~L:1KbCfL-vb9OlqGVCWhxUBv22a5jHra_0-~C:1X9VvZMCZB5mGtWEir8IO_EZErgRyEL6B|2026-10-03T07:23:12Z|665652" \
+  "<id>|2026-10-03T02:28:47Z|6963167~E:<id>~L:<id>~C:<id>|2026-10-03T07:23:12Z|665652" \
   ./index.html
 ```
 
 Los archivos de Drive se bajan sin pasar por el MCP (son de enlace público):
 `curl -sL "https://drive.google.com/uc?export=download&id=<ID>" -o <archivo>`, y se compara el tamaño con Drive.
 
-`RISK_DOCX` / `RISK_ID` ya no se usan: la pestaña de Seguimiento se eliminó.
 
 Regenerar **el mismo corte** (mismo `dateMax`) ya no duplica nada: `reports.py` **reemplaza** la
 entrada de `history.json` en vez de añadirla, aunque cambie la cadena de versión.
 Validar después: descifrar con un PIN real y comprobar los 4 logins, `dayCount`, `riskList` y `driveLinks`.
 
 **Variables de entorno que lee `build_dashboard.py`:**
-`SECRETS_PATH` (default: `secrets.json` junto al script) · `RISK_LIST_XLSX` · `EXEC_DOCX` · `RISK_DOCX` · **`COB_XLSX`** · `EXEC_ID` · `RISK_ID` · `LIST_ID` · **`COB_ID`** (los IDs generan links `https://drive.google.com/uc?export=download&id=<id>`).
+`SECRETS_PATH` (default: `secrets.json` junto al script) · `RISK_LIST_XLSX` · `EXEC_DOCX` · **`COB_XLSX`** · `EXEC_ID` · `LIST_ID` · **`COB_ID`** · **`CORTE`** (los IDs generan links `https://drive.google.com/uc?export=download&id=<id>`).
 
 ### 10.4 Respaldos
 Cada vez que se sube un cambio se guarda una copia completa en:
@@ -665,46 +575,31 @@ C:\Users\RJ\Desktop\Sitios web  pruebas\dashboard-ip-_backups\prod_<FECHA-HORA>\
 
 ## 11. ⚠️ Cómo editar sin romper nada
 
-> **Desde el 2026-09-13 las reglas de diseño, visualización, móvil, motion, copy y código viven en
-> [`NORMAS_SISTEMA.md`](NORMAS_SISTEMA.md)** y tienen precedencia sobre lo que diga esta sección y la §6.
-> Lo de abajo sigue valiendo como mecánica (dónde se edita, cómo se valida); los criterios de *qué* está
-> bien y *qué* no, están allí.
+El procedimiento está en **`METODO.md` §3**. Las trampas propias de IP:
 
-Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de tocar código.
-
-1. **La UI se edita SOLO en `template.html`.** Ya no hay duplicación: `build_dashboard.py` lee ese archivo al arrancar. **Nunca edites `index.html` a mano** — es un artefacto generado y cualquier cambio se pierde en la siguiente regeneración.
-2. **Para ver el cambio en producción hay que regenerar**, lo que exige `secrets.json` + el Excel. Si no los tienes a mano, puedes previsualizar abriendo `template.html` en el navegador (los gráficos no dibujarán porque no hay datos, pero el layout y el CSS sí se ven).
-3. **Finales de línea:** `template.html` se lee con `newline` por defecto (universal), así que da igual si git lo deja en LF o en CRLF — el `index.html` sale idéntico en ambos casos. No "arregles" eso poniendo `newline=""`: con `core.autocrlf=true` produciría `\r\r\n`.
-4. **Un cambio a la vez, en rama, con respaldo.** El respaldo va a `dashboard-ip-_backups\prod_<FECHA-HORA>\`.
-5. **Validar siempre antes de subir:**
-   - JS: extraer el último `<script>` de `template.html` y correr `node --check`.
-   - Python: `python -m py_compile build_dashboard.py reports.py`.
-   - **Regresión de salida:** genera un `index.html` antes y después del cambio y compáralos enmascarando el bloque `const ENC = {…}` (es aleatorio por diseño: `secure.encrypt` usa `os.urandom` para IV, salt y clave maestra, así que **dos builds nunca son byte a byte iguales**) y el marcador `DATA_VERSION`. Todo lo demás debe coincidir.
-6. **Al añadir un gráfico nuevo:** darle un `id` que empiece por `c-`, meterlo dentro de una `.card` con su `h3` y `.hint`, y **añadir su texto a `TIPS`** (si no, no tendrá botón (i); el botón ⬇ de descarga se inyecta solo).
-7. **Al añadir una dimensión/filtro nuevo:** hay que tocar `R`, `encode()` en `main()`, `payload.dims`, `DIMS` en `initMeta()`, `filtered()`, el HTML de la `.bar`, y **regenerar** (los datos van cifrados, no basta con editar el HTML).
-8. No borrar `.nojekyll` ni `Logo.svg` ni `ve_states.geojson`: los tres son necesarios para generar/servir.
-9. `ve_states.geojson` se puede regenerar con `scratchpad/simplify_geo.py` a partir de geoBoundaries VEN ADM1.
+1. **Ninguna cifra se recalcula en el front si ya la calcula un parser.** La cobranza solo transporta lo
+   que concilió el Excel (§8 bis); el informe es el Word.
+2. **El mes parcial** (§7) se aplica en `GIP.tiempo` (`app/motor.js`) y está fijado por la prueba de
+   paridad con la v3 (`tests/motor.test.mjs`). Cambiarlo es un cambio de cálculo y se dice en Novedades.
+3. **Todo nombre que viene del Excel pasa por `esc()`**: clientes, productos y hojas los escribe gente.
+4. Una tarjeta que muestre totales, costos o márgenes de la empresa lleva `sensible: true`.
+5. Agregar una dimensión = columna en `DIMENSIONES` (`build_dashboard.py`) + segmentador en `ip.js`.
 
 ---
 
 ## 12. Estado actual y deuda técnica conocida
 
-**Funcionando:**
-- 10 secciones en panel lateral colapsable, 8 KPIs, ~25 gráficos, mapa choropleth interactivo, calendario heatmap, comparador de períodos, clientes inactivos (>45 días), descarga HD de gráficos, informe ejecutivo con descarga Word/PDF, lista de riesgo y recuperados desde Drive.
-- Responsive con breakpoint en 640 px (panel lateral off-canvas en móvil).
-- **Una sola fuente de UI** (`template.html`); `index.html` es puro artefacto.
-- Pipeline de informes versionado en `pipeline/`, con las cifras verificadas contra `reports.py`.
+**Funcionando (v4, 2026-10-20):** 11 secciones en ruta de lectura, 9 segmentadores, 8 indicadores, ~30
+gráficos, modo reunión con PIN propio, Novedades, paquete v2 (2,2 MB), pruebas automáticas y verificación
+de navegador en 1440 y 390 px.
 
 **Deuda / limitaciones conocidas:**
-- **Roles decorativos** — todos ven todo. Segmentar por rol exige payloads separados y cifrados por rol; es un proyecto, no un ajuste de UI.
-- **Google Fonts sigue viniendo de CDN**: sin internet la tipografía cae al `system-ui` del sistema (los gráficos ya no dependen del CDN gracias a `vendor/echarts.min.js`).
-- **`index.html` de 6,1 MB** en cada commit: el repo crece rápido (un blob nuevo completo por corte). Opciones sin decidir: Git LFS o publicar el artefacto fuera de git.
-- **Datos sucios sin limpiar en el dashboard** (`VENDEDOR` "23"/"2", `GRUPO` "6") aparecen como opciones reales en los filtros. El **pipeline de informes** sí los excluye (`pipeline/clean.py`), pero el dashboard no.
-- **Sin tests.** La validación es manual (`node --check`, `py_compile`, comparación de salida, revisión visual).
-- `netlify.toml` y la carpeta `netlify/functions` son residuales.
-- **`history.json` tiene 5 cortes registrados** (`2026-06-30`, `2026-07-15`, `2026-07-31`, `2026-08-15`, `2026-08-31`); los cortes 1–3 se hicieron a mano antes del sistema y no están. Se compensa con `CORTE_OFFSET = 3` en `reports.py`, pero **la tabla "Evolución entre cortes" solo puede comparar los cortes que sí están en el histórico** (hoy, cinco).
-- **«Recuperados» significa dos cosas distintas y ambas se publican.** `reports.py` exige compra **anterior** a los dos meses dormidos (8.º corte: **71**); el Excel que arma Roberts a mano cuenta todo el que compró en el mes sin haber comprado en los dos anteriores, **incluidos los clientes nuevos** (8.º corte: **130**). Los 59 de diferencia son clientes cuya primera compra del año fue agosto. Los dos números conviven en el dashboard —el 71 en el informe generado, el 130 en la pestaña de la lista de Drive— y **no se han unificado**: cambiar el criterio de `reports.py` rompería la serie de `history.json` (54 · 17 · 38 · 33 · 71).
+- **PIN de 6 dígitos frente a fuerza bruta fuera de línea** (la página es pública): ver `METODO.md` §5.
+- **Roles decorativos**: los 4 usuarios ven lo mismo; el único paquete distinto es el de reunión.
+- **Datos sucios visibles** en los segmentadores (`VENDEDOR` «2», `GRUPO` «6»); el pipeline de informes sí los excluye.
+- **«Recuperados» significa dos cosas** (§8): 71 en `reports.py`, 130 en el Excel de Drive. Sin unificar.
 - **El sufijo `(N)` de las marcas no está normalizado** (§4.3.8): `FULLCREAM` se cuenta dos veces.
+- `index.html` sigue entrando completo en cada commit (≈2 MB por corte).
 
 ---
 
@@ -723,11 +618,26 @@ Esta es la parte donde más fácil se rompe el sistema. Leer completo antes de t
 | **DATA_VERSION** | Huella de versión en la línea 2 de `index.html`; decide si hay que reconstruir. |
 | **`P`** | El objeto de datos descifrado en el navegador. |
 | **`ENC`** | El bloque cifrado embebido en el HTML. |
-| **`TEMPLATE`** | La variable de `build_dashboard.py` con toda la app; **se lee de `template.html`**, ya no está incrustada en el `.py`. |
+| **Paquete v2** | El bloque de datos cifrado: meta JSON + columnas binarias + gzip (`grupo/paquete.py`). |
 
 ---
 
 ## 14. Historial de cambios del sistema
+
+> Desde la v4 el historial vivo es **Novedades** (`changelog.json`, visible en el sistema). Esta lista
+> conserva el detalle técnico de cada hito.
+
+- **2026-10-20** — **Sistema Grupo IP v4** (ingenieria-pro → disenio-web-pro → seguridad-web). Núcleo común
+  en `app/` y `grupo/`; paquete v2 en columnas (7,1 → 2,2 MB); motor con pruebas y paridad con la v3;
+  ruta de lectura (titular, qué lo explica, qué atender); segmentadores Estado, Familia y Producto; modo
+  reunión con PIN y paquete propios; Novedades con guardián en el build; CSP con hashes y ECharts local.
+  Se retiraron `template*.html`, los informes HTML completos de `reports.py`, `netlify.toml`, `SYSTEM.md`,
+  `COWORK_ACTUALIZACION.md`, `NORMAS_SISTEMA.md` y `PRODUCT.md` (su contenido vigente pasó a `METODO.md`
+  y `DESIGN.md`).
+- **2026-10-19** — Informes del **corte 11** (Word, lista de riesgo, conciliación de marzo a octubre) con las
+  ventas aún al 30-09 (el Excel del 15-10 no estaba en Drive). **Relevos de vendedor**: #10 Leonardo→Héctor
+  desde su primera aparición (18-05) y #20 Edixon→Jorge desde el 24-09 (`grupo/reglas.py`). La conciliación
+  quitó `COBERTURA`, `POR GRUPO`, `POR PRECIO LISTA` y `COMISIONES CAFÉ`: `cobranza.py` las trata como opcionales.
 
 - **2026-10-02** — **Corte 10** (`dateMax` 2026-09-30: 83 239 filas · $7 016 508,20 en el dashboard ·
   $4 040 832,16 en el informe · 1 629 clientes por nombre · 512 en riesgo · 64 recuperados). **No hay
@@ -821,7 +731,7 @@ camino distinto y confundirlas es la forma más rápida de romper algo:
 | Tipo de tarea | Qué se toca | Qué NO se toca | Validación mínima |
 |---|---|---|---|
 | **A · Corte nuevo** (Excel nuevo de Drive) | `data_ip.xlsx`, `exec.docx`, `risk_list.xlsx`, `index.html`, `history.json` | Nada de código | Los 9 pasos de §10.2, con I1 (`FECHADOC.max()`) y el cotejo del §10.2-8 |
-| **B · Cambio de interfaz o de cálculo** | `template.html` (UI) · `reports.py` / `pipeline/` (informes) · `build_dashboard.py` (payload) | **`index.html` jamás a mano** | `node --check` del último `<script>`, `py_compile`, y regeneración comparando salida enmascarando `ENC` y `DATA_VERSION` (§11.5) |
+| **B · Cambio de interfaz o de cálculo** | `app/` (UI) · `reports.py` / `pipeline/` (informes) · `build_dashboard.py` (payload) | **`index.html` jamás a mano** | `node --check` del último `<script>`, `py_compile`, y regeneración comparando salida enmascarando `ENC` y `DATA_VERSION` (§11.5) |
 | **C · Análisis o informe puntual** (una pregunta sobre los datos) | Nada del repo: se lee `data_ip.xlsx` con pandas | Ni build ni push | Los **siete invariantes** de la cabecera, en especial I1, I2, I3 e I7 |
 
 **Cinco cosas que casi siempre hay que recordarle a quien llega nuevo al sistema:**
@@ -835,7 +745,7 @@ camino distinto y confundirlas es la forma más rápida de romper algo:
 
 **Si la instrucción nueva llega desde otro Claude (Desktop, Cowork, etc.):** pídele que diga explícitamente
 **a qué categoría (A/B/C) pertenece** y **qué debe quedar publicado al final**. Si es de tipo B, la salida
-esperada es un cambio en `template.html` (o en el `.py` que corresponda) **más** una regeneración validada;
+esperada es un cambio en `app/` (o en el `.py` que corresponda) con su entrada en Novedades **más** una regeneración validada;
 si es de tipo A, la salida es un `index.html` nuevo y una entrada nueva en `history.json`. En ambos casos,
 respaldo previo en `dashboard-ip-_backups\prod_<FECHA-HORA>\` (§10.4).
 
@@ -850,7 +760,7 @@ página; si eliges Caleb, se navega a `caleb.html#entrar`, que salta directo al 
 (en la puerta y en la cabecera de cada dashboard) vuelve a la puerta. Los **cuatro usuarios y PINs son los
 mismos** en todas las empresas: cada build cifra su paquete con el mismo `secrets.json`.
 
-- La puerta vive en **`puerta.html`** y la insertan los dos builds en el marcador de su plantilla, con el
+- La puerta vive en **`app/puerta.html`** y la inserta `grupo/pagina.py` en el armazón de cada empresa, con el
   logo, el nombre y el color de botón de cada empresa. Los ids `pin`, `enter` y `gerr` los usa `boot()`:
   no renombrarlos. Los logos de la puerta están en `assets/` (se sirven como archivos, no van embebidos).
 - **IP no cambió por dentro**: la plantilla solo perdió su pantalla de PIN propia y ganó el enlace
@@ -858,10 +768,9 @@ mismos** en todas las empresas: cada build cifra su paquete con el mismo `secret
   `history.json`); el diff enmascarando `ENC` son solo esas líneas.
 - **Caleb tiene su propio contexto**: `CONTEXTO_CALEB.md` (datos, reparaciones, certificación y build).
 - `publish.py` sube ahora `index.html`, `history.json`, `caleb.html` y `history_caleb.json`.
-- Para sumar **Reviplas**: su `build_reviplas.py` + `template_reviplas.html`, un logo en `assets/`, y en
-  `puerta.html` quitar `disabled` a su botón y darle `data-co="reviplas" data-href="reviplas.html"`.
+- Para sumar **Reviplas**: `METODO.md` §6.
 
 ---
 
 *Elaborado a partir del código y los datos reales del repositorio. Autor del sistema: Ing. Roberts Flores.*
-*Última verificación contra código y datos: **2026-08-20** (corte 6).*
+*Última verificación contra código y datos: **2026-10-20** (v4, corte 10 + informes del 11).*

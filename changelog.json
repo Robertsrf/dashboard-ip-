@@ -1,0 +1,516 @@
+{
+ "entradas": [
+  {
+   "v": "4.0.0",
+   "fecha": "2026-10-20",
+   "tipo": "version",
+   "empresas": [
+    "grupo",
+    "ip",
+    "caleb"
+   ],
+   "titulo": "Sistema Grupo IP v4: una guía de lectura, más rápido y con modo reunión",
+   "detalle": [
+    "Cada empresa abre en «Cómo vamos»: un titular del corte, los indicadores, qué lo explica y qué atender.",
+    "Menú como ruta de lectura (cómo vamos, qué lo mueve, qué atender, herramientas); cada sección responde una pregunta y lleva a la siguiente.",
+    "Datos en columnas comprimidas: la página de IP pasa de 7,1 MB a 2,2 MB y filtra en una sola pasada.",
+    "Nuevos segmentadores en IP: estado, familia y producto. El mapa filtra por estado y se encuadra solo.",
+    "Modo reunión con PIN propio: muestra todo menos los totales y la proyección de la empresa y los costos y márgenes.",
+    "Novedades: el historial de versiones queda a la vista y cada cambio suma una entrada.",
+    "Diseño único para el grupo, adaptado a teléfono, portátil, escritorio y proyector.",
+    "Seguridad: política de contenido con huellas, gráficos desde el propio sitio, protección contra el enmarcado; la página ya no muestra IDs de Drive y el historial de cortes deja de publicarse en claro."
+   ],
+   "huella": "7cafb0e9e24527db"
+  },
+  {
+   "v": "3.17.3",
+   "fecha": "2026-10-19",
+   "tipo": "corte",
+   "empresas": [
+    "ip"
+   ],
+   "corte": 11,
+   "datos_al": "2026-09-30",
+   "titulo": "Corte 11 · IP · informes al 15-10-2026",
+   "detalle": [
+    "Word ejecutivo, lista de riesgo y conciliación de cobranza de marzo a octubre.",
+    "Las ventas siguen al 30-09: el Excel de ventas del 15-10 no estaba en Drive."
+   ]
+  },
+  {
+   "v": "3.17.3",
+   "fecha": "2026-10-19",
+   "tipo": "arreglo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Vendedores #10 y #20 con su titular real",
+   "detalle": [
+    "El código 10 es de Héctor: todo lo que decía Leonardo desde la primera venta de Héctor pasa a Héctor.",
+    "El código 20 es de Jorge desde su primera factura (24-09): desde esa fecha Edixon pasa a Jorge.",
+    "José/Jose, Televenta3 y Hector se unifican igual que en la conciliación.",
+    "La conciliación del corte 11 ya no trae la hoja COBERTURA: la tarjeta se oculta sola."
+   ]
+  },
+  {
+   "v": "3.17.2",
+   "fecha": "2026-10-02",
+   "tipo": "corte",
+   "empresas": [
+    "ip"
+   ],
+   "corte": 10,
+   "datos_al": "2026-09-30",
+   "titulo": "Corte 10 · IP · datos al 30-09-2026",
+   "detalle": [
+    "Ventas hasta el 30-09-2026."
+   ]
+  },
+  {
+   "v": "3.17.2",
+   "fecha": "2026-10-02",
+   "tipo": "arreglo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Cobranza lee el formato de septiembre y cada corte guarda su número",
+   "detalle": [
+    "El Excel de conciliación cambió de nuevo (café sin Pendiente, RESUMEN por bloques, COBERTURA con el café aparte).",
+    "Cada corte del historial lleva su propio número: la serie puede saltarse uno."
+   ]
+  },
+  {
+   "v": "3.17.1",
+   "fecha": "2026-09-25",
+   "tipo": "arreglo",
+   "empresas": [
+    "caleb"
+   ],
+   "titulo": "Margen bruto de Caleb con la definición contable",
+   "detalle": [
+    "Sólo ventas con precio y costo registrado; las salidas a precio $0 se controlan aparte."
+   ]
+  },
+  {
+   "v": "3.17.0",
+   "fecha": "2026-09-25",
+   "tipo": "corte",
+   "empresas": [
+    "caleb"
+   ],
+   "corte": 1,
+   "datos_al": "2026-09-07",
+   "titulo": "Corte 1 · Tiendas Caleb · datos al 07-09-2026",
+   "detalle": [
+    "Ventas hasta el 07-09-2026."
+   ]
+  },
+  {
+   "v": "3.17.0",
+   "fecha": "2026-09-25",
+   "tipo": "nuevo",
+   "empresas": [
+    "grupo",
+    "caleb"
+   ],
+   "titulo": "Grupo IP multiempresa: puerta de empresa + dashboard de Tiendas Caleb",
+   "detalle": [
+    "Primero se elige la empresa y luego se entra con el mismo PIN.",
+    "Tiendas Caleb: ventas por día de venta, rentabilidad, inventario, vendedores, clientes y devoluciones."
+   ]
+  },
+  {
+   "v": "3.16.1",
+   "fecha": "2026-09-14",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Revisión de diseño a cero hallazgos",
+   "detalle": [
+    "Sin bordes de color gruesos, sombras neutras, tipografía IBM Plex Sans.",
+    "El botón del menú vive en la barra de filtros y el menú se pega bajo ella."
+   ]
+  },
+  {
+   "v": "3.16.0",
+   "fecha": "2026-09-13",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Normas del sistema: pirámide invertida, movimiento y contraste",
+   "detalle": [
+    "Cada sección va de la trayectoria al detalle; la proyección del año pasa al segundo indicador.",
+    "Animaciones cortas, objetivos táctiles de 44 px y contraste AA."
+   ]
+  },
+  {
+   "v": "3.15.3",
+   "fecha": "2026-09-06",
+   "tipo": "arreglo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Informes de Word con sus tablas y lista de riesgo completa",
+   "detalle": [
+    "El resumen del Word se lee en el orden real del documento, con tablas.",
+    "El Resumen y el Plan de Acción de la lista de riesgo ya no salen vacíos."
+   ]
+  },
+  {
+   "v": "3.15.2",
+   "fecha": "2026-09-06",
+   "tipo": "corte",
+   "empresas": [
+    "ip"
+   ],
+   "corte": 8,
+   "datos_al": "2026-08-31",
+   "titulo": "Corte 8 · IP · datos al 31-08-2026",
+   "detalle": [
+    "Agosto completo: el riesgo deja de estar inflado.",
+    "Cobranza adaptada al nuevo formato de la conciliación (café aparte, comisiones en bolívares)."
+   ]
+  },
+  {
+   "v": "3.15.2",
+   "fecha": "2026-08-22",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Cobranza arriba en el menú y descarga del Excel de conciliación",
+   "detalle": []
+  },
+  {
+   "v": "3.15.1",
+   "fecha": "2026-08-22",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Cobranza: café La Protectora y cobrado por lista de precio",
+   "detalle": []
+  },
+  {
+   "v": "3.15.0",
+   "fecha": "2026-08-20",
+   "tipo": "corte",
+   "empresas": [
+    "ip"
+   ],
+   "corte": 7,
+   "datos_al": "2026-08-15",
+   "titulo": "Corte 7 · IP · datos al 15-08-2026",
+   "detalle": [
+    "Agosto a medias: el riesgo se lee inflado."
+   ]
+  },
+  {
+   "v": "3.15.0",
+   "fecha": "2026-08-20",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Nuevo módulo de Cobranza: facturado contra cobrado",
+   "detalle": [
+    "Camadas por mes de despacho, las dos tasas de cobro, pendiente por vendedor y comisiones.",
+    "El build se niega a publicar si la conciliación no cuadra."
+   ]
+  },
+  {
+   "v": "3.14.0",
+   "fecha": "2026-08-09",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "El corte pasa a ser a petición",
+   "detalle": [
+    "Se retiran las tareas automáticas: cada archivo de Drive se valida antes de publicar."
+   ]
+  },
+  {
+   "v": "3.13.1",
+   "fecha": "2026-08-09",
+   "tipo": "corte",
+   "empresas": [
+    "ip"
+   ],
+   "corte": 6,
+   "datos_al": "2026-07-31",
+   "titulo": "Corte 6 · IP · datos al 31-07-2026",
+   "detalle": [
+    "Con el Word ejecutivo del 6.º corte."
+   ]
+  },
+  {
+   "v": "3.13.1",
+   "fecha": "2026-08-09",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Botón para ocultar el menú dentro del panel",
+   "detalle": []
+  },
+  {
+   "v": "3.13.0",
+   "fecha": "2026-08-09",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Mejoras de estructura: plantilla única, menú lateral y respaldo de gráficos",
+   "detalle": [
+    "La interfaz vive en un solo archivo; las secciones pasan a un menú lateral plegable.",
+    "Los gráficos funcionan aunque falle el CDN; el historial guarda un corte por fecha.",
+    "Se versiona el pipeline de informes y se escriben los invariantes de cálculo."
+   ]
+  },
+  {
+   "v": "3.12.1",
+   "fecha": "2026-07-22",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Leyendas con valores en el mapa y el calendario",
+   "detalle": []
+  },
+  {
+   "v": "3.12.0",
+   "fecha": "2026-07-21",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Sección Sectores y Zonas con mapa de Venezuela",
+   "detalle": [
+    "Clic en un estado filtra todos sus sectores."
+   ]
+  },
+  {
+   "v": "3.11.0",
+   "fecha": "2026-07-21",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Descarga de gráficos en HD con título",
+   "detalle": [
+    "Imágenes listas para enviar por WhatsApp en alta definición."
+   ]
+  },
+  {
+   "v": "3.10.1",
+   "fecha": "2026-07-21",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Comparar períodos, clientes inactivos y barras con deslizador",
+   "detalle": []
+  },
+  {
+   "v": "3.10.0",
+   "fecha": "2026-07-21",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Datos por día: filtro de fechas y calendario de ventas",
+   "detalle": []
+  },
+  {
+   "v": "3.9.1",
+   "fecha": "2026-07-21",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Botón de ayuda (i) en cada indicador",
+   "detalle": []
+  },
+  {
+   "v": "3.9.0",
+   "fecha": "2026-07-21",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Publicación en GitHub Pages",
+   "detalle": [
+    "Sale de Netlify; se publica con git."
+   ]
+  },
+  {
+   "v": "3.8.0",
+   "fecha": "2026-07-21",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Proyección con mes parcial y comparativas mensuales",
+   "detalle": [
+    "El mes en curso se estima a cierre antes de comparar, para no leer caídas falsas."
+   ]
+  },
+  {
+   "v": "3.7.0",
+   "fecha": "2026-07-21",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Segmentadores compactos, filtro de cliente y deslizador de tiempo",
+   "detalle": []
+  },
+  {
+   "v": "3.6.0",
+   "fecha": "2026-07-20",
+   "tipo": "corte",
+   "empresas": [
+    "ip"
+   ],
+   "corte": 5,
+   "datos_al": "2026-07-15",
+   "titulo": "Corte 5 · IP · datos al 15-07-2026",
+   "detalle": [
+    "Publicado por la tarea automática de entonces."
+   ]
+  },
+  {
+   "v": "3.6.0",
+   "fecha": "2026-07-08",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Descarga del archivo exacto de Drive",
+   "detalle": [
+    "Word e Excel de los informes, tal cual se subieron."
+   ]
+  },
+  {
+   "v": "3.5.1",
+   "fecha": "2026-07-08",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Ícono de IP en la pestaña del navegador",
+   "detalle": []
+  },
+  {
+   "v": "3.5.0",
+   "fecha": "2026-07-08",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Pestaña de clientes en riesgo",
+   "detalle": [
+    "Lista detallada desde Drive: en riesgo, dormidos y recuperados."
+   ]
+  },
+  {
+   "v": "3.4.0",
+   "fecha": "2026-07-08",
+   "tipo": "corte",
+   "empresas": [
+    "ip"
+   ],
+   "corte": 4,
+   "datos_al": "2026-06-30",
+   "titulo": "Corte 4 · IP · cierre del semestre (30-06-2026)",
+   "detalle": [
+    "Los cortes 1 a 3 (mayo y junio) fueron informes hechos a mano, antes del sistema."
+   ]
+  },
+  {
+   "v": "3.4.0",
+   "fecha": "2026-07-08",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Informes desde el Word de Drive y universo sin AMÉRICO ni REVIPLAS",
+   "detalle": [
+    "Los informes excluyen el café AMÉRICO y a REVIPLAS; el dashboard los incluye."
+   ]
+  },
+  {
+   "v": "3.3.0",
+   "fecha": "2026-07-08",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Informes completos descargables y versión móvil",
+   "detalle": []
+  },
+  {
+   "v": "3.2.0",
+   "fecha": "2026-07-07",
+   "tipo": "seguridad",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Acceso cifrado con PIN para cuatro usuarios",
+   "detalle": [
+    "Los datos viajan cifrados dentro de la página y sólo se abren con un PIN."
+   ]
+  },
+  {
+   "v": "3.1.0",
+   "fecha": "2026-07-07",
+   "tipo": "nuevo",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Informes automáticos: ejecutivo y riesgo/recuperados",
+   "detalle": [
+    "Con historial de cortes."
+   ]
+  },
+  {
+   "v": "3.0.0",
+   "fecha": "2026-07-07",
+   "tipo": "version",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Versión 3: identidad de IP",
+   "detalle": [
+    "Colores y logo de la marca, tema claro, pie con fechas y autor."
+   ]
+  },
+  {
+   "v": "2.0.0",
+   "fecha": "2026-07-07",
+   "tipo": "version",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Versión 2: gráficos interactivos",
+   "detalle": [
+    "ECharts, pestañas, filtros de selección múltiple, proyecciones y Pareto."
+   ]
+  },
+  {
+   "v": "1.0.0",
+   "fecha": "2026-07-07",
+   "tipo": "version",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "Primera versión del dashboard de IP",
+   "detalle": [
+    "Ventas de enero a junio de 2026."
+   ]
+  }
+ ]
+}

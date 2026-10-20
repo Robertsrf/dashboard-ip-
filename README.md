@@ -1,32 +1,26 @@
-# Dashboard IP - Ventas
+# Sistema Grupo IP · Inteligencia de ventas
 
-Dashboard interactivo autogenerado a partir del Excel en Google Drive
-(carpeta "Informes IP"). Desplegado en **GitHub Pages** con auto-deploy desde este repo.
+Dashboards de **Distribuidora y Suministros IP** (`index.html`) y **Tiendas Caleb** (`caleb.html`), detrás de
+una puerta común y con los datos cifrados por PIN. Publicado en GitHub Pages:
+https://robertsrf.github.io/dashboard-ip-/
 
-- `index.html`  -> dashboard desplegado (contiene marcador `DATA_VERSION`).
-- `template.html` -> HTML/CSS/JS del dashboard. **Unica** fuente de la UI: editar aqui, nunca el `index.html`.
-- `build_dashboard.py` -> generador: `python3 build_dashboard.py <xlsx> <version> index.html`
-- `vendor/echarts.min.js` -> respaldo local de ECharts 5.5.1 (solo se usa si el CDN no responde).
-- `publish.py` -> publica en GitHub (git add/commit/push) -> GitHub Pages despliega solo.
-
-## Corte nuevo
-
-**No hay actualizacion automatica.** El flujo es: subes los archivos a la carpeta de Drive
-"Informes IP" y pides la corrida en el chat. El procedimiento completo (9 pasos, con la
-validacion de que los archivos de Drive son Office de verdad y no una pagina HTML) esta en
-`CONTEXTO_CLAUDE.md`, seccion **10.2**; el comando del build, en la **10.3**.
-
-## Informes del corte (carpeta `pipeline/`)
-
-Herramienta paralela: no la lee `build_dashboard.py` ni entra en el `index.html`.
+| Dónde | Qué |
+|---|---|
+| `CLAUDE.md` | Entrada rápida para quien trabaje en el repo |
+| `METODO.md` | Proceso: corte, cambios, Novedades, modo reunión, seguridad |
+| `DESIGN.md` | Sistema de diseño del grupo |
+| `CONTEXTO_CLAUDE.md`, `CONTEXTO_CALEB.md` | Datos y reglas de cálculo de cada empresa |
+| `app/` | Interfaz (núcleo común + un módulo por empresa) |
+| `grupo/` | Paquete de datos, armado de páginas, reglas, reunión, Novedades |
+| `build_dashboard.py`, `build_caleb.py` | Builds |
+| `tests/`, `tools/` | Pruebas y verificación |
 
 ```
-python pipeline/analysis.py <excel>     # -> pipeline/analysis.json con TODO el analisis
-node   pipeline/build_report.js         # -> pipeline/Informe_Ejecutivo_IP.doc
+python -m unittest discover -s tests && node --test tests/*.test.mjs     # o: npm test
+python tools/verificar.py index.html data_ip.xlsx
 ```
 
-`pipeline/clean.py` centraliza la limpieza (vendedores espurios, sufijo `" (N)"` en marcas,
-espacios sobrantes) y los totales de control. Los invariantes metodologicos que nunca cambian
-estan en `CONTEXTO_CLAUDE.md`, seccion **Invariantes**.
+`pipeline/` es una herramienta paralela para armar el informe del corte (no entra en el dashboard):
+`python pipeline/analysis.py <excel>` y `node pipeline/build_report.js`.
 
-URL: https://robertsrf.github.io/dashboard-ip-/
+Autor: Ing. Roberts Flores.

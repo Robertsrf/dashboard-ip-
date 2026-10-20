@@ -16,3 +16,10 @@ __pycache__/
 
 # Capturas de revision de impeccable: muestran cifras reales de venta
 .impeccable/review/
+
+# Historial de cortes: cifras de negocio en claro, solo en local (METODO.md, seguridad)
+history.json
+history_caleb.json
+
+# Paginas de prueba de la v4
+v4_*.html
