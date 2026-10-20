@@ -1,6 +1,32 @@
 {
  "entradas": [
   {
+   "v": "4.1.1",
+   "fecha": "2026-10-20",
+   "tipo": "arreglo",
+   "empresas": [
+    "grupo"
+   ],
+   "titulo": "Regenerar un corte conserva sus notas en Novedades",
+   "detalle": [
+    "El build solo actualiza la línea de ventas del corte; lo escrito a mano se queda."
+   ],
+   "huella": "cc178b3934cdb8ab"
+  },
+  {
+   "v": "4.1.0",
+   "fecha": "2026-10-20",
+   "tipo": "seguridad",
+   "empresas": [
+    "caleb"
+   ],
+   "titulo": "Unidades de medida escapadas en los globos de Caleb",
+   "detalle": [
+    "La unidad que viene del Excel (piezas, kg…) pasa por el escape antes de mostrarse, como todo texto de los datos."
+   ],
+   "huella": "f90b4afd86d49938"
+  },
+  {
    "v": "4.0.0",
    "fecha": "2026-10-20",
    "tipo": "version",
@@ -24,17 +50,18 @@
   },
   {
    "v": "3.17.3",
-   "fecha": "2026-10-19",
+   "fecha": "2026-10-20",
    "tipo": "corte",
    "empresas": [
     "ip"
    ],
    "corte": 11,
-   "datos_al": "2026-09-30",
-   "titulo": "Corte 11 · IP · informes al 15-10-2026",
+   "datos_al": "2026-10-15",
+   "titulo": "Corte 11 · IP · datos al 15-10-2026",
    "detalle": [
-    "Word ejecutivo, lista de riesgo y conciliación de cobranza de marzo a octubre.",
-    "Las ventas siguen al 30-09: el Excel de ventas del 15-10 no estaba en Drive."
+    "Ventas hasta el 15-10-2026.",
+    "Octubre va a medias: se compara estimado a cierre y el riesgo se lee inflado.",
+    "Word ejecutivo, lista de riesgo y conciliación de cobranza de marzo a octubre."
    ]
   },
   {
