@@ -61,13 +61,22 @@ class Changelog(unittest.TestCase):
         self.assertEqual(CL.huella(self.dir), h)
 
     def test_corte_se_agrega_una_vez_y_no_cambia_la_version(self):
-        CL.corte(self.ruta, "ip", 11, "2026-10-15", ["90 000 líneas"], fecha="2026-10-19")
-        CL.corte(self.ruta, "ip", 11, "2026-10-15", ["91 000 líneas"], fecha="2026-10-20")
+        CL.corte(self.ruta, "ip", 11, "2026-10-15", ["Ventas hasta el 14-10-2026."], fecha="2026-10-19")
+        CL.corte(self.ruta, "ip", 11, "2026-10-15", ["Ventas hasta el 15-10-2026."], fecha="2026-10-20")
         cortes = [e for e in self.leer()["entradas"] if e["tipo"] == "corte"]
         self.assertEqual(len(cortes), 1)
-        self.assertEqual(cortes[0]["detalle"], ["91 000 líneas"])
+        self.assertEqual(cortes[0]["detalle"], ["Ventas hasta el 15-10-2026."])
         self.assertEqual(cortes[0]["fecha"], "2026-10-19")      # regenerar no lo mueve de fecha
         self.assertEqual(cortes[0]["v"], "1.1.0")
+
+    def test_regenerar_conserva_las_notas_escritas_a_mano(self):
+        CL.corte(self.ruta, "ip", 11, "2026-10-15", ["Ventas hasta el 15-10-2026."], fecha="2026-10-20")
+        d = self.leer()
+        d["entradas"][0]["detalle"].append("Octubre va a medias.")
+        escribir(self.ruta, json.dumps(d))
+        CL.corte(self.ruta, "ip", 11, "2026-10-15", ["Ventas hasta el 15-10-2026."], fecha="2026-10-21")
+        corte = next(e for e in self.leer()["entradas"] if e["tipo"] == "corte")
+        self.assertEqual(corte["detalle"], ["Ventas hasta el 15-10-2026.", "Octubre va a medias."])
 
     def test_la_clave_del_corte_es_su_numero_no_la_fecha_de_datos(self):
         CL.corte(self.ruta, "ip", 10, "2026-09-30", ["a"], fecha="2026-10-02")

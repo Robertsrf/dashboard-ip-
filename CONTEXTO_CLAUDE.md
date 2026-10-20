@@ -119,7 +119,11 @@ una sola pasada sobre arreglos tipados (**83 239 filas** en el corte 10). Solo s
 | `SUMACANT` | float | = `CANTIDAD − CNTDEVUELT` (verificado: coincide en el 100 % de las filas). |
 | `SUMANETO` | float | = `SUMACANT × PRECIOUNIT` (verificado 100 %). **Es LA métrica de venta neta.** |
 
-### 4.2 Cifras del corte actual (10.º corte, `dateMax` 2026-09-30)
+### 4.2 Cifras de control del 10.º corte (`dateMax` 2026-09-30)
+
+> El vigente es el **11.º** (`dateMax` 2026-10-15, octubre a medias). Desde la v4 las cifras de cada corte
+> quedan en `history.json` (local, fuera del repo público), no en este documento.
+
 
 > **No hubo corte 9 en el dashboard.** Roberts juntó las dos quincenas de septiembre en un solo corte, el
 > 10.º. El Word sí trae un 9.º (15-sep) en su tabla de evolución, calculado a mano. Ver la numeración en §8.
@@ -281,8 +285,9 @@ entradas sin el campo: los primeros informes se hicieron **a mano, antes del sis
 | `2026-08-15` | 7 | — |
 | `2026-08-31` | 8 | — |
 | *(no existe)* | ~~9~~ | sólo en la tabla del Word del 10 (15-sep, hecho a mano) |
-| `2026-09-30` | **10** (vigente) | `Informe_Ejecutivo_10moCorte.docx` (`exec.docx`, 24 503 bytes) |
-| *(próximo)* | 11 | — |
+| `2026-09-30` | 10 | `Informe_Ejecutivo_10moCorte.docx` (`exec.docx`, 24 503 bytes) |
+| `2026-10-15` | **11** (vigente) | `Informe_Ejecutivo_11voCorte_Octubre2026_Parcial…` (octubre a medias) |
+| *(próximo)* | 12 | — |
 
 ### `risk_list.xlsx` (Drive, opcional)
 El del corte 8 trae **9 hojas**: `Índice` (se salta), `📄 Seguimiento (Resumen)`, `🎯 Plan de Acción`,

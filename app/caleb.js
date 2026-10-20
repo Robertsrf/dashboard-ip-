@@ -189,7 +189,7 @@
   function rankProd(c, ch, campo, o) {
     const g = sumaPor(c, c.sel, 'prod', campo === 'q' ? 'q' : 'neto'), p = [...g.entries()].filter(e => e[1] > 0).map(([i, v]) => [c.dims.prod[i], v, i]).sort((a, b) => b[1] - a[1]).slice(0, 300);
     KIT.barrasH(ch, p, Object.assign({ izq: 230, izqMob: 120, trunc: 34, clic: q => GIP.alternar('prod', q[0]) }, campo === 'q'
-      ? { fmt: v => F.entero(v) + ' ' , axf: v => F.entero(v), label: q => F.entero(q[1]), color: C.slate, tip: q => F.entero(q[1]) + ' ' + unidad(c, q[2]) } : {}, o || {}));
+      ? { fmt: v => F.entero(v) + ' ' , axf: v => F.entero(v), label: q => F.entero(q[1]), color: C.slate, tip: q => F.entero(q[1]) + ' ' + esc(unidad(c, q[2])) } : {}, o || {}));
   }
 
   /* Que atender (lo de la v3, mas el modo reunion) */

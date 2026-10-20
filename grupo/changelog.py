@@ -127,8 +127,9 @@ def verificar(ruta, raiz):
 def corte(ruta, empresa, numero, datos_al, detalle, fecha=None):
     """Entrada de corte de datos (la agrega el build). La clave es (empresa,
     numero): un corte puede traer informes nuevos con las mismas ventas que el
-    anterior. Regenerar el mismo corte actualiza su texto sin moverlo de fecha
-    ni de version. Sin cifras en dolares: la ve tambien el modo reunion."""
+    anterior. Regenerar el mismo corte actualiza su linea de ventas sin moverlo
+    de fecha ni de version, y conserva las notas escritas a mano. Sin cifras:
+    el repo es publico y la ve tambien el modo reunion."""
     datos = cargar(ruta)
     nombre = {"ip": "IP", "caleb": "Tiendas Caleb"}.get(empresa, empresa)
     d = datos_al.split("-")
@@ -137,7 +138,10 @@ def corte(ruta, empresa, numero, datos_al, detalle, fecha=None):
     previa = next((e for e in datos["entradas"] if e["tipo"] == "corte"
                    and e.get("empresas") == [empresa] and e.get("corte") == numero), None)
     if previa:
-        previa.update(nuevo)
+        # el build solo es dueno de su linea "Ventas hasta ..."; las notas que se
+        # escribieron a mano en ese corte se conservan al regenerarlo
+        notas = [x for x in previa.get("detalle", []) if not x.startswith("Ventas hasta")]
+        previa.update(nuevo, detalle=list(detalle) + notas)
     else:
         datos["entradas"].insert(0, dict(
             {"v": ".".join(map(str, _vigente(datos))), "fecha": fecha or dt.date.today().isoformat(),
