@@ -134,8 +134,12 @@ def _cobertura(xls):
     """Hoja COBERTURA: reparto del facturado del SISTEMA (fuente Data_IP), no de
     la cobranza. El corte 8 dejo de publicar 'Documentos' y anadio 'Nota': el
     conteo queda en 0 y el front muestra la nota en su lugar. El 10 acorto el
-    encabezado del porcentaje a '% sistema'."""
-    raw = _sheet(xls, "COBERTURA")
+    encabezado del porcentaje a '% sistema'. El 11 la quito del libro: sin hoja
+    la lista sale vacia y el front oculta la tarjeta."""
+    sh = _find_sheet(xls, "COBERTURA")
+    if sh is None:
+        return []
+    raw = _sheet(xls, sh)
     hi, cells = _header_row(raw, ["Categoria", ("% del sistema", "% sistema")], limit=10)
     if hi is None:
         return []

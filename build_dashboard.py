@@ -25,6 +25,34 @@ def _wrap_summary(title, body, full_id, fname):
             f'{body}<div class="repnote">📄 Resumen del informe cargado en Drive. Usa <b>Descargar informe (Word)</b> para el documento completo.</div></div>')
 
 
+# Codigos de vendedor que cambiaron de titular. El Excel trae el NOMBRE con el
+# que el ERP exporta el codigo, y ese nombre se queda pegado al titular viejo:
+# desde que aparece el nuevo, todo lo del viejo es del nuevo (lo pidio Roberts el
+# 2026-10-19). `desde` = la primera aparicion conocida del nuevo; si el nuevo ya
+# sale en los datos antes de esa fecha, manda la fecha de los datos.
+VEND_RELEVO = [
+    # (codigo, viejo, nuevo, desde)
+    (10, "Leonardo", "Héctor", None),          # Héctor sale en los datos desde el 18-05
+    (20, "Edixon", "Jorge", "2026-09-24"),     # 1.a factura de Jorge: *0140591 (conciliacion corte 11)
+]
+# Grafias del mismo vendedor (la LEYENDA de la conciliacion las unifica igual)
+VEND_ALIAS = {"Hector": "Héctor", "Jose": "José", "Televenta3": "Televenta"}
+
+
+def vendedores(df):
+    """Aplica alias y relevos de codigo sobre VENDEDOR (ya con strip y fecha)."""
+    df["VENDEDOR"] = df["VENDEDOR"].replace(VEND_ALIAS)
+    for _cod, viejo, nuevo, desde in VEND_RELEVO:
+        f = df.loc[df["VENDEDOR"] == nuevo, "FECHADOC"].min()
+        if desde is not None:
+            d = pd.Timestamp(desde)
+            f = d if pd.isna(f) else min(f, d)
+        if pd.isna(f):
+            continue
+        df.loc[(df["VENDEDOR"] == viejo) & (df["FECHADOC"] >= f), "VENDEDOR"] = nuevo
+    return df
+
+
 def main():
     xlsx, version, out = sys.argv[1], sys.argv[2], sys.argv[3]
     df = pd.read_excel(xlsx, engine="openpyxl")
@@ -36,6 +64,7 @@ def main():
         df[c] = pd.to_numeric(df[c], errors="coerce").fillna(0.0)
     df["FECHADOC"] = pd.to_datetime(df["FECHADOC"], errors="coerce")
     df = df.dropna(subset=["FECHADOC"])
+    df = vendedores(df)
     df["MES"] = df["FECHADOC"].dt.strftime("%Y-%m")
 
     def encode(col):

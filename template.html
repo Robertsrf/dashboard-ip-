@@ -1006,8 +1006,9 @@ class App{
 
     // 3 - cobertura (hoja COBERTURA: universo del sistema, no depende de filtros)
     const cov=(COB.cobertura||[]).filter(c=>!c.total);
-    const cc=this.chart('c-cob-cobertura');
-    cc.setOption({tooltip:{trigger:'item',confine:true,
+    /* El corte 11 quito la hoja COBERTURA: sin datos la tarjeta no se pinta. */
+    document.getElementById('c-cob-cobertura').closest('.card').hidden=!cov.length;
+    if(cov.length)this.chart('c-cob-cobertura').setOption({tooltip:{trigger:'item',confine:true,
         /* El conteo de documentos dejo de publicarse en el corte 8 y la hoja
            trae una nota en su lugar: se muestra lo que el corte si tenga.  */
         formatter:p=>{const c=cov[p.dataIndex];
