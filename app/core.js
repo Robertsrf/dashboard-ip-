@@ -97,6 +97,8 @@
     document.body.classList.remove('bloqueado');
     $('#app').hidden = false;
     if (S.mod.iniciar) S.mod.iniciar(S);
+    /* una pieza con armazon propio (la presentacion de la reunion) arranca sola */
+    if (S.mod.propio) { S.mod.propio(S); return; }
     construir();
     const h = location.hash.slice(1);
     ir(secciones().some(s => s.id === h) ? h : primera(), true);
@@ -522,6 +524,8 @@
     },
   };
   GIP.kit = KIT;
+  GIP.grafico = grafico;
+  GIP.soltarGraficos = () => { for (const c of S.charts.values()) c.dispose(); S.charts.clear(); };
 
   /* Orden de tabla: numeros como numeros aunque vengan como texto del Excel
      ("12,941.77", "$62,751"); lo vacio ("—") al final; el texto, en espanol. */

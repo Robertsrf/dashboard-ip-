@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<!-- DATA_VERSION: __VERSION__ -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="__CSP__">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>__TITULO__</title>
+<link rel="icon" type="image/svg+xml" href="__FAVICON__">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@500;600;700&display=swap">
+<style>__CSS__</style>
+</head>
+<body data-empresa="ip" class="bloqueado presentacion">
+__PUERTA__
+<div id="app" hidden>
+  <header class="dk-cab">
+    <span class="dk-logo">__LOGO__</span>
+    <p class="dk-capitulo" id="dk-capitulo" aria-live="polite"></p>
+    <div class="dk-acc">
+      <button class="dk-btn" type="button" id="dk-pantalla" aria-label="Pantalla completa">Pantalla completa</button>
+      <a class="dk-btn" href="index.html">Cambiar de empresa</a>
+    </div>
+    <div class="dk-progreso" aria-hidden="true"><span id="dk-barra"></span></div>
+  </header>
+  <main class="dk" id="dk" tabindex="-1"><div class="cargando">Preparando la presentación…</div></main>
+  <nav class="dk-pie" aria-label="Navegación de la presentación">
+    <button class="dk-btn" type="button" id="dk-ant" aria-label="Anterior">Anterior</button>
+    <span class="dk-cuenta" id="dk-cuenta"></span>
+    <button class="dk-btn dk-sig" type="button" id="dk-sig" aria-label="Siguiente">Siguiente</button>
+  </nav>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+<script type="application/json" id="cfg">__CFG__</script>
+<script type="application/json" id="extra">__EXTRA__</script>
+<script type="application/json" id="enc">__ENC__</script>
+<script type="application/json" id="enc-r">__ENC_R__</script>
+<script src="vendor/echarts.min.js"></script>
+<script>__JS_MOTOR__</script>
+<script>__JS_CORE__</script>
+<script>__JS_EMPRESA__</script>
+</body>
+</html>

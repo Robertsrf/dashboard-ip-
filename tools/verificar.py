@@ -109,7 +109,14 @@ def main(ruta, xlsx=None):
     meta, cols = PAQ.abrir(gz)
     esc = {c["n"]: c["s"] for c in meta["cols"]}
     print(f"  {meta['empresa']}: {meta['filas']} filas, {meta['dateMin']} -> {meta['dateMax']}, corte {meta.get('corte')}")
-    if sec.get("reunion"):
+    if meta.get("modo") == "reunion":
+        # la presentacion: su UNICO paquete es el de reunion, abierto con todos los PIN
+        check(not (PROHIBIDO_META & set(meta)), f"presentacion sin claves prohibidas {sorted(PROHIBIDO_META & set(meta))}")
+        check(not (PROHIBIDO_COLS & set(cols)), f"presentacion sin columnas prohibidas {sorted(PROHIBIDO_COLS & set(cols))}")
+        check(not (meta.get("Pcob") or {}).get("cobertura"), "presentacion sin cobertura de cobranza")
+        if sec.get("reunion"):
+            check(abrir(enc, sec["reunion"]["pin"]) is not None, "PIN de reunion abre la presentacion")
+    elif sec.get("reunion"):
         check(enc_r is not None, "paquete de reunion presente")
         check(abrir(enc, sec["reunion"]["pin"]) is None, "PIN de reunion NO abre el paquete principal")
         gr = abrir(enc_r, sec["reunion"]["pin"])

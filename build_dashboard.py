@@ -127,6 +127,17 @@ def adjuntos():
     return out
 
 
+# La presentacion de la reunion de vendedores: misma data de IP, solo el paquete
+# de reunion (sin totales ni margenes), abierto con cualquier PIN del grupo.
+# Los enlaces de los otros sistemas van DENTRO del paquete cifrado.
+CFG_REUNION = {"clave": "reunion", "nombre": "Reunión de vendedores 2026", "modulo": "reunion.js",
+               "titulo": "Reunión de vendedores 2026 · Grupo IP", "acento": "#c93608",
+               "shell": "shell_reunion.html", "estilos": ["core.css", "reunion.css"],
+               "logo_html": '<img src="assets/logo-ip.png" alt="Distribuidora y Suministros IP" width="38" height="38">',
+               "puerta_logo": '<img src="assets/logo-ip.png" alt="Reunión de vendedores 2026">'}
+ENLACES = {"cobranzas": os.environ.get("REUNION_COBRANZAS_URL", "https://cobranzas.onrender.com"),
+           "flota": os.environ.get("REUNION_FLOTA_URL", "https://robertsrf.github.io/flota-ip/")}
+
 CFG = {"clave": "ip", "nombre": "Distribuidora y Suministros IP", "modulo": "ip.js",
        "titulo": "Distribuidora y Suministros IP · Inteligencia de Ventas", "acento": "#c93608",
        "logo_html": '<img src="assets/logo-ip.png" alt="" width="48" height="48">',
@@ -165,11 +176,23 @@ def main():
     with open(os.path.join(AQUI, "ve_states.geojson"), encoding="utf-8") as f:
         geo = json.load(f)
     with open(os.path.join(AQUI, "app", "favicons.json"), encoding="utf-8") as f:
-        cfg = dict(CFG, favicon=json.load(f)["ip"])
-    html = PAG.construir(cfg, enc, enc_r, version, extra={"geo": geo})
+        favicon = json.load(f)["ip"]
+    html = PAG.construir(dict(CFG, favicon=favicon), enc, enc_r, version, extra={"geo": geo})
     PAG.escribir(salida, html)
     print(f"OK -> {salida} ({len(html) / 1e6:.2f} MB, {len(df)} filas, corte {corte}"
           f"{', con paquete de reunion' if enc_r else ''})")
+    presentacion(meta, cols, secretos["users"] + reunion, iters, version, geo, favicon, salida)
+
+
+def presentacion(meta, cols, usuarios, iters, version, geo, favicon, salida):
+    """reunion.html: la presentacion de la reunion de vendedores, junto a index.html."""
+    m, c = REUNION.limpiar("ip", meta, cols)
+    m["enlaces"] = ENLACES
+    enc = SECURE.encrypt_bytes(PAQ.empaquetar(m, c), usuarios, iters)
+    ruta = os.path.join(os.path.dirname(os.path.abspath(salida)), "reunion.html")
+    html = PAG.construir(dict(CFG_REUNION, favicon=favicon), enc, None, version, extra={"geo": geo})
+    PAG.escribir(ruta, html)
+    print(f"OK -> {ruta} ({len(html) / 1e6:.2f} MB, presentacion sin totales)")
 
 
 if __name__ == "__main__":

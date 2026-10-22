@@ -26,6 +26,10 @@
 .co[disabled] b{color:#5E6573}
 .co .rv{height:74px;display:grid;place-items:center;font-size:19px;font-weight:700;letter-spacing:.08em;color:#5E6573}
 .co .soon{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#5E6573}
+/* la reunion no es una empresa: ocupa su propia fila, debajo de las tres */
+.co-reunion{grid-column:1/-1;flex-direction:row;justify-content:flex-start;gap:18px;min-height:0;padding:14px 18px;text-align:left}
+.co-reunion .rn{width:74px;height:56px;flex:none;display:grid;place-items:center;border-radius:10px;background:#24205b;color:#fff;font-size:18px;font-weight:700;letter-spacing:.04em}
+.co-reunion .soon{text-transform:none;letter-spacing:0;font-size:12.5px}
 .gatecard{max-width:400px;text-align:center}
 .gatelogo{width:112px;height:112px;margin:4px auto 10px;display:grid;place-items:center}
 .gatelogo svg{width:112px;height:112px}
@@ -61,6 +65,7 @@
       <button class="co" type="button" data-co="ip" data-href="index.html"><img src="assets/logo-ip.png" alt=""><b>Distribuidora y Suministros IP</b></button>
       <button class="co" type="button" data-co="caleb" data-href="caleb.html"><img src="assets/logo-caleb.png" alt=""><b>Tiendas Caleb</b></button>
       <button class="co" type="button" disabled><span class="rv" aria-hidden="true">REVIPLAS</span><span><b>Reviplas</b><br><span class="soon">Próximamente</span></span></button>
+      <button class="co co-reunion" type="button" data-co="reunion" data-href="reunion.html"><span class="rn" aria-hidden="true">2026</span><span><b>Reunión de vendedores 2026</b><br><span class="soon">Presentación con los datos de IP, sin totales</span></span></button>
     </div>
   </section>
   <section class="dcard gatecard" id="paso-pin" aria-labelledby="pp-h" hidden>

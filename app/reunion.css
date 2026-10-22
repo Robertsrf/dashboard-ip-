@@ -1,0 +1,121 @@
+/* Presentacion de la reunion de vendedores: misma marca que el sistema
+   (DESIGN.md), escala de proyector y movimiento con proposito: cada pieza
+   entra cuando el expositor la nombra. */
+body.presentacion{background:var(--lienzo);overflow:hidden}
+.dk-cab{position:fixed;inset:0 0 auto 0;height:60px;z-index:20;display:flex;align-items:center;gap:20px;padding:0 3vw;
+  background:rgba(255,255,255,.92);border-bottom:1px solid var(--linea)}
+.dk-logo img{height:38px;width:auto;display:block}
+.dk-capitulo{font-size:.9375rem;color:var(--tinta-2);font-variant-numeric:tabular-nums}
+.dk-capitulo b{color:var(--tinta);font-weight:600}
+.dk-acc{margin-left:auto;display:flex;gap:8px}
+.dk-btn{display:inline-flex;align-items:center;min-height:38px;padding:7px 14px;border-radius:var(--r-control);border:1px solid var(--linea);
+  background:var(--papel);color:var(--tinta);font-weight:600;font-size:.875rem;text-decoration:none;cursor:pointer;
+  transition:transform var(--t-press) var(--ease),border-color .15s}
+.dk-btn:active{transform:scale(.97)}
+.dk-btn:disabled{opacity:.4;cursor:default}
+.dk-sig{background:var(--tinta);color:#fff;border-color:var(--tinta)}
+.dk-progreso{position:absolute;left:0;right:0;bottom:-1px;height:3px;background:transparent}
+.dk-progreso span{display:block;height:100%;width:0;background:var(--marca);transition:width .5s var(--ease)}
+.dk{position:fixed;inset:60px 0 64px 0;overflow:hidden;outline:none}
+.dk-pie{position:fixed;inset:auto 0 0 0;height:64px;display:flex;align-items:center;justify-content:center;gap:18px;z-index:20}
+.dk-cuenta{font-size:.875rem;color:var(--tinta-3);min-width:70px;text-align:center;font-variant-numeric:tabular-nums}
+
+/* ---- Lamina ------------------------------------------------------------ */
+.lamina{position:absolute;inset:0;padding:4vh 6vw 3vh;display:flex;flex-direction:column;gap:2.4vh;overflow:hidden;
+  animation:ln-entra .55s var(--ease) both}
+@keyframes ln-entra{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.lamina.sale{animation:ln-sale .22s ease-in both}
+@keyframes ln-sale{to{opacity:0;transform:translateY(-10px)}}
+.ln-titulo{font-family:var(--fuente-titular);font-weight:600;font-size:clamp(1.9rem,3.4vw,3.4rem);line-height:1.12;letter-spacing:-.015em;
+  max-width:24ch;text-wrap:balance}
+.ln-sub{font-size:clamp(1rem,1.5vw,1.45rem);color:var(--tinta-2);max-width:60ch;line-height:1.45}
+.ln-sub b{color:var(--tinta);font-weight:600}
+.ln-cuerpo{flex:1;min-height:0;display:grid;gap:2.4vw}
+.ln-2{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr)}
+.ln-2i{grid-template-columns:minmax(0,1fr) minmax(0,1.35fr)}
+.ln-graf{width:100%;height:100%;min-height:280px}
+.ln-nota{font-size:clamp(.85rem,1.05vw,1rem);color:var(--tinta-3)}
+/* entrada escalonada de las piezas de una lamina */
+[data-ap]{animation:ln-ap .6s var(--ease) both;animation-delay:calc(var(--i,0) * 110ms + 120ms)}
+@keyframes ln-ap{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+/* revelado por pasos: aparece cuando el expositor avanza */
+[data-paso]{opacity:0;transform:translateY(14px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+[data-paso].visto{opacity:1;transform:none}
+[data-paso].apagado{opacity:.28}
+
+/* ---- Portada y cierre ---------------------------------------------------- */
+.portada{justify-content:center;background:var(--papel)}
+.portada .ln-titulo{font-size:clamp(2.6rem,6vw,5.6rem);max-width:15ch}
+.raya{width:12vw;height:5px;background:var(--marca);transform-origin:left;animation:raya .9s .5s var(--ease) both}
+@keyframes raya{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.firma{display:flex;align-items:center;gap:16px;margin-top:6vh;font-size:clamp(.95rem,1.3vw,1.2rem);color:var(--tinta-2)}
+.firma b{display:block;color:var(--tinta);font-weight:600}
+.cierre{justify-content:center;background:var(--tinta);color:#fff}
+.cierre .ln-titulo{color:#fff;font-size:clamp(2.4rem,5vw,4.6rem)}
+.cierre .ln-sub{color:rgba(255,255,255,.82)}
+
+/* ---- Piezas ---------------------------------------------------------------- */
+.dos-col{display:grid;grid-template-columns:1fr 1fr;gap:4vw;align-content:center}
+.lista-ln{list-style:none}
+.lista-ln li{font-size:clamp(1.15rem,2vw,1.85rem);line-height:1.3;padding:1.6vh 0;border-top:1px solid var(--linea)}
+.lista-ln.tenue li{color:var(--tinta-2)}
+.col-tit{font-size:clamp(1rem,1.4vw,1.3rem);font-weight:600;color:var(--tinta-2);margin-bottom:1.4vh}
+.col-tit.naranja{color:var(--marca-tinta)}
+.controles{display:grid;grid-template-columns:repeat(5,1fr);gap:1.2vw;align-content:start}
+.control{background:var(--papel);border:1px solid var(--linea);border-radius:12px;padding:2.4vh 1.2vw}
+.control .n{font-family:var(--fuente-titular);font-weight:600;font-size:clamp(1.4rem,2.2vw,2.2rem);color:var(--marca-tinta)}
+.control h3{font-size:clamp(1rem,1.45vw,1.4rem);font-weight:600;margin:.8vh 0}
+.control p{font-size:clamp(.9rem,1.2vw,1.15rem);color:var(--tinta-2);line-height:1.4}
+.control .cifra{display:block;font-size:clamp(1.3rem,2vw,2rem);font-weight:600;color:var(--tinta);margin-top:1vh;font-variant-numeric:tabular-nums}
+.remate{font-family:var(--fuente-titular);font-size:clamp(1.2rem,2vw,1.9rem);max-width:44ch}
+.grandes{display:grid;grid-template-columns:repeat(3,1fr);gap:2vw;align-content:center}
+.grande{background:var(--papel);border:1px solid var(--linea);border-radius:14px;padding:3vh 2vw}
+.grande .num{font-size:clamp(2.6rem,5.4vw,5.4rem);font-weight:600;letter-spacing:-.02em;line-height:1;color:var(--tinta);font-variant-numeric:tabular-nums}
+.grande .num small{font-size:.42em;color:var(--tinta-2);font-weight:500;letter-spacing:0}
+.grande p{font-size:clamp(1rem,1.45vw,1.4rem);color:var(--tinta-2);margin-top:1.4vh;line-height:1.35}
+.grande.acento .num{color:var(--marca-tinta)}
+
+/* ---- Ficha de vendedor ------------------------------------------------------ */
+.ficha-v{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:3vw;flex:1;min-height:0}
+.fv-nombre{font-family:var(--fuente-titular);font-weight:600;font-size:clamp(2.4rem,5vw,4.6rem);line-height:1;letter-spacing:-.02em}
+.fv-puesto{font-size:clamp(1rem,1.5vw,1.4rem);color:var(--tinta-2);margin-top:1.2vh}
+.fv-puesto b{color:var(--marca-tinta)}
+.fv-kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--linea-2);border:1px solid var(--linea);border-radius:12px;overflow:hidden;margin-top:3vh}
+.fv-kpis div{background:var(--papel);padding:1.8vh 1.2vw}
+.fv-kpis span{display:block;font-size:clamp(.8rem,1.05vw,1rem);color:var(--tinta-2)}
+.fv-kpis b{display:block;font-size:clamp(1.3rem,2.2vw,2.1rem);font-weight:600;margin-top:.4vh;font-variant-numeric:tabular-nums}
+.fv-lista{margin-top:2.4vh;font-size:clamp(.9rem,1.2vw,1.15rem);color:var(--tinta-2)}
+.fv-lista b{color:var(--tinta);font-weight:600}
+.fv-lista li{list-style:none;padding:.6vh 0;border-top:1px solid var(--linea-2);display:flex;justify-content:space-between;gap:12px}
+.fv-lista li span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fv-der{display:flex;flex-direction:column;min-height:0}
+.fv-mov{transition:opacity .25s var(--ease)}
+.fv-mov.cambia{opacity:0}
+.sube{color:var(--pos);font-weight:600}.baja{color:var(--neg);font-weight:600}
+
+/* ---- Laminas de los otros sistemas ------------------------------------------- */
+.sistema{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:4vw;align-items:center;flex:1}
+.abrir{display:inline-flex;align-items:center;gap:14px;margin-top:4vh;padding:2.2vh 2.4vw;border-radius:14px;background:var(--tinta);color:#fff;
+  text-decoration:none;font-size:clamp(1.1rem,1.8vw,1.7rem);font-weight:600;transition:transform var(--t-press) var(--ease)}
+.abrir:hover{filter:brightness(1.12)}
+.abrir:active{transform:scale(.98)}
+.abrir svg{width:1.2em;height:1.2em;stroke:currentColor;fill:none;stroke-width:2}
+.url{display:block;margin-top:1.6vh;font-size:clamp(1rem,1.6vw,1.5rem);color:var(--tinta-2);font-variant-numeric:tabular-nums;word-break:break-all}
+.estado-s{display:inline-block;font-size:clamp(.85rem,1.1vw,1.05rem);font-weight:600;padding:4px 12px;border-radius:999px;background:var(--marca-suave);color:var(--marca-tinta)}
+
+/* ---- Compromisos ---------------------------------------------------------- */
+.compromisos{list-style:none;counter-reset:c;max-width:1200px;align-self:center;width:100%}
+.compromisos li{display:grid;grid-template-columns:auto 1fr;gap:2vw;align-items:baseline;padding:2.6vh 0;border-top:1px solid var(--linea);
+  font-size:clamp(1.25rem,2.4vw,2.2rem);line-height:1.25}
+.compromisos li::before{counter-increment:c;content:counter(c);font-family:var(--fuente-titular);font-weight:600;color:var(--marca-tinta);font-size:1.2em}
+
+@media(max-width:900px){
+  .ln-2,.ln-2i,.dos-col,.ficha-v,.sistema,.grandes{grid-template-columns:1fr}
+  .controles{grid-template-columns:1fr 1fr}
+  .lamina{overflow:auto}
+  .dk-capitulo{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .lamina,.lamina.sale,[data-ap],.raya{animation:none}
+  [data-paso]{transition:opacity .2s linear;transform:none}
+}

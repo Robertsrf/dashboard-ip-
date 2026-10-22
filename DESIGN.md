@@ -76,7 +76,15 @@ Tú imperativo, frases cortas, números en español (`$7.016.508`, `15,6 %`). Lo
 («Descargar el Excel de conciliación»). Los errores dicen qué pasó y cómo salir («PIN incorrecto. Vuelve a
 intentarlo»). La jerga del negocio se define donde aparece (camada, diferencial, efectividad).
 
-## 8. No se hace
+## 8. La presentación de la reunión
+
+Misma marca y tipografía, escala de proyector (títulos Serif de 3,4 rem, cifras de 5 rem). Aquí el
+movimiento sí es parte del mensaje, pero siempre con propósito: cada pieza entra cuando el expositor la
+nombra (pasos), las barras crecen en orden, las cifras cuentan hasta su valor y la ficha de cada vendedor
+se transforma en la del siguiente. Transición de lámina 550 ms; con `prefers-reduced-motion`, nada se mueve.
+Naranja solo para lo que el expositor señala (los tres primeros, el mejor mes); verde y rojo, con ▲/▼.
+
+## 9. No se hace
 
 Fondos crema, oscuro con un solo acento chillón, tarjetas idénticas con la misma sombra, degradados de
 adorno, emoji como icono, mayúsculas sostenidas, flechas «→» pegadas a los botones, número gigante como

@@ -51,16 +51,17 @@ def puerta(clave, acento, logo_html, nombre):
 
 
 def construir(cfg, enc, enc_r, version, extra=None):
-    """cfg: {clave, nombre, titulo, acento, logo_html, favicon, modulo}. enc /
+    """cfg: {clave, nombre, titulo, acento, logo_html, puerta_logo, favicon, modulo,
+    shell?, estilos?} (shell y estilos cambian solo en piezas con armazon propio). enc /
     enc_r: salidas de secure.encrypt_bytes (enc_r puede ser None). extra: datos
     publicos que el modulo necesita antes del PIN (p. ej. el mapa de Venezuela)."""
-    html = _leer(APP, "shell.html")
+    html = _leer(APP, cfg.get("shell", "shell.html"))
     reemplazos = {
         "__TITULO__": cfg["titulo"], "__FAVICON__": cfg["favicon"], "__EMPRESA__": cfg["clave"],
-        "__CSS__": _leer(APP, "core.css"),
+        "__CSS__": "\n".join(_leer(APP, f) for f in cfg.get("estilos", ["core.css"])),
         "__PUERTA__": puerta(cfg["clave"], cfg["acento"], cfg["puerta_logo"], cfg["nombre"]),
         "__LOGO__": cfg["logo_html"],
-        "__CFG__": json_seguro({k: v for k, v in cfg.items() if k not in ("logo_html", "puerta_logo", "favicon")}),
+        "__CFG__": json_seguro({k: v for k, v in cfg.items() if k in ("clave", "nombre", "titulo", "acento", "modulo")}),
         "__EXTRA__": json_seguro(extra or {}),
         "__ENC__": json_seguro(enc), "__ENC_R__": json_seguro(enc_r),
         "__JS_MOTOR__": _leer(APP, "motor.js"), "__JS_CORE__": _leer(APP, "core.js"),

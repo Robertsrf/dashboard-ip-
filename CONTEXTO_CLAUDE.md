@@ -760,7 +760,8 @@ respaldo previo en `dashboard-ip-_backups\prod_<FECHA-HORA>\` (§10.4).
 ### 15.1 Multiempresa: la puerta del Grupo IP (2026-09-25)
 
 El sitio ya no es solo IP. `index.html` abre con la **puerta del Grupo IP** («¿A qué empresa vas a entrar?»):
-IP, **Tiendas Caleb** y Reviplas (deshabilitada, «Próximamente»). Si eliges IP, el PIN se pide en la misma
+IP, **Tiendas Caleb**, Reviplas (deshabilitada, «Próximamente») y, desde el 2026-10-22, la presentación
+**«Reunión de vendedores 2026»** (`reunion.html`, ver `METODO.md` §4.1). Si eliges IP, el PIN se pide en la misma
 página; si eliges Caleb, se navega a `caleb.html#entrar`, que salta directo al PIN. «Cambiar de empresa»
 (en la puerta y en la cabecera de cada dashboard) vuelve a la puerta. Los **cuatro usuarios y PINs son los
 mismos** en todas las empresas: cada build cifra su paquete con el mismo `secrets.json`.

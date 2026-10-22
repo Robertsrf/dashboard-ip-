@@ -1,6 +1,22 @@
 {
  "entradas": [
   {
+   "v": "4.2.0",
+   "fecha": "2026-10-22",
+   "tipo": "nuevo",
+   "empresas": [
+    "grupo",
+    "ip"
+   ],
+   "titulo": "Reunión de vendedores 2026 dentro del sistema",
+   "detalle": [
+    "Cuarta opción de la puerta: una presentación por pasos y animada con los datos de IP, sin totales de la empresa ni márgenes.",
+    "El año, el equipo, crecimientos y caídas, trimestre contra trimestre, vendedor por vendedor, zonas, clientes, grupos y cobranza, siempre con meses cerrados.",
+    "Láminas de Cobranzas y Flota con su botón para abrirlas, y cierre con los compromisos."
+   ],
+   "huella": "ac7c7c53418f62b3"
+  },
+  {
    "v": "4.1.1",
    "fecha": "2026-10-20",
    "tipo": "arreglo",

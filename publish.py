@@ -20,7 +20,7 @@ def git(*args, check=True, capture=False):
 # Lo que cambia en un corte: las paginas y Novedades (el build agrega el corte).
 # history*.json NO: traen ventas, costos y margenes en claro y el repo es publico;
 # viven solo en local (y en los respaldos).
-ARTEFACTOS = ["index.html", "caleb.html", "changelog.json"]
+ARTEFACTOS = ["index.html", "reunion.html", "caleb.html", "changelog.json"]
 git("add", *[a for a in ARTEFACTOS if os.path.exists(a)])
 
 # ¿Hay algo que commitear?

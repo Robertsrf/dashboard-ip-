@@ -46,6 +46,21 @@ RECORRIDO = r"""(async()=>{const r=[];const espera=ms=>new Promise(x=>setTimeout
  return JSON.stringify(r);})()"""
 
 
+# La presentacion de la reunion: lamina por lamina (una orden cada una: el
+# recorrido entero pasa del limite de una orden del navegador).
+def recorrer_deck():
+    out = []
+    for i in range(int(evaluar("GIP.deck.total()"))):
+        evaluar("GIP.deck.ir(%d);for(let p=1;p<GIP.deck.pasos(%d);p++)GIP.deck.siguiente();'ok'" % (i, i))
+        ab("wait", "1300")
+        r = evaluar("JSON.stringify({g:[...document.querySelectorAll('.lamina .ln-graf')].map(x=>[x.id,!!x.querySelector('canvas')]),"
+                    "d:document.documentElement.scrollWidth>innerWidth+1,t:(document.querySelector('.lamina')||{}).getAttribute('aria-label')})")
+        r = json.loads(r) if isinstance(r, str) else r
+        out.append({"id": f"{i + 1} {r['t']}"[:28], "graficos": len(r["g"]), "sinPintar": [g[0] for g in r["g"] if not g[1]],
+                    "rotas": [], "desborde": r["d"]})
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("url")
@@ -63,14 +78,15 @@ def main():
         ab("errors", "--clear")
         evaluar("document.getElementById('pin').value=%s;document.getElementById('enter').click();'ok'" % json.dumps(pin))
         ab("wait", "4500")
-        res = evaluar(RECORRIDO)
+        res = evaluar("(window.GIP ? (GIP.deck ? 'deck' : 'tablero') : 'tablero')")   # sin & : el .cmd lo corta
+        res = recorrer_deck() if res == "deck" else evaluar(RECORRIDO)
         if isinstance(res, str):
             res = json.loads(res)
         print(f"== {a.rol} a {ancho}px: {len(res)} secciones")
         for s in res:
             mal = s["sinPintar"] or s["rotas"] or s["desborde"]
             fallos += bool(mal)
-            print(f"  {'MAL' if mal else 'ok '} {s['id']:<12} {s['graficos']:>2} graficos"
+            print(f"  {'MAL' if mal else 'ok '} {s['id']:<28} {s['graficos']:>2} graficos"
                   + (f" · sin pintar {s['sinPintar']}" if s["sinPintar"] else "")
                   + (f" · rotas {s['rotas']}" if s["rotas"] else "") + (" · DESBORDA EN HORIZONTAL" if s["desborde"] else ""))
             if a.capturas:
