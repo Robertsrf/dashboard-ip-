@@ -20,6 +20,7 @@ import risklist as RLIST
 import secure as SECURE
 import wordrep as WORDREP
 from grupo import changelog as CL
+from grupo import control as CTRL
 from grupo import pagina as PAG
 from grupo import paquete as PAQ
 from grupo import reglas as REGLAS
@@ -135,8 +136,9 @@ CFG_REUNION = {"clave": "reunion", "nombre": "Reunión de vendedores 2026", "mod
                "shell": "shell_reunion.html", "estilos": ["core.css", "reunion.css"],
                "logo_html": '<img src="assets/logo-ip.png" alt="Distribuidora y Suministros IP" width="38" height="38">',
                "puerta_logo": '<img src="assets/logo-ip.png" alt="Reunión de vendedores 2026">'}
-ENLACES = {"cobranzas": os.environ.get("REUNION_COBRANZAS_URL", "https://cobranzas.onrender.com"),
-           "flota": os.environ.get("REUNION_FLOTA_URL", "https://robertsrf.github.io/flota-ip/")}
+# La direccion de Cobranzas va en secrets.json ("enlaces"), no aqui: el repo es
+# publico. REUNION_<CLAVE>_URL la cambia al construir.
+ENLACES = {"cobranzas": "", "flota": "https://robertsrf.github.io/flota-ip/"}
 
 CFG = {"clave": "ip", "nombre": "Distribuidora y Suministros IP", "modulo": "ip.js",
        "titulo": "Distribuidora y Suministros IP · Inteligencia de Ventas", "acento": "#c93608",
@@ -168,6 +170,8 @@ def main():
     with open(os.environ.get("SECRETS_PATH", os.path.join(AQUI, "secrets.json")), encoding="utf-8") as f:
         secretos = json.load(f)
     iters = int(secretos.get("iterations", 200000))
+    # las columnas no dependen de meta: el cuadre sobre este paquete vale para el publicado
+    meta["controles"] = CTRL.armar(df, PAQ.empaquetar(meta, cols), corte, fechas["dateMax"])
     enc = SECURE.encrypt_bytes(PAQ.empaquetar(meta, cols), secretos["users"], iters)
     reunion = SECURE.reunion_users(secretos)
     enc_r = (SECURE.encrypt_bytes(PAQ.empaquetar(*REUNION.limpiar("ip", meta, cols)), reunion, iters)
@@ -181,13 +185,14 @@ def main():
     PAG.escribir(salida, html)
     print(f"OK -> {salida} ({len(html) / 1e6:.2f} MB, {len(df)} filas, corte {corte}"
           f"{', con paquete de reunion' if enc_r else ''})")
-    presentacion(meta, cols, secretos["users"] + reunion, iters, version, geo, favicon, salida)
+    presentacion(meta, cols, secretos["users"] + reunion, iters, version, geo, favicon, salida,
+                 dict(ENLACES, **secretos.get("enlaces", {})))
 
 
-def presentacion(meta, cols, usuarios, iters, version, geo, favicon, salida):
+def presentacion(meta, cols, usuarios, iters, version, geo, favicon, salida, enlaces):
     """reunion.html: la presentacion de la reunion de vendedores, junto a index.html."""
     m, c = REUNION.limpiar("ip", meta, cols)
-    m["enlaces"] = ENLACES
+    m["enlaces"] = {k: os.environ.get("REUNION_" + k.upper() + "_URL") or v for k, v in enlaces.items()}
     enc = SECURE.encrypt_bytes(PAQ.empaquetar(m, c), usuarios, iters)
     ruta = os.path.join(os.path.dirname(os.path.abspath(salida)), "reunion.html")
     html = PAG.construir(dict(CFG_REUNION, favicon=favicon), enc, None, version, extra={"geo": geo})

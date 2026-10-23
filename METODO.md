@@ -58,12 +58,22 @@ Navegador: PIN → WebCrypto → DecompressionStream → GIP.Motor (TypedArrays)
    Huella: `<dataId>|<modifiedTime>|<bytes>~E:<execId>~L:<listId>~C:<cobId>|<modifiedTime>|<bytes>`. Va
    completa dentro del paquete cifrado; en claro (`DATA_VERSION`) solo su hash. El build agrega el corte en
    Novedades, sin cifras.
+   **Controles del build** (`grupo/control.py`, viajan en `meta.controles` y sostienen la lámina de
+   confianza de la presentación). El build **no publica** si falla uno:
+   - *cuadre a tres caminos*: líneas, facturas, clientes, productos y la huella SHA-256 de la venta, contados
+     desde el Excel (pandas), desde el paquete releído (numpy) y con el motor del navegador (Node);
+   - *pruebas*: corre `unittest` y `node --test` y guarda cuántas pasaron.
+   - *pasado*: guarda la foto mes a mes del corte en `history_meses.json` (local, con cifras) y coteja los
+     meses que el corte anterior ya tenía cerrados. Si cambian, avisa y la lámina lo muestra con la
+     diferencia; no detiene el build (una nota de crédito tardía es legítima), pero hay que explicarlo.
 8. **Verificar**: `python tools/verificar.py index.html data_ip.xlsx` (5 PIN, paquete de reunión limpio,
    sintaxis, totales Excel = numpy = motor JS) y, con el servidor local levantado,
    `python tools/navegador.py http://127.0.0.1:8765/index.html` (todas las secciones pintadas, 0 errores).
-9. **Cotejar** con el corte anterior de `history.json`: caída de venta > 25 % o menos filas ⇒ avisar.
+9. **Cotejar** con el corte anterior de `history.json`: caída de venta > 25 % o menos filas ⇒ avisar. Si el
+   build avisó «meses cerrados distintos», averiguar por qué antes de publicar.
 10. **Publicar**: `python publish.py "Corte N (dd-mm)"` (sube `index.html`, `reunion.html`, `caleb.html` y `changelog.json`).
-    `history.json` y `history_caleb.json` **no se suben**: traen cifras en claro; viven en local y en los respaldos.
+    `history.json`, `history_caleb.json` y `history_meses.json` **no se suben**: traen cifras en claro; viven
+    en local y en los respaldos.
 
 Caleb: mismo esquema con `python build_caleb.py <reporte.xlsx> "<huella>" caleb.html`; solo se toca si hay
 reporte nuevo en su subcarpeta de Drive. Su certificación (`caleb_clean.py`) aborta si algo no cuadra.
@@ -106,13 +116,18 @@ reporte nuevo en su subcarpeta de Drive. Su certificación (`caleb_clean.py`) ab
 - Cuarta opción de la puerta. La genera `build_dashboard.py` junto a `index.html` (`presentacion()`), con el
   **paquete de reunión** de IP cifrado para los 4 PIN y el de reunión: aunque entre el administrador, ahí
   no viaja nada sensible. Armazón propio (`app/shell_reunion.html`, `app/reunion.css`, `app/reunion.js`).
-- Láminas por pasos (→, Av Pág, clic en «Siguiente»): apertura, confianza, estadísticas (año, ritmo,
+- Láminas por pasos (→, Av Pág, clic en «Siguiente»): apertura, confianza (cada control con su evidencia)
+  y el cuadre a tres caminos (la tercera columna la recuenta el navegador en vivo), estadísticas (año, ritmo,
   equipo, mes contra mes, trimestre contra trimestre, vendedor por vendedor, zonas, clientes, grupos,
   cobranza), Cobranzas y Flota con su botón, compromisos y cierre.
 - Nunca pinta un total de la empresa en dólares: participaciones, variaciones, conteos y la venta de cada
   vendedor. Las comparaciones usan **meses cerrados** (si el corte cae a mitad de mes, ese mes no entra).
-- Los enlaces van dentro del paquete cifrado: `REUNION_COBRANZAS_URL` y `REUNION_FLOTA_URL` al construir
-  (por defecto, los de `build_dashboard.py`).
+- Ficha de cada vendedor: participación, mes y trimestre contra el anterior, clientes distintos atendidos,
+  ticket, mejor mes, zona donde más vende, grupo más fuerte, producto que más vende (con unidades) y sus tres
+  clientes principales.
+- Los enlaces van dentro del paquete cifrado. Cobranzas en `secrets.json` → `"enlaces": {"cobranzas": …}`
+  (no en el código: el repo es público); Flota por defecto en `build_dashboard.py`. `REUNION_COBRANZAS_URL`
+  o `REUNION_FLOTA_URL` los cambian al construir.
 - Verificación: `tools/verificar.py reunion.html data_ip.xlsx` y `tools/navegador.py <url>/reunion.html
   --rol reunion` (recorre las láminas y cada paso).
 

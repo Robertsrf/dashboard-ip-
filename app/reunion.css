@@ -61,12 +61,29 @@ body.presentacion{background:var(--lienzo);overflow:hidden}
 .lista-ln.tenue li{color:var(--tinta-2)}
 .col-tit{font-size:clamp(1rem,1.4vw,1.3rem);font-weight:600;color:var(--tinta-2);margin-bottom:1.4vh}
 .col-tit.naranja{color:var(--marca-tinta)}
-.controles{display:grid;grid-template-columns:repeat(5,1fr);gap:1.2vw;align-content:start}
-.control{background:var(--papel);border:1px solid var(--linea);border-radius:12px;padding:2.4vh 1.2vw}
+/* controles: una fila por control, con su evidencia a la derecha */
+.controles{grid-template-columns:1fr;gap:0;align-content:start}
+.ln-titulo.una{max-width:none}
+.control{display:grid;grid-template-columns:3rem minmax(0,1fr) minmax(0,.7fr);gap:2vw;align-items:center;padding:1.1vh 0;border-top:1px solid var(--linea)}
 .control .n{font-family:var(--fuente-titular);font-weight:600;font-size:clamp(1.4rem,2.2vw,2.2rem);color:var(--marca-tinta)}
-.control h3{font-size:clamp(1rem,1.45vw,1.4rem);font-weight:600;margin:.8vh 0}
-.control p{font-size:clamp(.9rem,1.2vw,1.15rem);color:var(--tinta-2);line-height:1.4}
-.control .cifra{display:block;font-size:clamp(1.3rem,2vw,2rem);font-weight:600;color:var(--tinta);margin-top:1vh;font-variant-numeric:tabular-nums}
+.control h3{font-size:clamp(1rem,1.5vw,1.45rem);font-weight:600;margin-bottom:.4vh}
+.control p{font-size:clamp(.88rem,1.12vw,1.08rem);color:var(--tinta-2);line-height:1.38;max-width:64ch}
+.ev b{display:block;font-size:clamp(1.4rem,2.4vw,2.3rem);font-weight:600;line-height:1.05;font-variant-numeric:tabular-nums}
+.ev>span{display:block;font-size:clamp(.8rem,1.02vw,.98rem);color:var(--tinta-2);margin-top:.3vh}
+.meses-ok{display:flex;flex-wrap:wrap;gap:4px;margin-top:.8vh}
+.meses-ok span{font-size:clamp(.7rem,.85vw,.84rem);padding:1px 6px;border-radius:999px;background:#E8F3EC;color:var(--pos);font-weight:600}
+.meses-ok span.no{background:#FBEAE8;color:var(--neg)}
+/* el cuadre a tres caminos: una columna por camino, la tercera en vivo */
+.cuadre{display:grid;grid-template-columns:minmax(0,.7fr) repeat(3,minmax(0,1fr));align-content:start;column-gap:1.6vw}
+.cuadre>div{padding:.9vh 0;border-bottom:1px solid var(--linea)}
+.cd-h .n{font-family:var(--fuente-titular);font-weight:600;color:var(--marca-tinta);font-size:clamp(1.2rem,1.8vw,1.8rem);margin-right:.4em}
+.cd-h b{font-size:clamp(1rem,1.45vw,1.4rem);font-weight:600}
+.cd-h small{display:block;font-size:clamp(.78rem,.98vw,.96rem);color:var(--tinta-2);line-height:1.35;margin-top:.6vh}
+.cd-l{font-size:clamp(.95rem,1.3vw,1.25rem);color:var(--tinta-2);align-self:center}
+.cd-v{font-size:clamp(1.25rem,2.1vw,2rem);font-weight:600;font-variant-numeric:tabular-nums;align-self:center;white-space:nowrap}
+.cd-v code{font-family:ui-monospace,Consolas,monospace;font-size:.82em;letter-spacing:.04em}
+.cd-v i{font-style:normal;font-size:.48em;font-weight:600;vertical-align:middle;margin-left:.3em}
+.cd-v i.ok{color:var(--pos)}.cd-v i.mal{color:var(--neg)}
 .remate{font-family:var(--fuente-titular);font-size:clamp(1.2rem,2vw,1.9rem);max-width:44ch}
 .grandes{display:grid;grid-template-columns:repeat(3,1fr);gap:2vw;align-content:center}
 .grande{background:var(--papel);border:1px solid var(--linea);border-radius:14px;padding:3vh 2vw}
@@ -76,19 +93,28 @@ body.presentacion{background:var(--lienzo);overflow:hidden}
 .grande.acento .num{color:var(--marca-tinta)}
 
 /* ---- Ficha de vendedor ------------------------------------------------------ */
-.ficha-v{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:3vw;flex:1;min-height:0}
-.fv-nombre{font-family:var(--fuente-titular);font-weight:600;font-size:clamp(2.4rem,5vw,4.6rem);line-height:1;letter-spacing:-.02em}
+.ficha-v{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);grid-template-rows:minmax(0,1fr);gap:3vw;flex:1;min-height:0}
+.fv-izq{min-height:0;overflow:hidden}
+.fv-nombre{font-family:var(--fuente-titular);font-weight:600;font-size:clamp(2.2rem,4.4vw,4.4rem);line-height:1;letter-spacing:-.02em}
 .fv-puesto{font-size:clamp(1rem,1.5vw,1.4rem);color:var(--tinta-2);margin-top:1.2vh}
 .fv-puesto b{color:var(--marca-tinta)}
-.fv-kpis{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--linea-2);border:1px solid var(--linea);border-radius:12px;overflow:hidden;margin-top:3vh}
-.fv-kpis div{background:var(--papel);padding:1.8vh 1.2vw}
+.fv-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--linea-2);border:1px solid var(--linea);border-radius:12px;overflow:hidden;margin-top:2.4vh}
+.fv-kpis div{background:var(--papel);padding:1.4vh .9vw}
 .fv-kpis span{display:block;font-size:clamp(.8rem,1.05vw,1rem);color:var(--tinta-2)}
-.fv-kpis b{display:block;font-size:clamp(1.3rem,2.2vw,2.1rem);font-weight:600;margin-top:.4vh;font-variant-numeric:tabular-nums}
+.fv-kpis b{display:block;font-size:clamp(1.1rem,1.75vw,1.9rem);font-weight:600;margin-top:.4vh;font-variant-numeric:tabular-nums}
+.fv-perfil{margin-top:1.8vh}
+.fv-perfil>div{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.6fr);gap:1vw;padding:.7vh 0;border-top:1px solid var(--linea-2);align-items:baseline}
+.fv-perfil dt{font-size:clamp(.8rem,1.05vw,1rem);color:var(--tinta-2)}
+.fv-perfil dd b{display:block;font-size:clamp(1rem,1.4vw,1.35rem);font-weight:600;line-height:1.2}
+.fv-perfil dd span{display:block;font-size:clamp(.78rem,1vw,.95rem);color:var(--tinta-2);font-variant-numeric:tabular-nums}
+.fv-der .fv-graf{flex:1;min-height:0}
+.fv-tit{margin:1.2vh 0 0}
 .fv-lista{margin-top:2.4vh;font-size:clamp(.9rem,1.2vw,1.15rem);color:var(--tinta-2)}
 .fv-lista b{color:var(--tinta);font-weight:600}
 .fv-lista li{list-style:none;padding:.6vh 0;border-top:1px solid var(--linea-2);display:flex;justify-content:space-between;gap:12px}
 .fv-lista li span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .fv-der{display:flex;flex-direction:column;min-height:0}
+.fv-der .fv-lista{margin-top:.6vh}
 .fv-mov{transition:opacity .25s var(--ease)}
 .fv-mov.cambia{opacity:0}
 .sube{color:var(--pos);font-weight:600}.baja{color:var(--neg);font-weight:600}
@@ -111,7 +137,11 @@ body.presentacion{background:var(--lienzo);overflow:hidden}
 
 @media(max-width:900px){
   .ln-2,.ln-2i,.dos-col,.ficha-v,.sistema,.grandes{grid-template-columns:1fr}
-  .controles{grid-template-columns:1fr 1fr}
+  .control{grid-template-columns:2.2rem minmax(0,1fr)}
+  .control .evid{grid-column:2}
+  .cuadre{grid-template-columns:minmax(0,.8fr) repeat(3,minmax(0,1fr))}
+  .cd-h small{display:none}
+  .fv-der .fv-graf{min-height:260px}
   .lamina{overflow:auto}
   .dk-capitulo{display:none}
 }

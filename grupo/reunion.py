@@ -16,7 +16,7 @@ _META_COMUN = {"empresa", "version", "generated", "dateMin", "dateMax", "year", 
                "dayCount", "dims", "changelog", "corte"}
 
 REGLAS = {
-    "ip": {"meta": _META_COMUN | {"riskList", "Pcob"},
+    "ip": {"meta": _META_COMUN | {"riskList", "Pcob", "controles"},
            "cols": None},      # IP no tiene costos: pasan todas las columnas de venta
     "caleb": {"meta": _META_COMUN,
               "cols": {"dia", "hora", "doc", "prod", "vend", "cli", "mes", "grupo", "marca",

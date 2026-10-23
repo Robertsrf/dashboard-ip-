@@ -1,6 +1,19 @@
 {
  "entradas": [
   {
+   "v": "4.3.0",
+   "fecha": "2026-10-23",
+   "tipo": "mejora",
+   "empresas": [
+    "ip"
+   ],
+   "titulo": "La presentación demuestra lo que afirma",
+   "detalle": [
+    "Nueva lámina «El mismo resultado por tres caminos»: el Excel leído con Python, el archivo publicado releído byte a byte y el navegador recontando en vivo, con la huella de la venta en lugar de la cifra. Cada control de «¿Por qué creerle?» trae su evidencia: meses cerrados cotejados con el corte anterior, cobranza recuadrada camada por camada y las pruebas que pasaron (el build ya no publica si fallan). La ficha de cada vendedor suma zona donde más vende, clientes distintos atendidos, grupo más fuerte y producto estrella con sus unidades. Todos los nombres de vendedor visibles en los rankings; el botón de Cobranzas apunta a su dirección real."
+   ],
+   "huella": "6ba7eaaf38efbaaf"
+  },
+  {
    "v": "4.2.0",
    "fecha": "2026-10-22",
    "tipo": "nuevo",

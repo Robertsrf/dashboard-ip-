@@ -26,6 +26,7 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, RAIZ)
+from grupo import control as CTRL  # noqa: E402
 from grupo import paquete as PAQ  # noqa: E402
 
 PROHIBIDO_META = {"exec", "execDocx", "history", "driveLinks", "listDocx"}
@@ -134,6 +135,11 @@ def main(ruta, xlsx=None):
     if xlsx:
         te = totales_excel_ip(xlsx)
         check(all(abs(tn[k] - te[k]) < 0.005 for k in tn), f"paquete == Excel {te}")
+    cuadre = (meta.get("controles") or {}).get("cuadre")
+    if meta["empresa"] == "ip":
+        check(cuadre is not None, "controles de la lamina de confianza presentes")
+    if cuadre:
+        check(cuadre["paquete"] == CTRL.desde_paquete(gz), "el cuadre embebido coincide con el paquete publicado")
     print("VERIFICACION " + ("OK" if not FALLOS else f"CON {len(FALLOS)} FALLOS"))
     return 1 if FALLOS else 0
 

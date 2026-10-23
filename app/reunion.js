@@ -33,7 +33,8 @@
     const totAno = porMes.reduce((a, m) => a + m.neto, 0) || 1;
     const xv = M.cruzar(sel, 'vend', 'mes', 'neto'), gv = M.agrupar(sel, 'vend', { sumas: ['neto'], distintos: ['doc', 'cli'] });
     const gvu = M.agrupar(M.seleccion({ f: { mes: new Set([ult]) }, rango: null }), 'vend', { sumas: ['neto'], distintos: ['cli'] });
-    const xcli = M.cruzar(sel, 'vend', 'cli', 'neto'), xest = M.cruzar(sel, 'vend', 'estado', 'neto');
+    const xcli = M.cruzar(sel, 'vend', 'cli', 'neto'), xest = M.cruzar(sel, 'vend', 'estado', 'neto'), xgru = M.cruzar(sel, 'vend', 'grupo', 'neto');
+    const xpro = M.cruzar(sel, 'vend', 'prod', 'neto'), xcan = M.cruzar(sel, 'vend', 'prod', 'cant');
     const primero = new Int32Array(M.cardinal('vend')).fill(-1), ultimo = new Int32Array(M.cardinal('vend')).fill(-1);
     for (let k = 0; k < sel.length; k++) { const r = sel[k], v = M.cols.vend[r], d = M.cols.dia[r];
       if (primero[v] < 0 || d < primero[v]) primero[v] = d; if (d > ultimo[v]) ultimo[v] = d; }
@@ -46,13 +47,15 @@
       const prom = ms => ms.reduce((s, m) => s + serie[m], 0) / ms.length;
       const fila = (x, dimN) => { const out = []; for (let b = 0; b < x.nB; b++) { const v = x.v[a * x.nB + b]; if (v > 0) out.push([dimN[b], v]); }
         return out.sort((p, q) => q[1] - p[1]); };
-      const top = fila(xcli, dims.cli), zonas = fila(xest, dims.estado);
+      const top = fila(xcli, dims.cli), zonas = fila(xest, dims.estado), gru = fila(xgru, dims.grupo), pro = fila(xpro, dims.prod);
+      const pk = pro.length ? dims.prod.indexOf(pro[0][0]) : -1, de = x => x / gv.neto[a] * 100;
       vendedores.push({ a, nombre, neto: gv.neto[a], part: gv.neto[a] / totAno * 100, serie,
         varMes: serie[ult - 1] >= MIN_BASE ? pctVar(serie[ult], serie[ult - 1]) : null,
         varTri: tri && prom(tri.a) >= MIN_BASE ? pctVar(prom(tri.b), prom(tri.a)) : null,
         mejor: serie.indexOf(Math.max(...serie)), clientes: gv.cli[a], clientesUlt: gvu.cli[a] || 0,
         ticket: gv.doc[a] ? gv.neto[a] / gv.doc[a] : 0, top: top.slice(0, 3).map(t => [t[0], t[1] / gv.neto[a] * 100]),
-        zona: zonas.length ? [zonas[0][0], zonas[0][1] / gv.neto[a] * 100] : null,
+        zona: zonas.length ? [zonas[0][0], de(zonas[0][1])] : null, grupo: gru.length ? [gru[0][0], de(gru[0][1])] : null,
+        prod: pk >= 0 ? [pro[0][0], xcan.v[a * xcan.nB + pk], de(pro[0][1])] : null,
         desde: primero[a], hasta: ultimo[a] });
     }
     vendedores.sort((p, q) => q.part - p.part);
@@ -78,7 +81,30 @@
     return { P, ult, mesN, mesC, cerr, porMes, vendedores, estados, n80, inactivos, grupos, tri,
       parcial: ult < nM - 1, mesCorte: mesN(nM - 1), diaCorte: +dm[2],
       lineas: M.n, facturas: M.total(todo, { distintos: ['doc'] }).doc, clientesAno: M.total(sel, { distintos: ['cli'] }).cli,
-      riesgo: resumenRiesgo(P.riskList), cobro: cobranza(P.Pcob), enlaces: P.enlaces || {} };
+      riesgo: resumenRiesgo(P.riskList), cobro: cobranza(P.Pcob), cobCuadre: cuadreCobranza(P.Pcob), ctl: P.controles || {}, enlaces: P.enlaces || {} };
+  }
+
+  /* Los mismos conteos del build (grupo/control.py), rehechos AHORA por el
+     motor de este navegador: el tercer camino del cuadre. */
+  function recontar(M) {
+    const t0 = performance.now(), o = M.total(M.seleccion({ f: {}, rango: null }), { distintos: ['doc', 'cli', 'prod'] });
+    const a = M.cols.neto; let c = 0; for (let i = 0; i < a.length; i++) c += a[i];
+    return { lineas: o.filas, facturas: o.doc, clientes: o.cli, productos: o.prod, centavos: Math.round(c * 100 / M.esc.neto), ms: performance.now() - t0 };
+  }
+  /* Huella SHA-256 del total en centavos, igual que grupo/control.huella */
+  async function huella(centavos) {
+    if (!(G.crypto && crypto.subtle)) return null;
+    const b = new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(centavos))));
+    const h = Array.from(b.slice(0, 4), x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+    return h.slice(0, 4) + ' ' + h.slice(4);
+  }
+  /* Facturado = cobrado + pendiente + diferencial, camada por camada, en vivo */
+  function cuadreCobranza(COB) {
+    if (!COB) return null;
+    const por = new Map();
+    for (const r of COB.rows) { if (r[5] === COB.anulIdx) continue; por.set(r[0], (por.get(r[0]) || 0) + r[6] - r[7] - r[8] - r[9]); }
+    const d = Array.from(por.values(), Math.abs);
+    return { camadas: d.length, cuadran: d.filter(x => x < 0.01).length, peor: d.length ? Math.max(...d) : 0 };
   }
 
   /* Lo que la lista de Drive dice de la base dormida y del riesgo */
@@ -103,13 +129,17 @@
 
   /* ---- Graficos ------------------------------------------------------------ */
   const eje = (o) => Object.assign({ axisLabel: { fontSize: fsz(12), color: '#4A5270' }, splitLine: { lineStyle: { color: '#EDF0F5' } }, axisLine: { lineStyle: { color: GRIS } }, axisTick: { show: false } }, o);
+  /* Todos los nombres, uno por barra: ECharts salta etiquetas si cree que no
+     caben (interval auto); la letra se ajusta al alto de cada fila. */
+  const nombres = (ch, n) => ({ interval: 0, fontSize: Math.max(10, Math.min(fsz(13), Math.floor((ch.getHeight() - 12) / Math.max(1, n) * .62))),
+    color: '#24205b', width: fsz(150), overflow: 'truncate' });
   function barrasPct(id, filas, o) {
     const ch = GIP.grafico(id);
     ch.setOption(Object.assign({}, MOV, {
       grid: { left: 8, right: 70, top: 6, bottom: 6, containLabel: true },
       tooltip: { show: false },
       xAxis: eje({ type: 'value', axisLabel: { show: false }, splitLine: { show: false } }),
-      yAxis: eje({ type: 'category', inverse: true, data: filas.map(f => f[0]), axisLabel: { fontSize: fsz(13), color: '#24205b', width: fsz(150), overflow: 'truncate' } }),
+      yAxis: eje({ type: 'category', inverse: true, data: filas.map(f => f[0]), axisLabel: nombres(ch, filas.length) }),
       series: [{ type: 'bar', barMaxWidth: fsz(22), data: filas.map((f, k) => ({ value: +f[1].toFixed(2), itemStyle: { color: f[2] || SERIE, opacity: f[3] == null ? 1 : f[3] } })),
         itemStyle: { borderRadius: [0, 4, 4, 0] }, animationDelay: k => k * 70,
         label: { show: true, position: 'right', fontSize: fsz(13), fontWeight: 600, color: '#24205b', formatter: p => (o && o.etiqueta ? o.etiqueta(p.value) : F.pct(p.value)) } }],
@@ -123,7 +153,7 @@
     ch.setOption(Object.assign({}, MOV, {
       grid: { left: 8, right: 60, top: 6, bottom: 6, containLabel: true }, tooltip: { show: false },
       xAxis: eje({ type: 'value', axisLabel: { formatter: v => v + ' %', fontSize: fsz(11), color: '#6B7390' } }),
-      yAxis: eje({ type: 'category', inverse: true, data: filas.map(f => f[0]), axisLabel: { fontSize: fsz(13), color: '#24205b', width: fsz(150), overflow: 'truncate' } }),
+      yAxis: eje({ type: 'category', inverse: true, data: filas.map(f => f[0]), axisLabel: nombres(ch, filas.length) }),
       series: [{ type: 'bar', barMaxWidth: fsz(20), animationDelay: k => k * 60,
         data: filas.map(f => ({ value: +f[1].toFixed(1), itemStyle: { color: f[1] >= 0 ? POS : NEG, opacity: op(f), borderRadius: f[1] >= 0 ? [0, 4, 4, 0] : [4, 0, 0, 4] } })),
         label: { show: true, position: 'right', fontSize: fsz(13), fontWeight: 600, formatter: p => F.delta(p.value, 0), color: '#24205b' } }],
@@ -152,17 +182,62 @@
       + '<div data-paso="1"><p class="col-tit naranja">Ahora</p><ul class="lista-ln"><li>Un solo dato, sacado de la factura</li><li>Cuadra al centavo, o no se publica</li>'
       + '<li>Cada quincena, en el teléfono</li><li>Solo cuenta lo que confirmó el banco</li></ul></div></div>' });
 
+    /* Cada control con su evidencia: cifras del build (grupo/control.py) o
+       recalculadas aqui mismo. Si falta una, se dice, no se inventa. */
+    const C = D.ctl, cu = C.cuadre, pa = C.pasado, pr = C.pruebas, cb = D.cobCuadre;
+    const mesCh = m => F.mes(+m.slice(5) - 1).slice(0, 3);
+    const novedades = c => (Array.isArray(c) ? c : (c && c.entradas) || []).length;
+    const iguales = pa ? pa.meses.filter(m => m.igual).length : 0, cambian = pa ? pa.meses.filter(m => !m.igual) : [];
+    const REMATE = k => '<p class="remate" data-paso="' + k + '">Y la prueba más fuerte: compruébenlo ustedes, con un cliente suyo.</p>';
+    const ev = (num, txt) => '<div class="ev"><b>' + num + '</b><span>' + txt + '</span></div>';
     const ctl = [
-      ['Origen único', 'Líneas de factura leídas del sistema de facturación, sin tocarlas a mano.', D.lineas],
-      ['Cuadre triple', 'Facturas: el total se calcula por tres caminos distintos y tiene que dar lo mismo.', D.facturas],
-      ['El pasado no se toca', 'Cada corte se coteja con el anterior: los meses cerrados deben llegar idénticos.', null],
-      ['La cobranza cuadra', 'Camadas donde facturado = cobrado + diferencial + pendiente, al centavo.', D.cobro ? D.cobro.length : null],
-      ['Probado antes de salir', 'Pruebas automáticas y revisión en el navegador en cada corte; cada cambio queda escrito.', null]];
+      ['Origen único', 'Las líneas salen tal cual del sistema de facturación, del ' + esc(F.fechaCorta(D.P.dateMin)) + ' al ' + esc(F.fechaCorta(D.P.dateMax)) + '. Nadie las copia a mano.',
+        ev('<span data-cuenta="' + D.lineas + '">0</span>', 'líneas de ' + F.entero(D.facturas) + ' facturas')],
+      ['Cuadre a tres caminos', 'El Excel leído con Python, el archivo publicado releído byte a byte y este navegador cuentan por separado. Si no dan lo mismo, no se publica.',
+        cu ? ev('3 de 3', 'caminos dan lo mismo: lo ven en la lámina siguiente') : ev('—', 'sin datos del cuadre en este corte')],
+      ['El pasado no se toca', pa ? 'Los meses que el corte ' + pa.contra + ' ya tenía cerrados se cotejan con este, mes por mes: líneas, facturas y monto al centavo.'
+        : 'Cada corte guarda su foto mes a mes para cotejarla con el siguiente.',
+        pa ? ev(iguales + ' de ' + pa.meses.length, 'meses idénticos al corte ' + pa.contra) + '<div class="meses-ok">' + pa.meses.map(m => '<span class="' + (m.igual ? 'si' : 'no') + '">'
+          + mesCh(m.mes) + (m.igual ? ' ✓' : ' ✗') + '</span>').join('') + '</div>' : ev('—', 'primera foto: se coteja desde el próximo corte')],
+      ['La cobranza cuadra', 'En cada camada, facturado = cobrado + diferencial + pendiente. Recalculado ahora, en esta pantalla.',
+        cb ? ev(cb.cuadran + ' de ' + cb.camadas, 'camadas cuadran · diferencia mayor $' + cb.peor.toFixed(2).replace('.', ',')) : ev('—', 'sin conciliación en este corte')],
+      ['Probado antes de salir', 'Las pruebas automáticas corren en cada publicación: si una falla, el corte no sale. Cada cambio queda escrito en Novedades.',
+        pr ? ev(String(pr.python + pr.navegador), 'pruebas pasaron · 0 fallas · ' + novedades(D.P.changelog) + ' entradas en Novedades') : ev('—', 'sin registro de pruebas')]];
     L.push({ cap: 'Apertura', nombre: 'Por qué creerle a los números', pasos: 5, html: () =>
-      '<h2 class="ln-titulo" data-ap>¿Por qué creerle a los números?</h2><div class="ln-cuerpo controles">'
-      + ctl.map((c, k) => '<div class="control" data-paso="' + k + '"><span class="n">' + (k + 1) + '</span><h3>' + c[0] + '</h3><p>' + c[1] + '</p>'
-        + (c[2] != null ? '<span class="cifra" data-cuenta="' + c[2] + '">0</span>' : '') + '</div>').join('') + '</div>'
-      + '<p class="remate" data-paso="4">Y la prueba más fuerte: compruébenlo ustedes, con un cliente suyo.</p>' });
+      '<h2 class="ln-titulo una" data-ap>¿Por qué creerle a los números?</h2><div class="ln-cuerpo controles">'
+      + ctl.map((c, k) => '<div class="control" data-paso="' + k + '"><span class="n">' + (k + 1) + '</span><div><h3>' + c[0] + '</h3><p>' + c[1] + '</p></div><div class="evid">' + c[2] + '</div></div>').join('')
+      + '</div>' + (cambian.length ? '<p class="ln-nota" data-paso="2">Cambiaron: ' + cambian.map(m => esc(F.mes(+m.mes.slice(5) - 1)) + ' (' + (m.lineas >= 0 ? '+' : '') + m.lineas + ' líneas, '
+        + (m.centavos >= 0 ? '+' : '−') + '$' + (Math.abs(m.centavos) / 100).toFixed(2).replace('.', ',') + ')').join(', ') + '. Notas de crédito o facturas cargadas tarde: se explican, no se esconden.</p>' : '')
+      + (cu ? '' : REMATE(4)) });
+
+    /* El cuadre, a la vista: columna por columna, la tercera calculada en vivo */
+    if (cu) {
+      const FIL = [['lineas', 'Líneas de factura'], ['facturas', 'Facturas'], ['clientes', 'Clientes'], ['productos', 'Productos'], ['venta', 'Venta total (su huella)']];
+      const CAM = [['El Excel de origen', 'Python (pandas) lee el Excel tal como lo exporta el sistema de facturación.'],
+        ['El archivo publicado', 'Python (numpy) abre el archivo cifrado que se sube a la web y lo relee byte a byte.'],
+        ['Este navegador, ahora', 'El motor del tablero recorre todas las líneas en esta pantalla y vuelve a contar.']];
+      const celda = (k, f, x) => '<div class="cd-v" data-paso="' + k + '"' + (k === 2 ? ' data-f="' + f + '"' : '') + '>' + x + '</div>';
+      const num = (k, f) => f === 'venta' ? '<code>' + esc(cu[k][f]) + '</code>' : '<span data-cuenta="' + cu[k][f] + '">0</span>';
+      L.push({ cap: 'Apertura', nombre: 'El cuadre a tres caminos', pasos: 3, html: () =>
+        '<h2 class="ln-titulo una" data-ap>El mismo resultado por tres caminos</h2>'
+        + '<div class="ln-cuerpo"><div class="cuadre" role="table" aria-label="Cuadre a tres caminos">'
+        + '<div class="cd-h"></div>' + CAM.map((c, k) => '<div class="cd-h" data-paso="' + k + '"><span class="n">' + (k + 1) + '</span><b>' + c[0] + '</b><small>' + c[1] + '</small></div>').join('')
+        + FIL.map(([f, l]) => '<div class="cd-l">' + l + '</div>' + celda(0, f, num('excel', f)) + celda(1, f, num('paquete', f)) + celda(2, f, '…')).join('')
+        + '</div></div><p class="ln-nota" data-paso="2" id="cd-nota">La venta total no se proyecta en la reunión: se compara su huella SHA-256, que cambia por completo con un solo centavo.</p>' + REMATE(2),
+        montar: (el, D) => {
+          const r = recontar(GIP.S.M);
+          huella(r.centavos).then(h => huella(r.centavos + 1).then(h1 => {
+            el.querySelectorAll('.cd-v[data-f]').forEach(x => {
+              const f = x.dataset.f, v = f === 'venta' ? h : r[f], ok = v != null && v === cu.excel[f] && v === cu.paquete[f];
+              x.innerHTML = (f === 'venta' ? '<code>' + esc(v || 'sin cifrado en este navegador') + '</code>' : '<span data-cuenta="' + v + '">0</span>')
+                + ' <i class="' + (ok ? 'ok' : 'mal') + '">' + (ok ? '✓ igual' : '✗ distinto') + '</i>';
+            });
+            const nota = el.querySelector('#cd-nota');
+            if (nota && h1) nota.textContent = 'Recontado en ' + Math.max(1, Math.round(r.ms)) + ' ms sobre ' + F.entero(r.lineas) + ' líneas. La venta total no se proyecta: se compara su huella SHA-256. Con un solo centavo más, sería ' + h1 + '.';
+            contar(el);
+          }));
+        } });
+    }
 
     L.push({ cap: 'Estadísticas', nombre: 'El año en clientes y facturas', html: () => {
       const m = D.porMes.reduce((p, q) => q.cli > p.cli ? q : p);
@@ -217,7 +292,8 @@
     }
 
     L.push({ cap: 'Estadísticas', nombre: 'Vendedor por vendedor', pasos: D.vendedores.length, html: () =>
-      '<div class="ficha-v"><div class="fv-izq fv-mov" id="fv-izq"></div><div class="fv-der"><p class="ln-nota" id="fv-pie"></p><div class="ln-graf fv-graf" id="g-vend"></div></div></div>',
+      '<div class="ficha-v"><div class="fv-izq fv-mov" id="fv-izq"></div><div class="fv-der"><p class="ln-nota" id="fv-pie"></p><div class="ln-graf fv-graf" id="g-vend"></div>'
+      + '<p class="col-tit fv-tit">Sus tres clientes principales</p><ul class="fv-lista fv-mov" id="fv-cli"></ul></div></div>',
       paso: (el, D, p) => fichaVendedor(D, D.vendedores[p]) });
 
     L.push({ cap: 'Estadísticas', nombre: 'Zonas', pasos: 2, html: () =>
@@ -294,16 +370,21 @@
     const ini = GIP.contexto().offAFecha(v.desde), fin = GIP.contexto().offAFecha(v.hasta);
     if (ini.slice(0, 7) === D.P.dims.mes[D.ult]) notas.push('Se incorporó el ' + mesDe(v.desde) + '.');
     if (fin.slice(0, 7) < D.P.dims.mes[D.ult]) notas.push('Última venta el ' + mesDe(v.hasta) + '.');
+    const perfil = (l, x, y) => '<div><dt>' + l + '</dt><dd><b>' + x + '</b><span>' + y + '</span></dd></div>';
     const html = '<p class="ln-nota">Vendedor ' + v.puesto + ' de ' + D.vendedores.length + ' · ' + periodo(D) + '</p><h2 class="fv-nombre">' + esc(v.nombre) + '</h2>'
       + '<p class="fv-puesto">Hizo el <b>' + F.pct(v.part) + '</b> de la venta del año' + (notas.length ? '. ' + esc(notas.join(' ')) : '') + '</p>'
-      + '<div class="fv-kpis">' + kpi(cap(D.mesN(D.ult)) + ' frente a ' + D.mesN(D.ult - 1), vr(v.varMes)) + kpi('Último trimestre frente al anterior', vr(v.varTri))
-      + kpi('Clientes en el año', F.entero(v.clientes)) + kpi('Clientes en ' + D.mesN(D.ult), F.entero(v.clientesUlt)) + kpi('Ticket promedio', F.dinero(v.ticket))
-      + kpi('Mejor mes', cap(D.mesN(v.mejor))) + '</div>'
-      + '<ul class="fv-lista">' + v.top.map(t => '<li><span>' + esc(t[0]) + '</span><b>' + F.pct(t[1]) + '</b></li>').join('')
-      + (v.zona ? '<li><span>Zona principal: ' + esc(nombreEstado(v.zona[0])) + '</span><b>' + F.pct(v.zona[1]) + '</b></li>' : '') + '</ul>';
-    if (izq.innerHTML && !REDUCIDO) { izq.classList.add('cambia'); setTimeout(() => { izq.innerHTML = html; izq.classList.remove('cambia'); }, 220); }
-    else izq.innerHTML = html;
-    document.getElementById('fv-pie').textContent = 'Venta de ' + v.nombre + ' mes a mes; en naranja, su mejor mes. Sus tres clientes principales, a la izquierda.';
+      + '<div class="fv-kpis">' + kpi(cap(D.mesN(D.ult)) + ' frente a ' + D.mesN(D.ult - 1), vr(v.varMes)) + kpi('Trimestre frente al anterior', vr(v.varTri))
+      + kpi('Clientes distintos atendidos', F.entero(v.clientes)) + kpi('Clientes en ' + D.mesN(D.ult), F.entero(v.clientesUlt)) + kpi('Ticket promedio', F.dinero(v.ticket))
+      + kpi('Mejor mes', cap(D.mesN(v.mejor))) + '</div><dl class="fv-perfil">'
+      + (v.zona ? perfil('Zona donde más vende', esc(nombreEstado(v.zona[0])), F.pct(v.zona[1]) + ' de su venta') : '')
+      + (v.grupo ? perfil('Grupo más fuerte', esc(cap(v.grupo[0].toLowerCase())), F.pct(v.grupo[1]) + ' de su venta') : '')
+      + (v.prod ? perfil('Producto que más vende', esc(v.prod[0]), F.entero(v.prod[1]) + ' unidades · ' + F.pct(v.prod[2]) + ' de su venta') : '') + '</dl>';
+    const cli = v.top.map(t => '<li><span>' + esc(t[0]) + '</span><b>' + F.pct(t[1]) + '</b></li>').join('');
+    const lista = document.getElementById('fv-cli');
+    if (izq.innerHTML && !REDUCIDO) { izq.classList.add('cambia'); lista.classList.add('cambia');
+      setTimeout(() => { izq.innerHTML = html; lista.innerHTML = cli; izq.classList.remove('cambia'); lista.classList.remove('cambia'); }, 220); }
+    else { izq.innerHTML = html; lista.innerHTML = cli; }
+    document.getElementById('fv-pie').textContent = 'Venta de ' + v.nombre + ' mes a mes; en naranja, su mejor mes.';
     const ch = GIP.grafico('g-vend');
     ch.setOption(Object.assign({}, MOV, { grid: { left: 8, right: 8, top: 30, bottom: 8, containLabel: true }, tooltip: { show: false },
       xAxis: eje({ type: 'category', data: D.cerr.map(D.mesC) }), yAxis: eje({ type: 'value', axisLabel: { formatter: F.corto, fontSize: fsz(11), color: '#6B7390' } }),

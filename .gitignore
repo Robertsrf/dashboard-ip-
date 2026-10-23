@@ -20,6 +20,7 @@ __pycache__/
 # Historial de cortes: cifras de negocio en claro, solo en local (METODO.md, seguridad)
 history.json
 history_caleb.json
+history_meses.json
 
 # Paginas de prueba de la v4
 v4_*.html

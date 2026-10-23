@@ -83,6 +83,8 @@ movimiento sí es parte del mensaje, pero siempre con propósito: cada pieza ent
 nombra (pasos), las barras crecen en orden, las cifras cuentan hasta su valor y la ficha de cada vendedor
 se transforma en la del siguiente. Transición de lámina 550 ms; con `prefers-reduced-motion`, nada se mueve.
 Naranja solo para lo que el expositor señala (los tres primeros, el mejor mes); verde y rojo, con ▲/▼.
+Lo que una lámina afirma, lo demuestra en pantalla: cada control lleva su evidencia, el cuadre se recuenta
+en vivo columna por columna y la venta total aparece como huella (SHA-256), nunca como cifra.
 
 ## 9. No se hace
 
