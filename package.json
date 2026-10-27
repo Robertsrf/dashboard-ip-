@@ -1,7 +1,0 @@
-{
-  "name": "sistema-grupo-ip",
-  "private": true,
-  "scripts": {
-    "test": "python -m unittest discover -s tests && node --test tests/*.test.mjs"
-  }
-}
