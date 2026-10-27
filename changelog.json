@@ -1,6 +1,20 @@
 {
  "entradas": [
   {
+   "v": "4.4.0",
+   "fecha": "2026-10-26",
+   "tipo": "seguridad",
+   "empresas": [
+    "grupo"
+   ],
+   "titulo": "El código se publica aparte",
+   "detalle": [
+    "El código del sistema vive en un repositorio privado; el sitio público solo recibe las páginas cifradas.",
+    "Publicar sigue siendo un solo comando."
+   ],
+   "huella": "6ba7eaaf38efbaaf"
+  },
+  {
    "v": "4.3.0",
    "fecha": "2026-10-23",
    "tipo": "mejora",
